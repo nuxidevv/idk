@@ -47,8 +47,6 @@
     display:flex; align-items:flex-start; gap:12px;
   }
   .card:hover { border-color:#2f5d3f; }
-  .card.dork-card { border-color:#1f3d5a; }
-  .card.dork-card:hover { border-color:#2f5d8f; }
   .card.tool-card { border-color:#3d2f1f; }
   .card.tool-card:hover { border-color:#5d4a2f; }
   .dot {
@@ -56,7 +54,6 @@
     background:#00e07a; box-shadow:0 0 8px #00e07a88;
     margin-top:6px;
   }
-  .dot.blue { background:#4da3ff; box-shadow:0 0 8px #4da3ff88; }
   .dot.orange { background:#ffaa4d; box-shadow:0 0 8px #ffaa4d88; }
   .info { flex:1; min-width:0; }
   .info a, .info .title {
@@ -68,14 +65,6 @@
   .meta { font-size:0.65rem; color:#555; margin-top:4px; word-break:break-all; line-height:1.4; }
   .meta a { color:#4da3ff; text-decoration:none; display:block; margin-top:2px; }
   .meta a:hover { text-decoration:underline; }
-  .badge {
-    display:inline-block; font-size:0.6rem; padding:2px 6px;
-    border-radius:4px; margin-left:6px; font-weight:600;
-    vertical-align:middle;
-  }
-  .badge.ok { background:#1f3d2a; color:#00e07a; }
-  .badge.warn { background:#3d2a1f; color:#ffaa4d; }
-  .badge.neg { background:#3d1f1f; color:#ff6b6b; }
   .section-title {
     font-size:0.7rem; color:#888; text-transform:uppercase;
     letter-spacing:1px; margin:18px 0 10px;
@@ -83,13 +72,20 @@
   .err {
     background:#1a0a0a; color:#ff6b6b; padding:12px;
     border-radius:8px; font-size:0.72rem; margin-top:14px;
+    white-space:pre-wrap; word-break:break-word;
+  }
+  .raw {
+    background:#0a0a0a; border:1px solid #1a1a1a; border-radius:8px;
+    padding:12px; margin-top:14px; font-size:0.65rem; color:#888;
+    max-height:400px; overflow:auto; white-space:pre-wrap;
+    word-break:break-word; font-family:monospace;
   }
 </style>
 </head>
 <body>
 <div class="wrap">
   <h1>OSINT</h1>
-  <div class="sub">recherche approfondie par prénom nom</div>
+  <div class="sub">recherche par Prénom Nom</div>
 
   <input id="target" placeholder="prénom nom..." autocomplete="off">
 
@@ -100,527 +96,18 @@
 
 <script>
 /* ============================================================
-   CAPTURE D'ERREURS
+   CONFIGURATION BRIXHUB
+   ============================================================ */
+const BRIXHUB_API_KEY = "brix_kTDklqpV-orjSqnZ9mFSU7YqkzCdJVFJhY4Ka1Rni71WWoIh"; // <-- insérer la clé API ici
+const BRIXHUB_BASE = "https://api.brixhub.to/api/v1/search";
+
+/* ============================================================
+   CAPTURE D'ERREURS GLOBALES
    ============================================================ */
 window.addEventListener("error", e => {
   const out = document.getElementById("out");
-  if (out) out.innerHTML = `<div class="err">Erreur : ${e.message}</div>`;
+  if (out) out.innerHTML = `<div class="err">Erreur JS : ${e.message}</div>`;
 });
-
-/* ============================================================
-   PROXY CORS
-   ============================================================ */
-const PROXIES = [
-  u => `https://api.allorigins.win/raw?url=${encodeURIComponent(u)}`,
-  u => `https://api.codetabs.com/v1/proxy?quest=${encodeURIComponent(u)}`,
-  u => `https://corsproxy.io/?${encodeURIComponent(u)}`
-];
-
-async function fetchWithTimeout(url, ms) {
-  const controller = new AbortController();
-  const timer = setTimeout(() => controller.abort(), ms);
-  try {
-    const r = await fetch(url, { signal: controller.signal });
-    clearTimeout(timer);
-    return r;
-  } catch (e) {
-    clearTimeout(timer);
-    throw e;
-  }
-}
-
-async function P(url) {
-  const promises = PROXIES.map(p =>
-    fetchWithTimeout(p(url), 8000).then(r => r.ok ? r : Promise.reject())
-  );
-  return Promise.any(promises);
-}
-
-/* ============================================================
-   NORMALISATION — pour comparer noms
-   ============================================================ */
-function normalize(s) {
-  return String(s || "")
-    .toLowerCase()
-    .normalize("NFD").replace(/[\u0300-\u036f]/g, "") // enlève accents
-    .replace(/[^a-z0-9 ]/g, " ")
-    .replace(/\s+/g, " ")
-    .trim();
-}
-
-// Vérifie si le nom complet OU prénom + nom apparaît dans le texte
-function containsName(text, fullName) {
-  if (!text) return false;
-  const normText = normalize(text);
-  const normName = normalize(fullName);
-  if (!normName) return false;
-
-  // 1) Nom complet d'un coup
-  if (normText.includes(normName)) return true;
-
-  // 2) Prénom ET nom présents (dans n'importe quel ordre)
-  const parts = normName.split(" ").filter(p => p.length >= 2);
-  if (parts.length < 2) return false;
-  const allPresent = parts.every(p => normText.includes(p));
-  return allPresent;
-}
-
-/* ============================================================
-   VÉRIFICATION PROFIL — nom réellement présent dans la page
-   ============================================================ */
-async function verifyProfile(url, fullName, positives) {
-  try {
-    const r = await P(url);
-    if (r.status !== 200) return { confirmed:false };
-
-    const html = await r.text();
-
-    // 1) Cherche d'abord le nom complet dans la page
-    const nameFound = containsName(html, fullName);
-
-    // 2) Cherche les signatures de profil
-    const low = html.toLowerCase();
-    let posFound = 0;
-    for (const p of positives) {
-      if (low.includes(p.toLowerCase())) posFound++;
-    }
-    const ratio = positives.length > 0 ? posFound / positives.length : 0;
-
-    // 3) Décision
-    if (nameFound && ratio >= 0.3) {
-      return { confirmed:true, level:"ok", reason:`nom complet détecté` };
-    }
-    if (nameFound) {
-      return { confirmed:true, level:"ok", reason:`nom détecté dans la page` };
-    }
-    if (ratio >= 0.6) {
-      return { confirmed:true, level:"warn", reason:`profil probable (nom non trouvé)` };
-    }
-    return { confirmed:false };
-  } catch {
-    return { confirmed:false };
-  }
-}
-
-/* ============================================================
-   GOOGLE DORKS ÉTENDUS
-   ============================================================ */
-function buildDorks(fullName) {
-  const dorks = [
-    { label: "Nom complet exact",           q: `"${fullName}"` },
-    { label: "Nom + LinkedIn",              q: `"${fullName}" site:linkedin.com` },
-    { label: "Nom + Facebook",              q: `"${fullName}" site:facebook.com` },
-    { label: "Nom + Instagram",             q: `"${fullName}" site:instagram.com` },
-    { label: "Nom + Twitter/X",             q: `"${fullName}" (site:twitter.com OR site:x.com)` },
-    { label: "Nom + GitHub",                q: `"${fullName}" site:github.com` },
-    { label: "Nom + PDF",                   q: `"${fullName}" filetype:pdf` },
-    { label: "Nom + CV",                    q: `"${fullName}" (CV OR resume OR curriculum)` },
-    { label: "Nom + Email",                 q: `"${fullName}" (email OR mail OR contact)` },
-    { label: "Nom + Téléphone",             q: `"${fullName}" (téléphone OR phone OR tel)` },
-    { label: "Nom + Documents",             q: `"${fullName}" (filetype:docx OR filetype:xlsx OR filetype:pptx)` },
-    { label: "Nom + Pastebin",              q: `"${fullName}" site:pastebin.com` },
-    { label: "Nom + Wayback Machine",       q: `"${fullName}" site:web.archive.org` },
-    { label: "Nom + Reddit",                q: `"${fullName}" site:reddit.com` },
-    { label: "Nom + YouTube",               q: `"${fullName}" site:youtube.com` },
-    { label: "Nom + TikTok",                q: `"${fullName}" site:tiktok.com` },
-    { label: "Nom + Pinterest",             q: `"${fullName}" site:pinterest.com` },
-    { label: "Nom + Medium",                q: `"${fullName}" site:medium.com` },
-    { label: "Nom + Tumblr",                q: `"${fullName}" site:tumblr.com` },
-    { label: "Nom + Flickr",                q: `"${fullName}" site:flickr.com` },
-    { label: "Nom + StackOverflow",         q: `"${fullName}" site:stackoverflow.com` },
-    { label: "Nom + ORCID",                 q: `"${fullName}" site:orcid.org` },
-    { label: "Nom + ResearchGate",          q: `"${fullName}" site:researchgate.net` },
-    { label: "Nom + Google Scholar",        q: `"${fullName}" (site:scholar.google.com OR scholar)` },
-    { label: "Nom + Doctolib",              q: `"${fullName}" site:doctolib.fr` },
-    { label: "Nom + Société.com",           q: `"${fullName}" (site:societe.com OR site:infogreffe.fr)` },
-    { label: "Nom + Pages Jaunes",          q: `"${fullName}" site:pagesjaunes.fr` },
-    { label: "Nom + Copains d'avant",       q: `"${fullName}" site:copainsdavant.linternaute.com` },
-    { label: "Nom + index de fichiers",     q: `"${fullName}" intitle:"index of"` },
-    { label: "Nom + Documents compromis",   q: `"${fullName}" (password OR login OR credentials)` },
-  ];
-
-  return dorks;
-}
-
-async function searchDork(query) {
-  try {
-    const ddgUrl = `https://html.duckduckgo.com/html/?q=${encodeURIComponent(query)}`;
-    const r = await P(ddgUrl);
-    if (r.status !== 200) return { found:false, count:0, hits:[] };
-    const html = await r.text();
-
-    const results = [];
-    const regex = /<a[^>]*class="result__a"[^>]*href="([^"]+)"[^>]*>([\s\S]*?)<\/a>/g;
-    let m;
-    while ((m = regex.exec(html)) !== null && results.length < 5) {
-      let url = m[1];
-      const uddg = url.match(/uddg=([^&]+)/);
-      if (uddg) url = decodeURIComponent(uddg[1]);
-      const title = m[2].replace(/<[^>]+>/g, "").replace(/&amp;/g,"&").trim();
-      if (title && url && url.startsWith("http")) {
-        results.push({ title: title.slice(0,80), url });
-      }
-    }
-
-    return { found: results.length > 0, count: results.length, hits: results };
-  } catch {
-    return { found:false, count:0, hits:[] };
-  }
-}
-
-/* ============================================================
-   OUTILS ALTERNATIFS (moteurs supplémentaires)
-   ============================================================ */
-async function searchBrave(query) {
-  try {
-    const url = `https://search.brave.com/search?q=${encodeURIComponent(query)}`;
-    const r = await P(url);
-    if (r.status !== 200) return { found:false, hits:[] };
-    const html = await r.text();
-    const results = [];
-    const regex = /<a[^>]*href="(https?:\/\/[^"]+)"[^>]*class="[^"]*heading-serpresult[^"]*"[^>]*>([\s\S]*?)<\/a>/g;
-    let m;
-    while ((m = regex.exec(html)) !== null && results.length < 4) {
-      const url = m[1];
-      const title = m[2].replace(/<[^>]+>/g, "").trim();
-      if (title && url && !url.includes("brave.com")) {
-        results.push({ title: title.slice(0,80), url });
-      }
-    }
-    return { found: results.length > 0, hits: results };
-  } catch {
-    return { found:false, hits:[] };
-  }
-}
-
-async function searchBing(query) {
-  try {
-    const url = `https://www.bing.com/search?q=${encodeURIComponent(query)}`;
-    const r = await P(url);
-    if (r.status !== 200) return { found:false, hits:[] };
-    const html = await r.text();
-    const results = [];
-    const regex = /<h2><a href="(https?:\/\/[^"]+)"[^>]*>([\s\S]*?)<\/a><\/h2>/g;
-    let m;
-    while ((m = regex.exec(html)) !== null && results.length < 4) {
-      const url = m[1];
-      const title = m[2].replace(/<[^>]+>/g, "").trim();
-      if (title && url && !url.includes("bing.com")) {
-        results.push({ title: title.slice(0,80), url });
-      }
-    }
-    return { found: results.length > 0, hits: results };
-  } catch {
-    return { found:false, hits:[] };
-  }
-}
-
-/* ============================================================
-   WAYBACK MACHINE (archives)
-   ============================================================ */
-async function checkWayback(query) {
-  try {
-    const url = `https://archive.org/advancedsearch.php?q=${encodeURIComponent('"' + query + '"')}&fl[]=identifier&fl[]=title&rows=5&output=json`;
-    const r = await fetchWithTimeout(url, 6000);
-    if (!r.ok) return { found:false, hits:[] };
-    const j = await r.json();
-    const docs = j?.response?.docs || [];
-    const hits = docs.map(d => ({
-      title: d.title || d.identifier,
-      url: `https://archive.org/details/${d.identifier}`
-    }));
-    return { found: hits.length > 0, hits };
-  } catch {
-    return { found:false, hits:[] };
-  }
-}
-
-/* ============================================================
-   GOOGLE SCHOLAR (publications)
-   ============================================================ */
-async function checkScholar(fullName) {
-  try {
-    const url = `https://scholar.google.com/scholar?q=${encodeURIComponent('"' + fullName + '"')}`;
-    const r = await P(url);
-    if (r.status !== 200) return { found:false, hits:[] };
-    const html = await r.text();
-    const results = [];
-    const regex = /<h3[^>]*class="gs_rt"[^>]*><a[^>]*href="([^"]+)"[^>]*>([\s\S]*?)<\/a>/g;
-    let m;
-    while ((m = regex.exec(html)) !== null && results.length < 4) {
-      const url = m[1];
-      const title = m[2].replace(/<[^>]+>/g, "").trim();
-      if (title && url) results.push({ title: title.slice(0,80), url });
-    }
-    return { found: results.length > 0, hits: results };
-  } catch {
-    return { found:false, hits:[] };
-  }
-}
-
-/* ============================================================
-   DOCTOLIB / SANTÉ (France)
-   ============================================================ */
-async function checkDoctolib(fullName) {
-  try {
-    const url = `https://www.doctolib.fr/search?query=${encodeURIComponent(fullName)}`;
-    const r = await P(url);
-    if (r.status !== 200) return { found:false, hits:[] };
-    const html = await r.text();
-    const results = [];
-    const regex = /<a[^>]*href="(\/[\w-]+\/[\w-]+)"[^>]*>([\s\S]*?)<\/a>/g;
-    let m;
-    while ((m = regex.exec(html)) !== null && results.length < 3) {
-      const title = m[2].replace(/<[^>]+>/g, "").trim();
-      if (title && title.length > 5 && title.length < 100 && containsName(title, fullName)) {
-        results.push({ title: title.slice(0,80), url: `https://www.doctolib.fr${m[1]}` });
-      }
-    }
-    return { found: results.length > 0, hits: results };
-  } catch {
-    return { found:false, hits:[] };
-  }
-}
-
-/* ============================================================
-   SOCIETE.COM (entreprises FR)
-   ============================================================ */
-async function checkSociete(fullName) {
-  try {
-    const url = `https://www.societe.com/cgi-bin/search?champs=${encodeURIComponent(fullName)}`;
-    const r = await P(url);
-    if (r.status !== 200) return { found:false, hits:[] };
-    const html = await r.text();
-    const found = containsName(html, fullName);
-    if (found) {
-      return { found:true, hits:[{ title:"Résultats sur Societe.com", url:`https://www.societe.com/cgi-bin/search?champs=${encodeURIComponent(fullName)}` }] };
-    }
-    return { found:false, hits:[] };
-  } catch {
-    return { found:false, hits:[] };
-  }
-}
-
-/* ============================================================
-   API BRIXHUB — RECHERCHE PRÉNOM NOM
-   Endpoint : https://api.brixhub.to/api/v1/search
-   Clé API : à insérer dans BRIXHUB_API_KEY
-   ============================================================ */
-const BRIXHUB_API_KEY = "brix_kTDklqpV-orjSqnZ9mFSU7YqkzCdJVFJhY4Ka1Rni71WWoIh";
-const BRIXHUB_URL = "https://api.brixhub.to/api/v1/search";
-
-async function searchBrixHub(fullName) {
-  const parts = fullName.trim().split(/\s+/);
-  const firstName = parts[0] || "";
-  const lastName = parts.slice(1).join(" ") || "";
-
-  const url = `${BRIXHUB_URL}?first_name=${encodeURIComponent(firstName)}&last_name=${encodeURIComponent(lastName)}`;
-
-  const headers = {
-    "Accept": "application/json",
-    "Content-Type": "application/json",
-    "Authorization": `Bearer ${BRIXHUB_API_KEY}`,
-    "X-API-Key": BRIXHUB_API_KEY
-  };
-
-  try {
-    const controller = new AbortController();
-    const timer = setTimeout(() => controller.abort(), 12000);
-    const response = await fetch(url, { method: "GET", headers, signal: controller.signal });
-    clearTimeout(timer);
-
-    if (!response.ok) {
-      return { ok: false, status: response.status, data: null };
-    }
-
-    const data = await response.json();
-    return { ok: true, status: response.status, data };
-  } catch (err) {
-    return { ok: false, status: 0, data: null, error: err.message };
-  }
-}
-
-function normalizeBrixHubResults(data) {
-  const hits = [];
-  if (!data) return hits;
-
-  const arr = Array.isArray(data) ? data
-    : (data.results || data.data || data.items || data.records || []);
-
-  if (!Array.isArray(arr)) return hits;
-
-  arr.slice(0, 10).forEach(item => {
-    if (typeof item === "string") {
-      hits.push({ title: item, url: item });
-      return;
-    }
-    const title =
-      item.full_name ||
-      item.name ||
-      [item.first_name, item.last_name].filter(Boolean).join(" ") ||
-      item.title ||
-      item.email ||
-      "Résultat BrixHub";
-
-    const url =
-      item.url ||
-      item.profile_url ||
-      item.link ||
-      item.source_url ||
-      (item.id ? `https://api.brixhub.to/api/v1/record/${item.id}` : "#");
-
-    hits.push({ title: String(title).slice(0, 120), url });
-  });
-
-  return hits;
-}
-
-/* ============================================================
-   RECHERCHE PRINCIPALE — affichage au fur et à mesure
-   ============================================================ */
-async function renderDeepSearch(fullName) {
-  const out = document.getElementById("out");
-  out.innerHTML = "";
-
-  const dorks = buildDorks(fullName);
-
-  const total = dorks.length + 6; // +6 pour les outils alternatifs (5 + BrixHub)
-  let done = 0;
-  let foundCount = 0;
-
-  // Barre de statut
-  const statusEl = document.createElement("div");
-  statusEl.className = "status";
-  statusEl.textContent = `0/${total} analysé…`;
-  out.appendChild(statusEl);
-
-  function updateStatus() {
-    statusEl.textContent = `${done}/${total} analysé · ${foundCount} résultat(s)`;
-  }
-
-  // --- Section dorks ---
-  const sectionDorks = document.createElement("div");
-  sectionDorks.innerHTML = `<div class="section-title">Google Dorks — résultats filtrés par nom</div>`;
-  const dorksList = document.createElement("div");
-  sectionDorks.appendChild(dorksList);
-  out.appendChild(sectionDorks);
-
-  const noDorkEl = document.createElement("div");
-  noDorkEl.className = "none";
-  noDorkEl.textContent = "aucun dork positif";
-  dorksList.appendChild(noDorkEl);
-
-  let dorkFound = 0;
-
-  // Lance tous les dorks en parallèle
-  dorks.forEach(async (dork) => {
-    const result = await searchDork(dork.q);
-    done++;
-
-    // FILTRE ANTI-FAUX-POSITIF :
-    // Ne garde que les hits dont le titre OU l'URL semble lié au nom
-    const relevantHits = result.hits.filter(h =>
-      containsName(h.title, fullName) ||
-      containsName(decodeURIComponent(h.url), fullName)
-    );
-
-    if (relevantHits.length > 0) {
-      foundCount++;
-      dorkFound++;
-      if (dorkFound === 1) noDorkEl.remove();
-
-      const card = document.createElement("div");
-      card.className = "card dork-card";
-      const hitsHtml = relevantHits.slice(0,4).map(h =>
-        `<a href="${h.url}" target="_blank" rel="noopener">${escapeHtml(h.title)}</a>`
-      ).join("");
-      card.innerHTML = `
-        <div class="dot blue"></div>
-        <div class="info">
-          <div class="title">${escapeHtml(dork.label)}</div>
-          <div class="meta">${escapeHtml(dork.q)}</div>
-          <div class="meta">${hitsHtml}</div>
-        </div>
-      `;
-      dorksList.appendChild(card);
-    }
-    updateStatus();
-  });
-
-  // --- Section outils alternatifs ---
-  const sectionTools = document.createElement("div");
-  sectionTools.innerHTML = `<div class="section-title">Outils alternatifs</div>`;
-  const toolsList = document.createElement("div");
-  sectionTools.appendChild(toolsList);
-  out.appendChild(sectionTools);
-
-  // Brave Search
-  runTool(toolsList, "Brave Search", async () => {
-    const r = await searchBrave(`"${fullName}"`);
-    return r.hits.filter(h => containsName(h.title, fullName) || containsName(decodeURIComponent(h.url), fullName));
-  }).then(() => { done++; updateStatus(); });
-
-  // Bing
-  runTool(toolsList, "Bing", async () => {
-    const r = await searchBing(`"${fullName}"`);
-    return r.hits.filter(h => containsName(h.title, fullName) || containsName(decodeURIComponent(h.url), fullName));
-  }).then(() => { done++; updateStatus(); });
-
-  // Wayback Machine
-  runTool(toolsList, "Wayback Machine (archives)", async () => {
-    const r = await checkWayback(fullName);
-    return r.hits;
-  }).then(() => { done++; updateStatus(); });
-
-  // Google Scholar
-  runTool(toolsList, "Google Scholar (publications)", async () => {
-    const r = await checkScholar(fullName);
-    return r.hits;
-  }).then(() => { done++; updateStatus(); });
-
-  // Doctolib (santé FR)
-  runTool(toolsList, "Doctolib", async () => {
-    const r = await checkDoctolib(fullName);
-    return r.hits;
-  }).then(() => { done++; updateStatus(); });
-
-  // BrixHub API (prénom + nom)
-  runTool(toolsList, "BrixHub API (prénom + nom)", async () => {
-    const res = await searchBrixHub(fullName);
-    if (!res.ok) {
-      console.warn("[BrixHub] échec requête", res.status, res.error || "");
-      return [];
-    }
-    const hits = normalizeBrixHubResults(res.data);
-    return hits.filter(h =>
-      containsName(h.title, fullName) ||
-      containsName(decodeURIComponent(h.url), fullName)
-    );
-  }).then(() => { done++; updateStatus(); });
-
-  // Fonction utilitaire pour lancer un outil et afficher son résultat
-  async function runTool(container, label, fn) {
-    try {
-      const hits = await fn();
-      if (hits && hits.length > 0) {
-        foundCount++;
-        const card = document.createElement("div");
-        card.className = "card tool-card";
-        const hitsHtml = hits.slice(0,4).map(h =>
-          `<a href="${h.url}" target="_blank" rel="noopener">${escapeHtml(h.title)}</a>`
-        ).join("");
-        card.innerHTML = `
-          <div class="dot orange"></div>
-          <div class="info">
-            <div class="title">${escapeHtml(label)}</div>
-            <div class="meta">${hitsHtml}</div>
-          </div>
-        `;
-        container.appendChild(card);
-      }
-    } catch {}
-  }
-}
 
 /* ============================================================
    UTILITAIRES
@@ -638,9 +125,246 @@ function validate(t) {
 }
 
 /* ============================================================
+   APPEL BRIXHUB — plusieurs tentatives d'auth / URL
+   L'API est testée avec plusieurs combinaisons :
+   - clé dans header Authorization Bearer
+   - clé dans header X-API-Key
+   - clé en query string ?api_key=
+   ============================================================ */
+
+// Tentative 1 : Authorization Bearer + first_name / last_name
+async function brixhubCall1(firstName, lastName) {
+  const url = `${BRIXHUB_BASE}?first_name=${encodeURIComponent(firstName)}&last_name=${encodeURIComponent(lastName)}`;
+  const res = await fetch(url, {
+    method: "GET",
+    headers: {
+      "Accept": "application/json",
+      "Authorization": `Bearer ${BRIXHUB_API_KEY}`
+    }
+  });
+  return { url, status: res.status, ok: res.ok, body: res.ok ? await res.json().catch(()=>null) : await res.text().catch(()=>null) };
+}
+
+// Tentative 2 : header X-API-Key
+async function brixhubCall2(firstName, lastName) {
+  const url = `${BRIXHUB_BASE}?first_name=${encodeURIComponent(firstName)}&last_name=${encodeURIComponent(lastName)}`;
+  const res = await fetch(url, {
+    method: "GET",
+    headers: {
+      "Accept": "application/json",
+      "X-API-Key": BRIXHUB_API_KEY
+    }
+  });
+  return { url, status: res.status, ok: res.ok, body: res.ok ? await res.json().catch(()=>null) : await res.text().catch(()=>null) };
+}
+
+// Tentative 3 : clé en query string
+async function brixhubCall3(firstName, lastName) {
+  const url = `${BRIXHUB_BASE}?first_name=${encodeURIComponent(firstName)}&last_name=${encodeURIComponent(lastName)}&api_key=${encodeURIComponent(BRIXHUB_API_KEY)}`;
+  const res = await fetch(url, {
+    method: "GET",
+    headers: { "Accept": "application/json" }
+  });
+  return { url, status: res.status, ok: res.ok, body: res.ok ? await res.json().catch(()=>null) : await res.text().catch(()=>null) };
+}
+
+// Tentative 4 : paramètre "q" (nom complet)
+async function brixhubCall4(fullName) {
+  const url = `${BRIXHUB_BASE}?q=${encodeURIComponent(fullName)}`;
+  const res = await fetch(url, {
+    method: "GET",
+    headers: {
+      "Accept": "application/json",
+      "Authorization": `Bearer ${BRIXHUB_API_KEY}`
+    }
+  });
+  return { url, status: res.status, ok: res.ok, body: res.ok ? await res.json().catch(()=>null) : await res.text().catch(()=>null) };
+}
+
+// Tentative 5 : paramètre "name"
+async function brixhubCall5(fullName) {
+  const url = `${BRIXHUB_BASE}?name=${encodeURIComponent(fullName)}`;
+  const res = await fetch(url, {
+    method: "GET",
+    headers: {
+      "Accept": "application/json",
+      "Authorization": `Bearer ${BRIXHUB_API_KEY}`
+    }
+  });
+  return { url, status: res.status, ok: res.ok, body: res.ok ? await res.json().catch(()=>null) : await res.text().catch(()=>null) };
+}
+
+// Lance les 5 tentatives et retourne la première qui répond OK avec des données
+async function searchBrixHub(fullName) {
+  const parts = fullName.trim().split(/\s+/);
+  const firstName = parts[0] || "";
+  const lastName = parts.slice(1).join(" ") || "";
+
+  const attempts = [
+    { name: "Bearer + first_name/last_name", fn: () => brixhubCall1(firstName, lastName) },
+    { name: "X-API-Key + first_name/last_name", fn: () => brixhubCall2(firstName, lastName) },
+    { name: "query api_key + first_name/last_name", fn: () => brixhubCall3(firstName, lastName) },
+    { name: "Bearer + q=nom complet", fn: () => brixhubCall4(fullName) },
+    { name: "Bearer + name=nom complet", fn: () => brixhubCall5(fullName) }
+  ];
+
+  const logs = [];
+  for (const a of attempts) {
+    try {
+      const r = await a.fn();
+      logs.push({ tentative: a.name, url: r.url, status: r.status, ok: r.ok, body: r.body });
+      if (r.ok && r.body) {
+        return { ok: true, attempts: logs, data: r.body, usedAttempt: a.name };
+      }
+    } catch (err) {
+      logs.push({ tentative: a.name, error: err.message });
+    }
+  }
+  return { ok: false, attempts: logs, data: null };
+}
+
+/* ============================================================
+   NORMALISATION DES RÉSULTATS BRIXHUB
+   ============================================================ */
+function normalizeBrixHubResults(data) {
+  const hits = [];
+  if (!data) return hits;
+
+  // Recherche récursive d'un tableau dans la structure
+  function findArray(obj, depth = 0) {
+    if (depth > 4 || !obj) return null;
+    if (Array.isArray(obj)) return obj;
+    if (typeof obj === "object") {
+      const keys = ["results","data","items","records","hits","matches","entries","list","persons","people","response"];
+      for (const k of keys) {
+        if (obj[k] && Array.isArray(obj[k])) return obj[k];
+      }
+      for (const k of Object.keys(obj)) {
+        const r = findArray(obj[k], depth + 1);
+        if (r) return r;
+      }
+    }
+    return null;
+  }
+
+  const arr = findArray(data);
+  if (!arr) return hits;
+
+  arr.slice(0, 20).forEach(item => {
+    if (typeof item === "string") {
+      hits.push({ title: item, url: "#" });
+      return;
+    }
+    const title =
+      item.full_name || item.fullName || item.name ||
+      [item.first_name || item.firstName, item.last_name || item.lastName].filter(Boolean).join(" ") ||
+      item.title || item.email || "Résultat BrixHub";
+
+    const url =
+      item.url || item.profile_url || item.profileUrl ||
+      item.link || item.source_url || item.sourceUrl ||
+      (item.id ? `https://api.brixhub.to/api/v1/record/${item.id}` : "#");
+
+    const extra = Object.entries(item)
+      .filter(([k, v]) => v && typeof v !== "object" && k !== "url" && k !== "id")
+      .map(([k, v]) => `${k}: ${v}`)
+      .join(" · ");
+
+    hits.push({ title: String(title).slice(0, 120), url, extra });
+  });
+
+  return hits;
+}
+
+/* ============================================================
+   AFFICHAGE DES RÉSULTATS
+   ============================================================ */
+function renderResults(result, fullName) {
+  const out = document.getElementById("out");
+  out.innerHTML = "";
+
+  // Status
+  const statusEl = document.createElement("div");
+  statusEl.className = "status";
+  out.appendChild(statusEl);
+
+  if (!result.ok) {
+    statusEl.textContent = "aucune tentative n'a abouti";
+    const err = document.createElement("div");
+    err.className = "err";
+    err.textContent = "Tentatives échouées :\n" +
+      result.attempts.map(a =>
+        `• ${a.tentative} → ${a.error ? "ERR " + a.error : "HTTP " + a.status}`
+      ).join("\n");
+    out.appendChild(err);
+
+    // Affiche le détail brut pour diagnostic
+    const raw = document.createElement("div");
+    raw.className = "raw";
+    raw.textContent = JSON.stringify(result.attempts, null, 2).slice(0, 5000);
+    out.appendChild(raw);
+    return;
+  }
+
+  // Normalisation
+  const hits = normalizeBrixHubResults(result.data);
+  statusEl.textContent = `${hits.length} résultat(s) — via ${result.usedAttempt}`;
+
+  // Section titre
+  const section = document.createElement("div");
+  section.innerHTML = `<div class="section-title">BrixHub API</div>`;
+  out.appendChild(section);
+
+  const list = document.createElement("div");
+  section.appendChild(list);
+
+  if (hits.length === 0) {
+    const none = document.createElement("div");
+    none.className = "none";
+    none.textContent = "aucun résultat exploitable";
+    list.appendChild(none);
+  } else {
+    hits.forEach(h => {
+      const card = document.createElement("div");
+      card.className = "card tool-card";
+      const urlHtml = h.url && h.url !== "#"
+        ? `<a href="${h.url}" target="_blank" rel="noopener">${escapeHtml(h.url)}</a>`
+        : "";
+      const extraHtml = h.extra
+        ? `<div class="meta">${escapeHtml(h.extra)}</div>`
+        : "";
+      card.innerHTML = `
+        <div class="dot orange"></div>
+        <div class="info">
+          <div class="title">${escapeHtml(h.title)}</div>
+          ${extraHtml}
+          <div class="meta">${urlHtml}</div>
+        </div>
+      `;
+      list.appendChild(card);
+    });
+  }
+
+  // Bloc réponse brute (repliable visuellement via scroll)
+  const rawTitle = document.createElement("div");
+  rawTitle.className = "section-title";
+  rawTitle.textContent = "Réponse brute API";
+  out.appendChild(rawTitle);
+
+  const raw = document.createElement("div");
+  raw.className = "raw";
+  try {
+    raw.textContent = JSON.stringify(result.data, null, 2).slice(0, 8000);
+  } catch {
+    raw.textContent = String(result.data).slice(0, 8000);
+  }
+  out.appendChild(raw);
+}
+
+/* ============================================================
    EVENT
    ============================================================ */
-document.getElementById("go").addEventListener("click", () => {
+document.getElementById("go").addEventListener("click", async () => {
   const target = document.getElementById("target").value;
   const out = document.getElementById("out");
   const btn = document.getElementById("go");
@@ -653,10 +377,15 @@ document.getElementById("go").addEventListener("click", () => {
   btn.disabled = true;
   btn.textContent = "Recherche en cours…";
 
-  renderDeepSearch(target.trim()).finally(() => {
+  try {
+    const result = await searchBrixHub(target.trim());
+    renderResults(result, target.trim());
+  } catch (e) {
+    out.innerHTML = `<div class="err">Erreur : ${escapeHtml(e.message)}</div>`;
+  } finally {
     btn.disabled = false;
     btn.textContent = "Rechercher";
-  });
+  }
 });
 
 document.getElementById("target").addEventListener("keydown", e => {
