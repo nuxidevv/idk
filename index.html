@@ -16,81 +16,57 @@
     padding:60px 20px;
   }
   .wrap { width:100%; max-width:640px; }
-  h1 {
-    font-size:1.1rem;
-    font-weight:600;
-    letter-spacing:0.5px;
-    margin-bottom:4px;
-    color:#fff;
-  }
-  .sub {
-    font-size:0.75rem;
-    color:#555;
-    margin-bottom:32px;
-  }
+  h1 { font-size:1.1rem; font-weight:600; margin-bottom:4px; color:#fff; }
+  .sub { font-size:0.75rem; color:#555; margin-bottom:32px; }
   .row { display:flex; gap:10px; margin-bottom:12px; }
   select, input {
-    background:#0d0d0d;
-    border:1px solid #1e1e1e;
-    color:#eaeaea;
-    padding:12px 14px;
-    border-radius:8px;
-    font-size:0.85rem;
-    font-family:inherit;
-    outline:none;
-    transition:border 0.15s;
+    background:#0d0d0d; border:1px solid #1e1e1e; color:#eaeaea;
+    padding:12px 14px; border-radius:8px; font-size:0.85rem;
+    font-family:inherit; outline:none;
   }
   select { width:150px; }
   input { flex:1; }
   select:focus, input:focus { border-color:#333; }
   button {
-    width:100%;
-    background:#fff;
-    color:#000;
-    border:none;
-    padding:13px;
-    border-radius:8px;
-    font-size:0.85rem;
-    font-weight:600;
-    cursor:pointer;
-    transition:opacity 0.15s;
+    width:100%; background:#fff; color:#000; border:none;
+    padding:13px; border-radius:8px; font-size:0.85rem;
+    font-weight:600; cursor:pointer;
   }
   button:hover { opacity:0.85; }
   button:disabled { background:#1a1a1a; color:#555; cursor:default; }
   #out { margin-top:28px; }
-  .empty {
-    color:#444;
-    font-size:0.8rem;
-    text-align:center;
-    padding:20px;
+  .status {
+    font-size:0.72rem; color:#666; text-align:center;
+    margin-bottom:14px; letter-spacing:0.5px;
   }
+  .empty { color:#444; font-size:0.8rem; text-align:center; padding:20px; }
   .card {
-    background:#0b0b0b;
-    border:1px solid #181818;
-    border-radius:10px;
-    padding:14px 16px;
-    margin-bottom:8px;
-    transition:border 0.15s;
+    background:#0b0b0b; border:1px solid #181818; border-radius:10px;
+    padding:14px 16px; margin-bottom:8px; transition:border 0.15s;
+    display:flex; align-items:center; gap:12px;
   }
+  .card.found { border-color:#1f3d2a; }
   .card:hover { border-color:#2a2a2a; }
-  .card a {
-    color:#eaeaea;
-    text-decoration:none;
-    display:block;
-    font-size:0.85rem;
+  .dot {
+    width:8px; height:8px; border-radius:50%; flex-shrink:0;
+    background:#333;
   }
-  .card a:hover { color:#4da3ff; }
-  .card .meta {
-    font-size:0.68rem;
-    color:#555;
-    margin-top:4px;
+  .dot.on { background:#00e07a; box-shadow:0 0 8px #00e07a88; }
+  .info { flex:1; min-width:0; }
+  .info a {
+    color:#eaeaea; text-decoration:none; font-size:0.85rem;
+    display:block; overflow:hidden; text-overflow:ellipsis;
+    white-space:nowrap;
   }
-  .count {
-    font-size:0.7rem;
-    color:#555;
-    margin-bottom:14px;
-    text-align:center;
+  .info a:hover { color:#4da3ff; }
+  .meta { font-size:0.65rem; color:#555; margin-top:3px; }
+  .badge {
+    font-size:0.62rem; padding:3px 8px; border-radius:4px;
+    flex-shrink:0;
   }
+  .badge.ok { background:#0d2a1c; color:#00e07a; }
+  .badge.no { background:#1a1a1a; color:#555; }
+  .badge.wait { background:#1a1a1a; color:#888; }
 </style>
 </head>
 <body>
@@ -112,95 +88,197 @@
 </div>
 
 <script>
-// Retourne la liste des plateformes où la cible peut être trouvée selon le type
-function buildSites(type, t) {
-  t = t.trim();
-  const e = encodeURIComponent(t);
-  if (type === "email") return [
-    { name: "Google", url: `https://www.google.com/search?q=${e}` },
-    { name: "Have I Been Pwned", url: `https://haveibeenpwned.com/account/${e}` },
-    { name: "Hunter.io", url: `https://hunter.io/search/${e}` },
-    { name: "Epieos", url: `https://epieos.com/?q=${e}` },
-    { name: "EmailRep", url: `https://emailrep.io/${e}` },
-    { name: "Pastebin", url: `https://www.google.com/search?q=${e}+site:pastebin.com` }
-  ];
+/* ============================================================
+   VÉRIFICATION DE PROFILS — via APIs publiques / endpoints JSON
+   Chaque vérificateur renvoie true si le profil existe.
+   ============================================================ */
+
+// Vérificateur GitHub — API publique, réponse JSON fiable
+async function checkGitHub(username) {
+  try {
+    const r = await fetch(`https://api.github.com/users/${encodeURIComponent(username)}`);
+    return r.status === 200;
+  } catch { return false; }
+}
+
+// Vérificateur Reddit — endpoint JSON public
+async function checkReddit(username) {
+  try {
+    const r = await fetch(`https://www.reddit.com/user/${encodeURIComponent(username)}/about.json`);
+    if (r.status !== 200) return false;
+    const j = await r.json();
+    return !!(j && j.data && j.data.name);
+  } catch { return false; }
+}
+
+// Vérificateur via proxy allorigins (CORS) pour Instagram
+async function checkInstagram(username) {
+  try {
+    const target = `https://www.instagram.com/${encodeURIComponent(username)}/`;
+    const r = await fetch(`https://api.allorigins.win/raw?url=${encodeURIComponent(target)}`);
+    if (r.status !== 200) return false;
+    const txt = await r.text();
+    // Si la page contient un marqueur de profil inexistant
+    if (txt.includes("Sorry, this page isn't available")) return false;
+    return txt.includes("og:title") || txt.includes("profilePage_");
+  } catch { return false; }
+}
+
+// Vérificateur TikTok — proxy CORS
+async function checkTikTok(username) {
+  try {
+    const target = `https://www.tiktok.com/@${encodeURIComponent(username)}`;
+    const r = await fetch(`https://api.allorigins.win/raw?url=${encodeURIComponent(target)}`);
+    if (r.status !== 200) return false;
+    const txt = await r.text();
+    return !txt.includes("Couldn't find this account");
+  } catch { return false; }
+}
+
+// Vérificateur Twitter/X — proxy CORS
+async function checkTwitter(username) {
+  try {
+    const target = `https://x.com/${encodeURIComponent(username)}`;
+    const r = await fetch(`https://api.allorigins.win/raw?url=${encodeURIComponent(target)}`);
+    if (r.status !== 200) return false;
+    const txt = await r.text();
+    return !txt.includes("This account doesn") && txt.includes("og:title");
+  } catch { return false; }
+}
+
+// Vérificateur Pinterest — endpoint JSON public
+async function checkPinterest(username) {
+  try {
+    const r = await fetch(`https://www.pinterest.com/${encodeURIComponent(username)}/`);
+    return r.status === 200;
+  } catch { return false; }
+}
+
+// Vérificateur Twitch — endpoint non officiel mais stable
+async function checkTwitch(username) {
+  try {
+    const target = `https://www.twitch.tv/${encodeURIComponent(username)}`;
+    const r = await fetch(`https://api.allorigins.win/raw?url=${encodeURIComponent(target)}`);
+    if (r.status !== 200) return false;
+    const txt = await r.text();
+    return !txt.includes("page not found");
+  } catch { return false; }
+}
+
+// Vérificateur YouTube — endpoint JSON simple
+async function checkYouTube(username) {
+  try {
+    const target = `https://www.youtube.com/@${encodeURIComponent(username)}`;
+    const r = await fetch(`https://api.allorigins.win/raw?url=${encodeURIComponent(target)}`);
+    if (r.status !== 200) return false;
+    const txt = await r.text();
+    return txt.includes("og:url") && !txt.includes("404");
+  } catch { return false; }
+}
+
+// Retourne la liste des vérificateurs à exécuter selon le type
+function getCheckers(type) {
   if (type === "username") return [
-    { name: "Google", url: `https://www.google.com/search?q=${e}` },
-    { name: "GitHub", url: `https://github.com/search?q=${e}&type=users` },
-    { name: "Twitter / X", url: `https://x.com/${e}` },
-    { name: "Reddit", url: `https://www.reddit.com/user/${e}` },
-    { name: "Instagram", url: `https://www.instagram.com/${e}` },
-    { name: "TikTok", url: `https://www.tiktok.com/@${e}` },
-    { name: "WhatsMyName", url: `https://whatsmyname.app/?q=${e}` },
-    { name: "Namechk", url: `https://namechk.com/?q=${e}` }
+    ["GitHub",    "github.com/",        checkGitHub],
+    ["Reddit",    "reddit.com/user/",   checkReddit],
+    ["Instagram", "instagram.com/",     checkInstagram],
+    ["TikTok",    "tiktok.com/@",       checkTikTok],
+    ["Twitter/X", "x.com/",             checkTwitter],
+    ["Pinterest", "pinterest.com/",     checkPinterest],
+    ["Twitch",    "twitch.tv/",         checkTwitch],
+    ["YouTube",   "youtube.com/@",      checkYouTube]
   ];
-  const p = t.split(/\s+/);
-  const first = p[0] || "";
-  const last = p[1] || "";
-  const fe = encodeURIComponent(first);
-  const le = encodeURIComponent(last);
+  if (type === "email") return [
+    ["GitHub",    "github.com/",        checkGitHub],
+    ["Reddit",    "reddit.com/user/",   checkReddit]
+  ];
   return [
-    { name: "Google", url: `https://www.google.com/search?q=${e}` },
-    { name: "LinkedIn", url: `https://www.linkedin.com/search/results/all/?keywords=${e}` },
-    { name: "Facebook", url: `https://www.facebook.com/search/top?q=${e}` },
-    { name: "Instagram", url: `https://www.instagram.com/${encodeURIComponent(first + last)}` },
-    { name: "TruePeopleSearch", url: `https://www.truepeoplesearch.com/results?name=${e}` },
-    { name: "FastPeopleSearch", url: `https://www.fastpeoplesearch.com/name/${fe}-${le}` }
+    ["GitHub",    "github.com/",        checkGitHub],
+    ["Reddit",    "reddit.com/user/",   checkReddit],
+    ["Pinterest", "pinterest.com/",     checkPinterest]
   ];
 }
 
-// Score IA local — heuristique de validité du format de cible
-function aiScore(type, t) {
+// Construit la cible normalisée selon le type
+function normalizeTarget(type, t) {
   t = t.trim();
-  let s = 0;
   if (type === "email") {
-    if (/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(t)) s += 60;
-    if (/\d/.test(t)) s += 20;
-    if (t.length > 15) s += 20;
-  } else if (type === "username") {
-    if (/^[a-zA-Z0-9_.]+$/.test(t)) s += 40;
-    if (t.length >= 6 && t.length <= 15) s += 40;
-    if (/\d/.test(t)) s += 20;
-  } else {
-    const p = t.split(/\s+/);
-    if (p.length >= 2) s += 50;
-    if (p.every(x => /^[A-Za-zÀ-ÿ-]+$/.test(x))) s += 30;
-    if (t.length > 8) s += 20;
+    return t.split("@")[0]; // pseudo avant @
   }
-  return Math.min(s, 100);
+  if (type === "fullname") {
+    const p = t.split(/\s+/);
+    return (p[0] && p[1]) ? `${p[0]}${p[1]}`.toLowerCase() : t.replace(/\s+/g, "").toLowerCase();
+  }
+  return t;
 }
 
-// Rendu : uniquement les sites exploitables avec lien cliquable
+// Rendu dynamique : chaque carte apparaît puis se met à jour avec le statut réel
 function render(type, target) {
   const out = document.getElementById("out");
-  const sites = buildSites(type, target);
-  const score = aiScore(type, target);
+  const norm = normalizeTarget(type, target);
+  const checkers = getCheckers(type);
 
-  if (!sites.length) {
-    out.innerHTML = `<div class="empty">aucun résultat</div>`;
-    return;
-  }
+  out.innerHTML = `<div class="status" id="status">vérification de ${checkers.length} plateformes...</div>`;
 
-  let html = `<div class="count">${sites.length} site(s) · pertinence ${score}/100</div>`;
-  sites.forEach(s => {
-    html += `<div class="card">
-      <a href="${s.url}" target="_blank" rel="noopener">${s.name}</a>
-      <div class="meta">${s.url}</div>
-    </div>`;
+  const cards = {};
+  checkers.forEach(([name, prefix, fn], i) => {
+    const id = `c${i}`;
+    const url = `https://${prefix}${encodeURIComponent(norm)}`;
+    const div = document.createElement("div");
+    div.className = "card";
+    div.id = id;
+    div.innerHTML = `
+      <div class="dot"></div>
+      <div class="info">
+        <a href="${url}" target="_blank" rel="noopener">${name}</a>
+        <div class="meta">${url}</div>
+      </div>
+      <div class="badge wait">...</div>
+    `;
+    out.appendChild(div);
+    cards[id] = { el: div, name, url };
   });
-  out.innerHTML = html;
+
+  let done = 0;
+  let found = 0;
+  checkers.forEach(async ([name, prefix, fn], i) => {
+    const exists = await fn(norm);
+    const { el } = cards[`c${i}`];
+    el.querySelector(".dot").classList.toggle("on", exists);
+    const badge = el.querySelector(".badge");
+    if (exists) {
+      el.classList.add("found");
+      badge.className = "badge ok";
+      badge.textContent = "trouvé";
+      found++;
+    } else {
+      badge.className = "badge no";
+      badge.textContent = "inexistant";
+    }
+    done++;
+    const st = document.getElementById("status");
+    if (st) st.textContent = `${done}/${checkers.length} vérifié(s) · ${found} trouvé(s)`;
+  });
+}
+
+// Vérifie si la cible est syntaxiquement valide avant envoi
+function validate(type, t) {
+  t = t.trim();
+  if (!t) return false;
+  if (type === "email") return /^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(t);
+  if (type === "username") return /^[a-zA-Z0-9_.-]{2,}$/.test(t);
+  return t.split(/\s+/).length >= 2;
 }
 
 document.getElementById("go").addEventListener("click", () => {
   const type = document.getElementById("type").value;
   const target = document.getElementById("target").value;
   const out = document.getElementById("out");
-  if (!target.trim()) {
-    out.innerHTML = `<div class="empty">saisir une cible</div>`;
+  if (!validate(type, target)) {
+    out.innerHTML = `<div class="empty">format de cible invalide</div>`;
     return;
   }
-  out.innerHTML = `<div class="empty">analyse...</div>`;
-  setTimeout(() => render(type, target), 300);
+  render(type, target);
 });
 </script>
 </body>
