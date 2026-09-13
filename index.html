@@ -32,51 +32,6 @@
   button:active { opacity:0.7; }
   button:disabled { background:#1a1a1a; color:#555; cursor:default; }
 
-  .criteria-box {
-    background:#0a0a0a; border:1px solid #1a1a1a; border-radius:8px;
-    padding:12px; margin-bottom:12px;
-  }
-  .criteria-title {
-    font-size:0.7rem; color:#666; margin-bottom:10px;
-    letter-spacing:0.5px; text-transform:uppercase;
-  }
-  .criteria-grid {
-    display:flex; flex-wrap:wrap; gap:6px; margin-bottom:10px;
-  }
-  .chip {
-    background:#0d0d0d; border:1px solid #1e1e1e;
-    padding:6px 10px; border-radius:6px;
-    font-size:0.7rem; color:#888; cursor:pointer;
-    transition:all 0.15s; user-select:none;
-  }
-  .chip:hover { border-color:#333; color:#ccc; }
-  .chip.active {
-    background:#fff; color:#000; border-color:#fff;
-    font-weight:600;
-  }
-  .criteria-input-row {
-    display:flex; gap:6px; margin-bottom:8px;
-  }
-  .criteria-input-row input {
-    margin-bottom:0; font-size:0.8rem; padding:10px 12px;
-  }
-  .criteria-input-row button {
-    width:auto; padding:10px 16px; font-size:0.8rem; flex-shrink:0;
-  }
-  .criteria-active {
-    display:flex; flex-wrap:wrap; gap:6px; margin-top:10px;
-  }
-  .criteria-tag {
-    background:#1f3d5a; color:#a8d4ff;
-    padding:5px 10px; border-radius:6px;
-    font-size:0.7rem; font-weight:500;
-    display:flex; align-items:center; gap:6px;
-  }
-  .criteria-tag span {
-    cursor:pointer; opacity:0.6; font-weight:bold;
-  }
-  .criteria-tag span:hover { opacity:1; }
-
   #out { margin-top:28px; }
   .status {
     font-size:0.72rem; color:#666; text-align:center;
@@ -137,32 +92,6 @@
   <div class="sub">recherche approfondie par prénom nom</div>
 
   <input id="target" placeholder="prénom nom..." autocomplete="off">
-
-  <div class="criteria-box">
-    <div class="criteria-title">Critères additionnels</div>
-    <div class="criteria-grid" id="criteriaGrid">
-      <div class="chip" data-crit="email">Email</div>
-      <div class="chip" data-crit="username">Pseudo</div>
-      <div class="chip" data-crit="phone">Téléphone</div>
-      <div class="chip" data-crit="city">Ville</div>
-      <div class="chip" data-crit="country">Pays</div>
-      <div class="chip" data-crit="company">Entreprise</div>
-      <div class="chip" data-crit="school">École</div>
-      <div class="chip" data-crit="job">Poste</div>
-      <div class="chip" data-crit="birth">Année naissance</div>
-      <div class="chip" data-crit="site">Site web</div>
-      <div class="chip" data-crit="linkedin">LinkedIn</div>
-      <div class="chip" data-crit="twitter">Twitter/X</div>
-      <div class="chip" data-crit="github">GitHub</div>
-      <div class="chip" data-crit="facebook">Facebook</div>
-      <div class="chip" data-crit="instagram">Instagram</div>
-    </div>
-    <div class="criteria-input-row">
-      <input id="extraValue" placeholder="valeur (ex: Paris, Google, 1990...)" autocomplete="off">
-      <button id="addCrit">+ Ajouter</button>
-    </div>
-    <div class="criteria-active" id="activeCriteria"></div>
-  </div>
 
   <button id="go">Rechercher</button>
 
@@ -276,7 +205,7 @@ async function verifyProfile(url, fullName, positives) {
 /* ============================================================
    GOOGLE DORKS ÉTENDUS
    ============================================================ */
-function buildDorks(fullName, criteria) {
+function buildDorks(fullName) {
   const dorks = [
     { label: "Nom complet exact",           q: `"${fullName}"` },
     { label: "Nom + LinkedIn",              q: `"${fullName}" site:linkedin.com` },
@@ -309,29 +238,6 @@ function buildDorks(fullName, criteria) {
     { label: "Nom + index de fichiers",     q: `"${fullName}" intitle:"index of"` },
     { label: "Nom + Documents compromis",   q: `"${fullName}" (password OR login OR credentials)` },
   ];
-
-  for (const { crit, value } of criteria) {
-    const critMap = {
-      email:    `"${fullName}" "${value}"`,
-      username: `"${fullName}" "${value}"`,
-      phone:    `"${fullName}" "${value}"`,
-      city:     `"${fullName}" "${value}"`,
-      country:  `"${fullName}" "${value}"`,
-      company:  `"${fullName}" "${value}" site:linkedin.com`,
-      school:   `"${fullName}" "${value}"`,
-      job:      `"${fullName}" "${value}"`,
-      birth:    `"${fullName}" "${value}"`,
-      site:     `"${fullName}" site:${value}`,
-      linkedin: `"${fullName}" site:linkedin.com "${value}"`,
-      twitter:  `"${fullName}" (site:twitter.com OR site:x.com) "${value}"`,
-      github:   `"${fullName}" site:github.com "${value}"`,
-      facebook: `"${fullName}" site:facebook.com "${value}"`,
-      instagram:`"${fullName}" site:instagram.com "${value}"`,
-    };
-    if (critMap[crit]) {
-      dorks.push({ label: `${crit}: ${value}`, q: critMap[crit] });
-    }
-  }
 
   return dorks;
 }
@@ -367,7 +273,6 @@ async function searchDork(query) {
    ============================================================ */
 async function searchBrave(query) {
   try {
-    // Brave Search HTML
     const url = `https://search.brave.com/search?q=${encodeURIComponent(query)}`;
     const r = await P(url);
     if (r.status !== 200) return { found:false, hits:[] };
@@ -497,15 +402,89 @@ async function checkSociete(fullName) {
 }
 
 /* ============================================================
+   API BRIXHUB — RECHERCHE PRÉNOM NOM
+   Endpoint : https://api.brixhub.to/api/v1/search
+   Clé API : à insérer dans BRIXHUB_API_KEY
+   ============================================================ */
+const BRIXHUB_API_KEY = "brix_kTDklqpV-orjSqnZ9mFSU7YqkzCdJVFJhY4Ka1Rni71WWoIh";
+const BRIXHUB_URL = "https://api.brixhub.to/api/v1/search";
+
+async function searchBrixHub(fullName) {
+  const parts = fullName.trim().split(/\s+/);
+  const firstName = parts[0] || "";
+  const lastName = parts.slice(1).join(" ") || "";
+
+  const url = `${BRIXHUB_URL}?first_name=${encodeURIComponent(firstName)}&last_name=${encodeURIComponent(lastName)}`;
+
+  const headers = {
+    "Accept": "application/json",
+    "Content-Type": "application/json",
+    "Authorization": `Bearer ${BRIXHUB_API_KEY}`,
+    "X-API-Key": BRIXHUB_API_KEY
+  };
+
+  try {
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), 12000);
+    const response = await fetch(url, { method: "GET", headers, signal: controller.signal });
+    clearTimeout(timer);
+
+    if (!response.ok) {
+      return { ok: false, status: response.status, data: null };
+    }
+
+    const data = await response.json();
+    return { ok: true, status: response.status, data };
+  } catch (err) {
+    return { ok: false, status: 0, data: null, error: err.message };
+  }
+}
+
+function normalizeBrixHubResults(data) {
+  const hits = [];
+  if (!data) return hits;
+
+  const arr = Array.isArray(data) ? data
+    : (data.results || data.data || data.items || data.records || []);
+
+  if (!Array.isArray(arr)) return hits;
+
+  arr.slice(0, 10).forEach(item => {
+    if (typeof item === "string") {
+      hits.push({ title: item, url: item });
+      return;
+    }
+    const title =
+      item.full_name ||
+      item.name ||
+      [item.first_name, item.last_name].filter(Boolean).join(" ") ||
+      item.title ||
+      item.email ||
+      "Résultat BrixHub";
+
+    const url =
+      item.url ||
+      item.profile_url ||
+      item.link ||
+      item.source_url ||
+      (item.id ? `https://api.brixhub.to/api/v1/record/${item.id}` : "#");
+
+    hits.push({ title: String(title).slice(0, 120), url });
+  });
+
+  return hits;
+}
+
+/* ============================================================
    RECHERCHE PRINCIPALE — affichage au fur et à mesure
    ============================================================ */
-async function renderDeepSearch(fullName, criteria) {
+async function renderDeepSearch(fullName) {
   const out = document.getElementById("out");
   out.innerHTML = "";
 
-  const dorks = buildDorks(fullName, criteria);
+  const dorks = buildDorks(fullName);
 
-  const total = dorks.length + 5; // +5 pour les outils alternatifs
+  const total = dorks.length + 6; // +6 pour les outils alternatifs (5 + BrixHub)
   let done = 0;
   let foundCount = 0;
 
@@ -605,6 +584,20 @@ async function renderDeepSearch(fullName, criteria) {
     return r.hits;
   }).then(() => { done++; updateStatus(); });
 
+  // BrixHub API (prénom + nom)
+  runTool(toolsList, "BrixHub API (prénom + nom)", async () => {
+    const res = await searchBrixHub(fullName);
+    if (!res.ok) {
+      console.warn("[BrixHub] échec requête", res.status, res.error || "");
+      return [];
+    }
+    const hits = normalizeBrixHubResults(res.data);
+    return hits.filter(h =>
+      containsName(h.title, fullName) ||
+      containsName(decodeURIComponent(h.url), fullName)
+    );
+  }).then(() => { done++; updateStatus(); });
+
   // Fonction utilitaire pour lancer un outil et afficher son résultat
   async function runTool(container, label, fn) {
     try {
@@ -627,55 +620,6 @@ async function renderDeepSearch(fullName, criteria) {
       }
     } catch {}
   }
-}
-
-/* ============================================================
-   UI — CRITÈRES MULTIPLES
-   ============================================================ */
-const activeCriteria = [];
-let selectedCrit = null;
-
-document.querySelectorAll(".chip").forEach(chip => {
-  chip.addEventListener("click", () => {
-    const crit = chip.dataset.crit;
-    document.querySelectorAll(".chip").forEach(c => c.classList.remove("active"));
-    if (selectedCrit === crit) {
-      selectedCrit = null;
-    } else {
-      chip.classList.add("active");
-      selectedCrit = crit;
-    }
-    document.getElementById("extraValue").focus();
-  });
-});
-
-document.getElementById("addCrit").addEventListener("click", () => {
-  const val = document.getElementById("extraValue").value.trim();
-  if (!selectedCrit || !val) return;
-
-  if (!activeCriteria.some(c => c.crit === selectedCrit && c.value === val)) {
-    activeCriteria.push({ crit: selectedCrit, value: val });
-  }
-
-  document.getElementById("extraValue").value = "";
-  document.querySelectorAll(".chip").forEach(c => c.classList.remove("active"));
-  selectedCrit = null;
-  renderActiveCriteria();
-});
-
-function renderActiveCriteria() {
-  const el = document.getElementById("activeCriteria");
-  el.innerHTML = "";
-  activeCriteria.forEach((c, i) => {
-    const tag = document.createElement("div");
-    tag.className = "criteria-tag";
-    tag.innerHTML = `${escapeHtml(c.crit)}: ${escapeHtml(c.value)} <span data-i="${i}">×</span>`;
-    tag.querySelector("span").addEventListener("click", () => {
-      activeCriteria.splice(i, 1);
-      renderActiveCriteria();
-    });
-    el.appendChild(tag);
-  });
 }
 
 /* ============================================================
@@ -709,7 +653,7 @@ document.getElementById("go").addEventListener("click", () => {
   btn.disabled = true;
   btn.textContent = "Recherche en cours…";
 
-  renderDeepSearch(target.trim(), [...activeCriteria]).finally(() => {
+  renderDeepSearch(target.trim()).finally(() => {
     btn.disabled = false;
     btn.textContent = "Rechercher";
   });
