@@ -8,40 +8,71 @@
   * { margin:0; padding:0; box-sizing:border-box; }
   body {
     background:#000; color:#eaeaea;
-    font-family:--colorapple-system, 'Segoe UI',:# Roboto, sans-serif;
-   333 min-height:100vh; display:flex;; justify-content:center;
-    padding:60 }
-px 20px;
+    font-family:-apple-system, 'Segoe UI', Roboto, sans-serif;
+    min-height:100vh; display:flex; justify-content:center;
+    padding:60px 20px;
   }
-   .wrap { width:100%; max-width:680px; }
+  .wrap { width:100%; max-width:680px; }
   h1 { font-size:1.1rem; font-weight:600; margin-bottom:4px; color:#fff; }
-  .sub { font-size:0.75rem; color:#555; margin-bottom:24px; }
+  .sub { font-size:0.75rem; color:#555; margin-bottom:32px; }
   .row { display:flex; gap:10px; margin-bottom:12px; }
-  select, input {
+  input {
     background:#0d0d0d; border:1px solid #1e1e1e; color:#eaeaea;
     padding:12px 14px; border-radius:8px; font-size:0.85rem;
     font-family:inherit; outline:none;
+    width:100%; flex:1;
   }
-  select { width:150px; }
-  input { flex:1; }
-  select:focus, input:focus { border button {
+  input:focus { border-color:#333; }
+  button {
     width:100%; background:#fff; color:#000; border:none;
     padding:13px; border-radius:8px; font-size:0.85rem;
     font-weight:600; cursor:pointer;
+    transition:opacity 0.15s;
   }
   button:hover { opacity:0.85; }
-  #out { margin-top:24px; }
+  button:active { opacity:0.7; }
+  button:disabled { background:#1a1a1a; color:#555; cursor:default; }
+
+  .criteria {
+    margin-bottom:12px;
+  }
+  .criteria-header {
+    display:flex; justify-content:space-between; align-items:center;
+    font-size:0.72rem; color:#666; margin-bottom:10px;
+    cursor:pointer; user-select:none;
+  }
+  .criteria-header:hover { color:#999; }
+  .criteria-list { display:none; gap:8px; flex-wrap:wrap; margin-bottom:14px; }
+  .criteria-list.open { display:flex; }
+  .chip {
+    background:#0d0d0d; border:1px solid #1e1e1e;
+    padding:6px 10px; border-radius:6px;
+    font-size:0.7rem; color:#888; cursor:pointer;
+    transition:all 0.15s; user-select:none;
+  }
+  .chip:hover { border-color:#333; color:#ccc; }
+  .chip.active {
+    background:#fff; color:#000; border-color:#fff;
+    font-weight:600;
+  }
+
+  #out { margin-top:28px; }
   .status {
     font-size:0.72rem; color:#666; text-align:center;
     margin-bottom:14px; letter-spacing:0.5px;
   }
-  .none { color:#666; font-size:0.82rem; text-align:center; padding:30px 20px; }
+  .none {
+    color:#666; font-size:0.82rem; text-align:center;
+    padding:30px 20px;
+  }
   .card {
     background:#0b0b0b; border:1px solid #1f3d2a; border-radius:10px;
     padding:14px 16px; margin-bottom:8px;
     display:flex; align-items:center; gap:12px;
   }
-  .card.info-card { border-color:#1f3d5a; }
+  .card:hover { border-color:#2f5d3f; }
+  .card.dork-card { border-color:#1f3d5a; }
+  .card.dork-card:hover { border-color:#2f5d8f; }
   .dot {
     width:8px; height:8px; border-radius:50%; flex-shrink:0;
     background:#00e07a; box-shadow:0 0 8px #00e07a88;
@@ -74,23 +105,43 @@ px 20px;
   .err {
     background:#1a0a0a; color:#ff6b6b; padding:12px;
     border-radius:8px; font-size:0.72rem; margin-top:14px;
-    white-space:pre-wrap; word-break:break-word;
   }
 </style>
 </head>
 <body>
 <div class="wrap">
   <h1>OSINT</h1>
-  <div class="sub">email · pseudo · prénom nom</div>
+  <div class="sub">recherche approfondie par prénom nom</div>
 
   <div class="row">
-    <select id="type">
-      <option value="email">Email</option>
-      <option value="username">Pseudo</option>
-      <option value="fullname">Prénom Nom</option>
-    </select>
-    <input id="target" placeholder="cible..." autocomplete="off">
+    <input id="target" placeholder="prénom nom..." autocomplete="off">
   </div>
+
+  <div class="criteria">
+    <div class="criteria-header" id="criteriaToggle">
+      <span>+ Critères additionnels</span>
+      <span id="criteriaCount">0 sélectionné</span>
+    </div>
+    <div class="criteria-list" id="criteriaList">
+      <div class="chip" data-crit="email">Email</div>
+      <div class="chip" data-crit="username">Pseudo</div>
+      <div class="chip" data-crit="phone">Téléphone</div>
+      <div class="chip" data-crit="city">Ville</div>
+      <div class="chip" data-crit="country">Pays</div>
+      <div class="chip" data-crit="company">Entreprise</div>
+      <div class="chip" data-crit="school">École</div>
+      <div class="chip" data-crit="job">Poste</div>
+      <div class="chip" data-crit="birth">Année naissance</div>
+      <div class="chip" data-crit="site">Site web</div>
+      <div class="chip" data-crit="linkedin">LinkedIn</div>
+      <div class="chip" data-crit="twitter">Twitter/X</div>
+      <div class="chip" data-crit="github">GitHub</div>
+      <div class="chip" data-crit="facebook">Facebook</div>
+      <div class="chip" data-crit="instagram">Instagram</div>
+    </div>
+    <input id="extraValue" placeholder="valeur du critère (ex: Paris, Google, 1990...)" autocomplete="off">
+  </div>
+
   <button id="go">Rechercher</button>
 
   <div id="out"></div>
@@ -125,14 +176,14 @@ async function P(url) {
 }
 
 /* ============================================================
-   APIs OFFICIELLES (pas de clé)
+   APIs OFFICIELLES PSEUDO (pour la recherche par nom)
    ============================================================ */
 async function vGitHub(u) {
   try {
     const r = await fetch(`https://api.github.com/users/${u}`);
     if (r.status === 200) {
       const j = await r.json();
-      return { exists:true, confidence:1, reason:`${j.public_repos} repos · ${j.followers} followers` };
+      return { exists:true, confidence:1, reason:`${j.public_repos} repos · ${j.followers} followers`, url:`https://github.com/${u}` };
     }
     return { exists:false, confidence:1, reason:"404" };
   } catch { return { exists:false, confidence:0, reason:"erreur réseau" }; }
@@ -144,7 +195,7 @@ async function vReddit(u) {
     if (r.status !== 200) return { exists:false, confidence:1, reason:"404" };
     const j = await r.json();
     if (j?.data?.name) {
-      return { exists:true, confidence:1, reason:`karma: ${j.data.link_karma + j.data.comment_karma}` };
+      return { exists:true, confidence:1, reason:`karma: ${j.data.link_karma + j.data.comment_karma}`, url:`https://www.reddit.com/user/${u}` };
     }
     return { exists:false, confidence:1, reason:"pas de donnée" };
   } catch { return { exists:false, confidence:0, reason:"erreur réseau" }; }
@@ -156,27 +207,27 @@ async function vGitLab(u) {
     if (r.status !== 200) return { exists:false, confidence:1, reason:"404" };
     const j = await r.json();
     if (Array.isArray(j) && j.length > 0) {
-      return { exists:true, confidence:1, reason:j[0].name || j[0].username };
+      return { exists:true, confidence:1, reason:j[0].name || j[0].username, url:`https://gitlab.com/${u}` };
     }
     return { exists:false, confidence:1, reason:"liste vide" };
   } catch { return { exists:false, confidence:0, reason:"erreur réseau" }; }
 }
 
 /* ============================================================
-   CHECKER HTML avec signatures positives/négatives
+   CHECKER HTML avec signatures
    ============================================================ */
 function htmlCheck(options) {
   const { negatives = [], positives = [], minScore = 0.4 } = options;
-  return async (u) => {
+  return async (u, url) => {
     try {
-      const r = await P(u);
+      const r = await P(url);
       if (r.status !== 200) return { exists:false, confidence:1, reason:`HTTP ${r.status}` };
       const html = await r.text();
       const low = html.toLowerCase();
 
       for (const n of negatives) {
         if (low.includes(n.toLowerCase())) {
-          return { exists:false, confidence:0.9, reason:`marqueur négatif` };
+          return { exists:false, confidence:0.9, reason:`négatif` };
         }
       }
 
@@ -199,7 +250,7 @@ function htmlCheck(options) {
 }
 
 /* ============================================================
-   PLATEFORMES
+   PLATEFORMES PSEUDO
    ============================================================ */
 const PLATFORMS = [
   ["GitHub", u=>`https://github.com/${u}`, vGitHub],
@@ -267,7 +318,7 @@ const PLATFORMS = [
   })],
   ["Mastodon", u=>`https://mastodon.social/@${u}`, htmlCheck({
     negatives: ["the page you are looking for isn't here"],
-    positives: ["og:title","profile","statuses_count","followers_count"]
+    positives: ["og:title","profile","statuses_count"]
   })],
   ["Bluesky", u=>`https://bsky.app/profile/${u}`, htmlCheck({
     negatives: ["not found","profile not found"],
@@ -297,10 +348,6 @@ const PLATFORMS = [
     negatives: ["page not found","404"],
     positives: ["og:title","vimeo","profile"]
   })],
-  ["Dailymotion", u=>`https://www.dailymotion.com/${u}`, htmlCheck({
-    negatives: ["page not found","404"],
-    positives: ["og:title","dailymotion","channel"]
-  })],
   ["Bandcamp", u=>`https://bandcamp.com/${u}`, htmlCheck({
     negatives: ["page not found","404"],
     positives: ["og:title","bandcamp","artist"]
@@ -316,10 +363,6 @@ const PLATFORMS = [
   ["Dev.to", u=>`https://dev.to/${u}`, htmlCheck({
     negatives: ["not found","404"],
     positives: ["og:title","dev.to","profile"]
-  })],
-  ["Hashnode", u=>`https://hashnode.com/@${u}`, htmlCheck({
-    negatives: ["not found","404"],
-    positives: ["og:title","hashnode","profile"]
   })],
   ["CodePen", u=>`https://codepen.io/${u}`, htmlCheck({
     negatives: ["page not found","404"],
@@ -344,297 +387,237 @@ const PLATFORMS = [
 ];
 
 /* ============================================================
-   EMAIL — MD5 pur JS
+   GOOGLE DORKS — moteurs de recherche (via proxy)
    ============================================================ */
-function md5(str) {
-  function rotl(n, s) { return (n << s) | (n >>> (32 - s)); }
-  function add(a, b) { return (a + b) & 0xFFFFFFFF; }
-  const bytes = new TextEncoder().encode(str);
-  const K = [];
-  for (let i = 0; i < 64; i++) K[i] = Math.floor(Math.abs(Math.sin(i + 1)) * 4294967296);
-  const S = [7,12,17,22,7,12,17,22,7,12,17,22,7,12,17,22,
-             5,9,14,20,5,9,14,20,5,9,14,20,5,9,14,20,
-             4,11,16,23,4,11,16,23,4,11,16,23,4,11,16,23,
-             6,10,15,21,6,10,15,21,6,10,15,21,6,10,15,21];
-  const orig = bytes.length;
-  const ml = orig * 8;
-  const padded = new Uint8Array(((orig + 8) >> 6 << 6) + 64);
-  padded.set(bytes);
-  padded[orig] = 0x80;
-  const dv = new DataView(padded.buffer);
-  dv.setUint32(padded.length - 8, ml, true);
-  dv.setUint32(padded.length - 4, Math.floor(ml / 4294967296), true);
-  let a = 0x67452301, b = 0xEFCDAB89, c = 0x98BADCFE, d = 0x10325476;
-  for (let i = 0; i < padded.length; i += 64) {
-    const M = [];
-    for (let j = 0; j < 16; j++) M[j] = dv.getUint32(i + j * 4, true);
-    let [A,B,C,D] = [a,b,c,d];
-    for (let j = 0; j < 64; j++) {
-      let F, g;
-      if (j < 16)      { F = (B & C) | (~B & D);  g = j; }
-      else if (j < 32) { F = (D & B) | (~D & C);  g = (5*j + 1) % 16; }
-      else if (j < 48) { F = B ^ C ^ D;           g = (3*j + 5) % 16; }
-      else             { F = C ^ (B | ~D);        g = (7*j) % 16; }
-      F = add(add(add(F, A), K[j]), M[g]);
-      A = D; D = C; C = B;
-      B = add(B, rotl(F, S[j]));
-    }
-    a = add(a, A); b = add(b, B); c = add(c, C); d = add(d, D);
-  }
-  const toHex = n => n.toString(16).padStart(8, "0").match(/../g).reverse().join("");
-  return toHex(a) + toHex(b) + toHex(c) + toHex(d);
-}
 
-/* ============================================================
-   CHECKERS EMAIL
-   ============================================================ */
-const DISPOSABLE_DOMAINS = [
-  "mailinator.com","guerrillamail.com","10minutemail.com","tempmail.com",
-  "throwaway.email","yopmail.com","maildrop.cc","getnada.com",
-  "sharklasers.com","guerrillamailblock.com","temp-mail.org","fakeinbox.com",
-  "trashmail.com","dispostable.com","mailnesia.com","mailcatch.com",
-  "tempr.email","discard.email","spamgourmet.com","mytemp.email"
-];
+// Génère les variantes de recherche
+function buildDorks(fullName, criteria) {
+  const [first, ...rest] = fullName.trim().split(/\s+/);
+  const last = rest.join(" ") || "";
+  const f = first || "";
+  const l = last;
 
-async function checkMX(domain) {
-  try {
-    const url = `https://dns.google/resolve?name=${encodeURIComponent(domain)}&type=MX`;
-    const r = await fetch(url);
-    if (!r.ok) return { hasMX: false, records: [], reason: `DNS: HTTP ${r.status}` };
-    const j = await r.json();
-    const records = (j.Answer || []).filter(a => a.type === 15).map(a => a.data);
-    return { hasMX: records.length > 0, records, reason: records.length > 0 ? `${records.length} serveur(s) MX` : "aucun MX" };
-  } catch {
-    return { hasMX: false, records: [], reason: "DNS inaccessible" };
-  }
-}
+  const crit = criteria.crit || "";
+  const val = criteria.value || "";
 
-async function checkHIBP(email) {
-  try {
-    const url = `https://haveibeenpwned.com/api/v3/breachedaccount/${encodeURIComponent(email)}?truncateResponse=true`;
-    const r = await P(url);
-    if (r.status === 404) return { exists: false, breaches: [], reason: "aucune fuite connue" };
-    if (r.status === 200) {
-      const data = await r.json();
-      return { exists: true, breaches: data.map(b => b.Name), reason: `${data.length} fuite(s) connue(s)` };
-    }
-    return { exists: false, breaches: [], reason: `HIBP: HTTP ${r.status}` };
-  } catch {
-    return { exists: false, breaches: [], reason: "HIBP inaccessible" };
-  }
-}
+  // Dorks de base (toujours exécutés)
+  const dorks = [
+    { label: "Nom complet exact",          q: `"${fullName}"` },
+    { label: "Nom + LinkedIn",             q: `"${fullName}" site:linkedin.com` },
+    { label: "Nom + Facebook",             q: `"${fullName}" site:facebook.com` },
+    { label: "Nom + Instagram",            q: `"${fullName}" site:instagram.com` },
+    { label: "Nom + Twitter/X",            q: `"${fullName}" site:twitter.com OR site:x.com` },
+    { label: "Nom + GitHub",               q: `"${fullName}" site:github.com` },
+    { label: "Nom + PDF",                  q: `"${fullName}" filetype:pdf` },
+    { label: "Nom + CV / Resume",          q: `"${fullName}" (CV OR resume OR curriculum)` },
+    { label: "Nom + Email",                q: `"${fullName}" (email OR mail OR contact)` },
+    { label: "Nom + Téléphone",            q: `"${fullName}" (téléphone OR phone OR tel)` },
+    { label: "Nom sur Pastebin",           q: `"${fullName}" site:pastebin.com` },
+    { label: "Nom sur Documents publics",  q: `"${fullName}" filetype:docx OR filetype:xlsx OR filetype:pptx` },
+  ];
 
-async function checkGravatar(email) {
-  try {
-    const hash = md5(email.trim().toLowerCase());
-    const url = `https://www.gravatar.com/avatar/${hash}?d=404`;
-    const r = await P(url);
-    if (r.status === 200) {
-      const txt = await r.text();
-      return { exists: txt.length > 0, reason: txt.length > 0 ? "avatar Gravatar public trouvé" : "aucun Gravatar" };
-    }
-    return { exists: false, reason: "aucun Gravatar public" };
-  } catch {
-    return { exists: false, reason: "vérification impossible" };
-  }
-}
-
-async function checkEmailRep(email) {
-  try {
-    const url = `https://emailrep.io/${encodeURIComponent(email)}`;
-    const r = await fetch(url);
-    if (!r.ok) return null;
-    const j = await r.json();
-    return {
-      reputation: j.reputation || "inconnue",
-      suspicious: j.suspicious || false,
-      profiles: j.details?.profiles || [],
-      breaches: j.details?.breaches || 0,
-      firstSeen: j.details?.first_seen || null,
-      lastSeen: j.details?.last_seen || null
+  // Dork selon critère
+  if (crit && val) {
+    const critMap = {
+      email:    `"${fullName}" "${val}"`,
+      username: `"${fullName}" "${val}"`,
+      phone:    `"${fullName}" "${val}"`,
+      city:     `"${fullName}" "${val}"`,
+      country:  `"${fullName}" "${val}"`,
+      company:  `"${fullName}" "${val}" (LinkedIn OR site:linkedin.com)`,
+      school:   `"${fullName}" "${val}"`,
+      job:      `"${fullName}" "${val}"`,
+      birth:    `"${fullName}" "${val}"`,
+      site:     `"${fullName}" site:${val}`,
+      linkedin: `"${fullName}" site:linkedin.com "${val}"`,
+      twitter:  `"${fullName}" (site:twitter.com OR site:x.com) "${val}"`,
+      github:   `"${fullName}" site:github.com "${val}"`,
+      facebook: `"${fullName}" site:facebook.com "${val}"`,
+      instagram:`"${fullName}" site:instagram.com "${val}"`,
     };
-  } catch {
-    return null;
+    if (critMap[crit]) {
+      dorks.unshift({ label: `Critère : ${crit} = ${val}`, q: critMap[crit] });
+    }
+  }
+
+  return dorks;
+}
+
+// Vérifie si un résultat est valide via DuckDuckGo HTML
+async function searchDork(query) {
+  try {
+    // Utilise DuckDuckGo HTML (pas d'API, mais accessible via proxy)
+    const ddgUrl = `https://html.duckduckgo.com/html/?q=${encodeURIComponent(query)}`;
+    const r = await P(ddgUrl);
+    if (r.status !== 200) return { found:false, count:0, hits:[] };
+    const html = await r.text();
+
+    // Extrait les résultats (liens + titres)
+    const results = [];
+    const regex = /<a[^>]*class="result__a"[^>]*href="([^"]+)"[^>]*>(.*?)<\/a>/g;
+    let m;
+    while ((m = regex.exec(html)) !== null && results.length < 5) {
+      const url = decodeURIComponent(m[1].replace(/^.*uddg=/, "").replace(/&rut=.*$/, ""));
+      const title = m[2].replace(/<[^>]+>/g, "").trim();
+      if (title && url && !url.includes("duckduckgo.com")) {
+        results.push({ title, url });
+      }
+    }
+
+    return { found: results.length > 0, count: results.length, hits: results };
+  } catch (e) {
+    return { found:false, count:0, hits:[], error:true };
   }
 }
 
 /* ============================================================
-   RENDU EMAIL
+   RENDU — RECHERCHE PROFONDE PRÉNOM NOM
    ============================================================ */
-async function renderEmail(email) {
+async function renderDeepSearch(fullName, criteria) {
   const out = document.getElementById("out");
-  out.innerHTML = `<div class="status" id="status">analyse…</div>`;
+  out.innerHTML = `<div class="status" id="status">préparation…</div>`;
 
-  const valid = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(email);
-  if (!valid) {
-    out.innerHTML = `<div class="none">format d'email invalide</div>`;
-    return;
+  // 1) Génère les dorks
+  const dorks = buildDorks(fullName, criteria);
+
+  // 2) Génère les variantes de pseudo possibles
+  const [first, ...rest] = fullName.trim().toLowerCase().split(/\s+/);
+  const last = rest.join(" ");
+  const usernameVariants = [
+    first + last,
+    first + "." + last,
+    first + "_" + last,
+    first[0] + last,
+    first + last[0],
+    first + "-" + last
+  ].filter(u => u && u.length >= 2);
+
+  // 3) Lance TOUT en parallèle
+  document.getElementById("status").textContent = `analyse de ${dorks.length} dorks + ${usernameVariants.length} variantes…`;
+
+  const dorkPromises = dorks.map(async d => ({ type:"dork", label:d.label, query:d.q, result: await searchDork(d.q) }));
+
+  const platformPromises = [];
+  for (const variant of usernameVariants) {
+    for (const [name, urlFn, checker] of PLATFORMS) {
+      const url = urlFn(variant);
+      platformPromises.push(
+        Promise.resolve(checker(variant, url)).then(res => ({ type:"platform", platform:name, variant, url, result:res })).catch(() => null)
+      );
+    }
   }
 
-  const domain = email.toLowerCase().split("@")[1];
-  const local = email.toLowerCase().split("@")[0];
+  const [dorkResults, platformResults] = await Promise.all([
+    Promise.all(dorkPromises),
+    Promise.all(platformPromises)
+  ]);
 
-  const isDisposable = DISPOSABLE_DOMAINS.includes(domain);
-  const isRole = /^(contact|info|admin|support|sales|hello|noreply|no-reply|postmaster|webmaster|help|billing|team|office)$/i.test(local);
-
-  document.getElementById("status").textContent = "DNS…";
-  const mx = await checkMX(domain);
-
-  document.getElementById("status").textContent = "Gravatar…";
-  const gravatar = await checkGravatar(email);
-
-  document.getElementById("status").textContent = "Fuites…";
-  const hibp = await checkHIBP(email);
-
-  document.getElementById("status").textContent = "Réputation…";
-  const emailrep = await checkEmailRep(email);
-
+  // 4) Filtre et affiche
   out.innerHTML = "";
 
-  // Section 1 : Validité
-  addSection(out, "Validité technique");
-  addInfoCard(out, {
-    dotClass: "blue",
-    title: "Format email",
-    meta: "RFC 5322",
-    badge: { text: "valide", cls: "ok" }
-  });
+  // --- Résultats dorks ---
+  const foundDorks = dorkResults.filter(d => d.result.found);
+  addSection(out, `Google Dorks — ${foundDorks.length}/${dorks.length} positifs`);
 
-  addInfoCard(out, {
-    dotClass: mx.hasMX ? "blue" : "red",
-    title: "Serveurs MX",
-    meta: mx.hasMX ? mx.records.slice(0,2).join(" · ") : mx.reason,
-    badge: mx.hasMX ? { text: `${mx.records.length} MX`, cls: "ok" } : { text: "aucun", cls: "neg" }
-  });
-
-  // Section 2 : Classification
-  addSection(out, "Classification");
-
-  addInfoCard(out, {
-    dotClass: isDisposable ? "red" : "gray",
-    title: "Email jetable",
-    meta: isDisposable ? "Domaine jetable détecté" : "Domaine permanent",
-    badge: isDisposable ? { text: "jetable", cls: "neg" } : { text: "permanent", cls: "ok" }
-  });
-
-  addInfoCard(out, {
-    dotClass: isRole ? "orange" : "gray",
-    title: "Compte de rôle",
-    meta: isRole ? "Adresse de type contact@, info@, admin@…" : "Adresse personnelle",
-    badge: isRole ? { text: "rôle", cls: "warn" } : { text: "personnel", cls: "ok" }
-  });
-
-  // Section 3 : Présence publique
-  addSection(out, "Présence publique");
-
-  addInfoCard(out, {
-    dotClass: gravatar.exists ? "blue" : "gray",
-    title: "Gravatar",
-    meta: gravatar.exists ? "Un avatar public est associé" : "Aucun avatar public",
-    badge: gravatar.exists ? { text: "existe", cls: "ok" } : { text: "aucun", cls: "neg" }
-  });
-
-  if (emailrep) {
-    const profilesStr = emailrep.profiles.length > 0
-      ? `Profils liés : ${emailrep.profiles.join(", ")}`
-      : "Aucun profil public lié";
-
-    addInfoCard(out, {
-      dotClass: emailrep.suspicious ? "red" : "blue",
-      title: "Réputation EmailRep",
-      meta: profilesStr,
-      badge: {
-        text: emailrep.reputation,
-        cls: emailrep.reputation === "high" ? "ok" : emailrep.reputation === "low" ? "neg" : "warn"
-      }
+  if (foundDorks.length === 0) {
+    out.innerHTML += `<div class="none">aucun résultat de dork</div>`;
+  } else {
+    foundDorks.forEach(d => {
+      const card = document.createElement("div");
+      card.className = "card dork-card";
+      const hitsHtml = d.result.hits.slice(0,3).map(h =>
+        `<div class="meta" style="margin-left:0;">→ <a href="${h.url}" target="_blank" rel="noopener" style="color:#4da3ff;">${escapeHtml(h.title.slice(0,70))}</a></div>`
+      ).join("");
+      card.innerHTML = `
+        <div class="dot blue"></div>
+        <div class="info">
+          <div class="title">${escapeHtml(d.label)}
+            <span class="badge ok">${d.result.count}</span>
+          </div>
+          <div class="meta">${escapeHtml(d.query)}</div>
+          ${hitsHtml}
+        </div>
+      `;
+      out.appendChild(card);
     });
-
-    if (emailrep.firstSeen || emailrep.lastSeen) {
-      addInfoCard(out, {
-        dotClass: "gray",
-        title: "Historique de présence",
-        meta: `Première vue : ${emailrep.firstSeen || "?"} · Dernière vue : ${emailrep.lastSeen || "?"}`
-      });
-    }
   }
 
-  // Section 4 : Fuites
-  addSection(out, "Fuites de données");
+  // --- Résultats plateformes ---
+  const foundPlatforms = platformResults.filter(p => p && p.result.exists && p.result.confidence >= 0.5);
 
-  if (hibp.exists && hibp.breaches.length) {
-    addInfoCard(out, {
-      dotClass: "red",
-      title: `Have I Been Pwned — ${hibp.breaches.length} fuite(s)`,
-      meta: hibp.breaches.slice(0,5).join(", "),
-      badge: { text: "compromis", cls: "neg" }
-    });
+  addSection(out, `Plateformes — ${foundPlatforms.length} profil(s)`);
+
+  if (foundPlatforms.length === 0) {
+    out.innerHTML += `<div class="none">aucun profil trouvé via variantes de pseudo</div>`;
   } else {
-    addInfoCard(out, {
-      dotClass: "gray",
-      title: "Have I Been Pwned",
-      meta: hibp.reason || "aucune fuite trouvée",
-      badge: { text: "aucune", cls: "ok" }
+    // Déduplique par plateforme (garde la meilleure variante)
+    const best = {};
+    for (const p of foundPlatforms) {
+      if (!best[p.platform] || best[p.platform].result.confidence < p.result.confidence) {
+        best[p.platform] = p;
+      }
+    }
+    Object.values(best).forEach(p => {
+      const conf = Math.round((p.result.confidence || 0) * 100);
+      const badgeCls = p.result.confidence >= 0.85 ? "ok" : "warn";
+      const card = document.createElement("div");
+      card.className = "card";
+      card.innerHTML = `
+        <div class="dot"></div>
+        <div class="info">
+          <a href="${p.url}" target="_blank" rel="noopener">${p.platform}
+            <span class="badge ${badgeCls}">${conf}%</span>
+          </a>
+          <div class="meta">${escapeHtml(p.url)}</div>
+          <div class="meta">variante : ${escapeHtml(p.variant)} · ${escapeHtml(p.result.reason || "")}</div>
+        </div>
+      `;
+      out.appendChild(card);
     });
   }
 }
 
 /* ============================================================
-   RENDU PSEUDO
+   UI — critères
    ============================================================ */
-async function renderIdentity(target) {
-  const out = document.getElementById("out");
-  const norm = target.trim().replace(/\s+/g,"").toLowerCase();
+const activeCriteria = { crit: null, value: "" };
 
-  out.innerHTML = `<div class="status" id="status">analyse de ${PLATFORMS.length} plateformes…</div>`;
+document.getElementById("criteriaToggle").addEventListener("click", () => {
+  document.getElementById("criteriaList").classList.toggle("open");
+});
 
-  let done = 0, found = 0;
-  const foundEls = [];
+document.querySelectorAll(".chip").forEach(chip => {
+  chip.addEventListener("click", () => {
+    const crit = chip.dataset.crit;
+    const isActive = chip.classList.contains("active");
 
-  PLATFORMS.forEach(([name, urlFn, checker]) => {
-    const url = urlFn(norm);
-    Promise.resolve(checker(norm, name)).then(res => {
-      done++;
-      if (res && res.exists && res.confidence >= 0.5) {
-        found++;
-        const div = document.createElement("div");
-        div.className = "card";
-        const conf = Math.round((res.confidence || 0) * 100);
-        const badgeCls = res.confidence >= 0.85 ? "ok" : "warn";
-        div.innerHTML = `
-          <div class="dot"></div>
-          <div class="info">
-            <a href="${url}" target="_blank" rel="noopener">${name}
-              <span class="badge ${badgeCls}">${conf}%</span>
-            </a>
-            <div class="meta">${url}</div>
-            <div class="meta">${escapeHtml(res.reason || "")}</div>
-          </div>
-        `;
-        foundEls.push(div);
-      }
-      const st = document.getElementById("status");
-      if (st) st.textContent = `${done}/${PLATFORMS.length} · ${found} trouvé(s)`;
-      if (done === PLATFORMS.length) {
-        out.innerHTML = "";
-        if (found === 0) {
-          out.innerHTML = `<div class="none">aucun compte trouvé</div>`;
-        } else {
-          const head = document.createElement("div");
-          head.className = "status";
-          head.textContent = `${found} compte(s) trouvé(s)`;
-          out.appendChild(head);
-          foundEls.forEach(el => out.appendChild(el));
-        }
-      }
-    }).catch(() => {
-      done++;
-      const st = document.getElementById("status");
-      if (st) st.textContent = `${done}/${PLATFORMS.length} · ${found} trouvé(s)`;
-      if (done === PLATFORMS.length && found === 0) {
-        out.innerHTML = `<div class="none">aucun compte trouvé</div>`;
-      }
-    });
+    // Désactive tous les autres
+    document.querySelectorAll(".chip").forEach(c => c.classList.remove("active"));
+
+    if (isActive) {
+      activeCriteria.crit = null;
+    } else {
+      chip.classList.add("active");
+      activeCriteria.crit = crit;
+    }
+    updateCriteriaCount();
   });
+});
+
+document.getElementById("extraValue").addEventListener("input", e => {
+  activeCriteria.value = e.target.value.trim();
+  updateCriteriaCount();
+});
+
+function updateCriteriaCount() {
+  const el = document.getElementById("criteriaCount");
+  if (activeCriteria.crit && activeCriteria.value) {
+    el.textContent = `1 actif`;
+    el.style.color = "#00e07a";
+  } else {
+    el.textContent = "0 sélectionné";
+    el.style.color = "";
+  }
 }
 
 /* ============================================================
@@ -647,19 +630,6 @@ function addSection(parent, title) {
   parent.appendChild(s);
 }
 
-function addInfoCard(parent, {dotClass, title, meta, badge}) {
-  const c = document.createElement("div");
-  c.className = "card info-card";
-  c.innerHTML = `
-    <div class="dot ${dotClass}"></div>
-    <div class="info">
-      <div class="title">${escapeHtml(title)}${badge ? ` <span class="badge ${badge.cls}">${escapeHtml(badge.text)}</span>` : ""}</div>
-      <div class="meta">${escapeHtml(meta || "")}</div>
-    </div>
-  `;
-  parent.appendChild(c);
-}
-
 function escapeHtml(s) {
   return String(s ?? "").replace(/[&<>"']/g, m => ({
     "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"
@@ -669,27 +639,30 @@ function escapeHtml(s) {
 function validate(t) {
   t = (t || "").trim();
   if (!t) return false;
-  return /^[a-zA-Z0-9_.@\- ]{2,}$/.test(t);
+  if (t.length < 3) return false;
+  return /^[a-zA-ZÀ-ÿ'\- ]{2,}$/.test(t);
 }
 
 /* ============================================================
    EVENT
    ============================================================ */
 document.getElementById("go").addEventListener("click", () => {
-  const type = document.getElementById("type").value;
   const target = document.getElementById("target").value;
   const out = document.getElementById("out");
+  const btn = document.getElementById("go");
 
   if (!validate(target)) {
-    out.innerHTML = `<div class="none">cible invalide</div>`;
+    out.innerHTML = `<div class="none">entre un prénom et un nom valides</div>`;
     return;
   }
 
-  if (type === "email") {
-    renderEmail(target.trim());
-  } else {
-    renderIdentity(target);
-  }
+  btn.disabled = true;
+  btn.textContent = "Recherche en cours…";
+
+  renderDeepSearch(target.trim(), activeCriteria).finally(() => {
+    btn.disabled = false;
+    btn.textContent = "Rechercher";
+  });
 });
 
 document.getElementById("target").addEventListener("keydown", e => {
