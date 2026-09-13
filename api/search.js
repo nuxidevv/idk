@@ -5,10 +5,10 @@ function httpsGet(url, headers) {
     const req = https.get(url, { headers }, (res) => {
       let data = "";
       res.on("data", chunk => data += chunk);
-      res.on("end", () => resolve({ status: res.statusCode, body: data, headers: res.headers }));
+      res.on("end", () => resolve({ status: res.statusCode, body: data }));
     });
     req.on("error", (e) => resolve({ status: 0, body: "", error: e.message }));
-    req.setTimeout(8000, () => { req.destroy(); resolve({ status: 0, body: "", error: "timeout" }); });
+    req.setTimeout(10000, () => { req.destroy(); resolve({ status: 0, body: "", error: "timeout" }); });
   });
 }
 
@@ -16,42 +16,29 @@ export default async function handler(req, res) {
   res.setHeader("Access-Control-Allow-Origin", "*");
   res.setHeader("Access-Control-Allow-Methods", "GET, OPTIONS");
   res.setHeader("Access-Control-Allow-Headers", "Content-Type");
-
   if (req.method === "OPTIONS") return res.status(200).end();
 
   const { first_name = "", last_name = "" } = req.query;
-  const fullName = `${first_name} ${last_name}`.trim();
   const BASE = "https://api.brixhub.to/api/v1";
   const KEY = process.env.BRIXHUB_KEY || "";
 
-  // Header correct : X-API-Key (vu dans la doc OpenAPI)
+  // Header X-API-Key (confirmé par la doc)
   const headers = {
     "Accept": "application/json",
     "X-API-Key": KEY
   };
 
-  const q = `first_name=${encodeURIComponent(first_name)}&last_name=${encodeURIComponent(last_name)}`;
-  const qn = `name=${encodeURIComponent(fullName)}`;
-  const qq = `q=${encodeURIComponent(fullName)}`;
+  // Paramètres en français : prenom + nom_famille (confirmé par ta capture)
+  const p = `prenom=${encodeURIComponent(first_name)}&nom_famille=${encodeURIComponent(last_name)}`;
 
+  // Chemin correct : /lookups/ (avec un S)
   const candidates = [
-    // /lookup en priorité (le vrai endpoint selon la doc)
-    `${BASE}/lookup/name?${q}`,
-    `${BASE}/lookup/full?${qn}`,
-    `${BASE}/lookup/full_name?${qn}`,
-    `${BASE}/lookup?${q}`,
-    `${BASE}/lookup?${qn}`,
-    `${BASE}/lookup?${qq}`,
-    // Puis /search et variantes
-    `${BASE}/search?${q}`,
-    `${BASE}/search?${qn}`,
-    `${BASE}/search?${qq}`,
-    `${BASE}/person?${q}`,
-    `${BASE}/person/search?${q}`,
-    `${BASE}/people?${q}`,
-    `${BASE}/name?${q}`,
-    `${BASE}/identity?${q}`,
-    `${BASE}/records?${q}`,
+    `${BASE}/lookups/search?${p}`,
+    `${BASE}/lookups/name?${p}`,
+    `${BASE}/lookups/full?${p}`,
+    `${BASE}/lookups?${p}`,
+    `${BASE}/lookups/full_name?${p}`,
+    `${BASE}/lookups/identity?${p}`,
   ];
 
   const logs = [];
@@ -63,30 +50,17 @@ export default async function handler(req, res) {
     logs.push({
       url,
       status: r.status,
-      preview: (r.body || "").slice(0, 300),
-      error: r.error || null
+      preview: (r.body || "").slice(0, 300)
     });
 
-    // Succès RÉEL : status 2xx ET ce n'est pas la doc
-    if (
-      r.status >= 200 && r.status < 300 &&
-      parsed &&
-      !url.includes("/docs") &&
-      !url.includes("/openapi") &&
-      !url.includes("/swagger")
-    ) {
-      return res.status(200).json({
-        ok: true,
-        usedUrl: url,
-        data: parsed,
-        allAttempts: logs
-      });
+    if (r.status === 200 && parsed) {
+      return res.status(200).json({ ok: true, usedUrl: url, data: parsed, allAttempts: logs });
     }
   }
 
   return res.status(200).json({
     ok: false,
-    message: "Aucun endpoint valide trouvé (la doc a été ignorée)",
+    message: "Aucun endpoint /lookups/ n'a répondu 200",
     allAttempts: logs
   });
 }
