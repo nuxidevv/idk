@@ -68,37 +68,27 @@
     background:#0b0b0b;
     border:1px solid #181818;
     border-radius:10px;
-    padding:16px 18px;
-    margin-bottom:10px;
-  }
-  .card .label {
-    font-size:0.68rem;
-    color:#666;
-    text-transform:uppercase;
-    letter-spacing:1px;
+    padding:14px 16px;
     margin-bottom:8px;
+    transition:border 0.15s;
   }
-  .card .value {
-    font-size:0.85rem;
+  .card:hover { border-color:#2a2a2a; }
+  .card a {
     color:#eaeaea;
-    line-height:1.5;
-    word-break:break-word;
+    text-decoration:none;
+    display:block;
+    font-size:0.85rem;
   }
-  .card a { color:#4da3ff; text-decoration:none; }
-  .card a:hover { text-decoration:underline; }
-  .tags { display:flex; flex-wrap:wrap; gap:6px; }
-  .tag {
-    background:#141414;
-    border:1px solid #222;
-    border-radius:6px;
-    padding:6px 12px;
-    font-size:0.75rem;
+  .card a:hover { color:#4da3ff; }
+  .card .meta {
+    font-size:0.68rem;
+    color:#555;
+    margin-top:4px;
   }
-  .tag a { color:#eaeaea; }
-  .score {
-    font-size:0.75rem;
-    color:#666;
-    margin-bottom:20px;
+  .count {
+    font-size:0.7rem;
+    color:#555;
+    margin-bottom:14px;
     text-align:center;
   }
 </style>
@@ -122,54 +112,44 @@
 </div>
 
 <script>
-// Génère les dorks selon le type de cible
-function buildDorks(type, t) {
+// Retourne la liste des plateformes où la cible peut être trouvée selon le type
+function buildSites(type, t) {
   t = t.trim();
+  const e = encodeURIComponent(t);
   if (type === "email") return [
-    `"${t}"`,
-    `"${t}" site:pastebin.com`,
-    `"${t}" filetype:pdf`,
-    `"${t}" -site:${t.split("@")[1] || "mail.com"}`
+    { name: "Google", url: `https://www.google.com/search?q=${e}` },
+    { name: "Have I Been Pwned", url: `https://haveibeenpwned.com/account/${e}` },
+    { name: "Hunter.io", url: `https://hunter.io/search/${e}` },
+    { name: "Epieos", url: `https://epieos.com/?q=${e}` },
+    { name: "EmailRep", url: `https://emailrep.io/${e}` },
+    { name: "Pastebin", url: `https://www.google.com/search?q=${e}+site:pastebin.com` }
   ];
   if (type === "username") return [
-    `"${t}" site:github.com`,
-    `"${t}" (site:twitter.com OR site:x.com)`,
-    `"${t}" site:reddit.com`,
-    `"${t}" inurl:profile`,
-    `intitle:"${t}"`
+    { name: "Google", url: `https://www.google.com/search?q=${e}` },
+    { name: "GitHub", url: `https://github.com/search?q=${e}&type=users` },
+    { name: "Twitter / X", url: `https://x.com/${e}` },
+    { name: "Reddit", url: `https://www.reddit.com/user/${e}` },
+    { name: "Instagram", url: `https://www.instagram.com/${e}` },
+    { name: "TikTok", url: `https://www.tiktok.com/@${e}` },
+    { name: "WhatsMyName", url: `https://whatsmyname.app/?q=${e}` },
+    { name: "Namechk", url: `https://namechk.com/?q=${e}` }
   ];
   const p = t.split(/\s+/);
-  if (p.length >= 2) return [
-    `"${p[0]}" "${p[1]}"`,
-    `"${p[0]} ${p[1]}" site:linkedin.com`,
-    `"${p[0]} ${p[1]}" site:facebook.com`,
-    `"${p[0]} ${p[1]}" filetype:pdf`,
-    `"${p[0]} ${p[1]}" email OR contact`
-  ];
-  return [`"${t}"`];
-}
-
-// Liens directs vers outils OSINT selon type
-function buildTools(type, t) {
-  const e = encodeURIComponent(t.trim());
-  if (type === "email") return [
-    ["Have I Been Pwned", `https://haveibeenpwned.com/account/${e}`],
-    ["Hunter.io", `https://hunter.io/search/${e}`],
-    ["Epieos", `https://epieos.com/?q=${e}`]
-  ];
-  if (type === "username") return [
-    ["WhatsMyName", `https://whatsmyname.app/?q=${e}`],
-    ["GitHub Users", `https://github.com/search?q=${e}&type=users`],
-    ["Namechk", `https://namechk.com/?q=${e}`]
-  ];
+  const first = p[0] || "";
+  const last = p[1] || "";
+  const fe = encodeURIComponent(first);
+  const le = encodeURIComponent(last);
   return [
-    ["LinkedIn", `https://www.linkedin.com/search/results/all/?keywords=${e}`],
-    ["TruePeopleSearch", `https://www.truepeoplesearch.com/results?name=${e}`],
-    ["Facebook", `https://www.facebook.com/search/top?q=${e}`]
+    { name: "Google", url: `https://www.google.com/search?q=${e}` },
+    { name: "LinkedIn", url: `https://www.linkedin.com/search/results/all/?keywords=${e}` },
+    { name: "Facebook", url: `https://www.facebook.com/search/top?q=${e}` },
+    { name: "Instagram", url: `https://www.instagram.com/${encodeURIComponent(first + last)}` },
+    { name: "TruePeopleSearch", url: `https://www.truepeoplesearch.com/results?name=${e}` },
+    { name: "FastPeopleSearch", url: `https://www.fastpeoplesearch.com/name/${fe}-${le}` }
   ];
 }
 
-// Score IA local — heuristique de pertinence du format de cible
+// Score IA local — heuristique de validité du format de cible
 function aiScore(type, t) {
   t = t.trim();
   let s = 0;
@@ -190,32 +170,24 @@ function aiScore(type, t) {
   return Math.min(s, 100);
 }
 
-// Rendu final : uniquement les résultats exploitables
+// Rendu : uniquement les sites exploitables avec lien cliquable
 function render(type, target) {
   const out = document.getElementById("out");
-  const dorks = buildDorks(type, target);
-  const tools = buildTools(type, target);
+  const sites = buildSites(type, target);
   const score = aiScore(type, target);
 
-  let html = `<div class="score">pertinence ${score}/100</div>`;
-
-  if (dorks.length) {
-    html += `<div class="card"><div class="label">Google Dorks</div><div class="value">`;
-    dorks.forEach(d => {
-      const q = encodeURIComponent(d);
-      html += `<div>· ${d} — <a href="https://www.google.com/search?q=${q}" target="_blank">Google</a></div>`;
-    });
-    html += `</div></div>`;
+  if (!sites.length) {
+    out.innerHTML = `<div class="empty">aucun résultat</div>`;
+    return;
   }
 
-  if (tools.length) {
-    html += `<div class="card"><div class="label">Outils</div><div class="tags">`;
-    tools.forEach(([n, u]) => {
-      html += `<span class="tag"><a href="${u}" target="_blank">${n}</a></span>`;
-    });
-    html += `</div></div>`;
-  }
-
+  let html = `<div class="count">${sites.length} site(s) · pertinence ${score}/100</div>`;
+  sites.forEach(s => {
+    html += `<div class="card">
+      <a href="${s.url}" target="_blank" rel="noopener">${s.name}</a>
+      <div class="meta">${s.url}</div>
+    </div>`;
+  });
   out.innerHTML = html;
 }
 
