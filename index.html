@@ -114,9 +114,7 @@
     to { background-position:50px 50px; }
   }
 
-  /* ============================================================
-     AJOUT D — LOADER D'OUVERTURE
-     ============================================================ */
+  /* LOADER */
   .page-loader {
     position:fixed;
     inset:0;
@@ -223,7 +221,6 @@
     transform-style:preserve-3d;
   }
 
-  /* Header */
   .header {
     margin-bottom:36px;
     animation:fadeUp 0.6s ease-out;
@@ -320,9 +317,6 @@
 
   .theme-toggle:hover svg { color:var(--text); }
 
-  /* ============================================================
-     AJOUT W — BOUTON SON
-     ============================================================ */
   .sound-toggle {
     width:34px; height:34px;
     border-radius:8px;
@@ -383,7 +377,6 @@
     50% { opacity:0.4; transform:scale(0.8); }
   }
 
-  /* Input avec effet 3D */
   .input-wrap {
     position:relative;
     margin-bottom:12px;
@@ -460,7 +453,6 @@
   .input-clear.visible { display:flex; }
   .input-clear svg { width:10px; height:10px; color:var(--text-dim); }
 
-  /* Bouton principal */
   button.primary {
     width:100%;
     background:var(--accent);
@@ -532,9 +524,6 @@
     animation:fadeUp 0.4s ease-out;
   }
 
-  /* ============================================================
-     AJOUT J — BARRE DE TRI + EFFACER TOUT (BB)
-     ============================================================ */
   .toolbar {
     display:none;
     align-items:center;
@@ -614,7 +603,6 @@
     width:12px; height:12px;
   }
 
-  /* Squelettes */
   .skeleton {
     background:var(--card);
     border:1px solid var(--border);
@@ -642,9 +630,6 @@
     100% { background-position:-200% 0; }
   }
 
-  /* ============================================================
-     CARTES 3D — AJOUT EE (animation blur)
-     ============================================================ */
   .card {
     background:var(--card);
     border:1px solid var(--border);
@@ -1068,9 +1053,6 @@
     to { opacity:0; transform:translateY(20px) rotateX(30deg) scale(0.9); }
   }
 
-  /* ============================================================
-     AJOUT X + Y — MODALES
-     ============================================================ */
   .modal-overlay {
     position:fixed;
     inset:0;
@@ -1219,7 +1201,6 @@
 </head>
 <body>
 
-<!-- AJOUT D — Loader -->
 <div class="page-loader" id="pageLoader">
   <div class="loader-logo">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
@@ -1284,7 +1265,6 @@
     <span class="btn-text">Rechercher</span>
   </button>
 
-  <!-- AJOUT J + BB — Toolbar (tri + effacer tout) -->
   <div class="toolbar" id="toolbar">
     <div class="sort-wrap">
       <select class="sort-select" id="sortSelect">
@@ -1322,7 +1302,6 @@
 
 <div class="toast-container" id="toastContainer"></div>
 
-<!-- AJOUT X — Modale À propos -->
 <div class="modal-overlay" id="aboutModal">
   <div class="modal">
     <button class="modal-close" data-close="aboutModal">
@@ -1346,12 +1325,11 @@
       <p>Tu saisis un prénom et un nom. SeekIt interroge sa base et retourne les enregistrements correspondants, triés par fiabilité.</p>
       <h3>Confidentialité</h3>
       <p>Aucune donnée n'est stockée sur nos serveurs. Les recherches sont anonymes et ne sont pas tracées. Les résultats sont affichés localement dans ton navigateur.</p>
-      <p style="margin-top:16px;font-size:0.75rem;color:var(--text-dimmer)">Dernière modification 13 sept. 2026</p>
+      <p style="margin-top:16px;font-size:0.75rem;color:var(--text-dimmer)">Version 1.0 — 2026</p>
     </div>
   </div>
 </div>
 
-<!-- AJOUT Y — Modale Mentions légales -->
 <div class="modal-overlay" id="legalModal">
   <div class="modal">
     <button class="modal-close" data-close="legalModal">
@@ -1372,8 +1350,9 @@
       <p>SeekIt ne peut être tenu responsable de l'exactitude des données affichées. L'utilisateur doit vérifier toute information avant usage.</p>
       <h3>5. RGPD / Vie privée</h3>
       <p>Aucune recherche n'est stockée. Aucun cookie de tracking n'est utilisé. Aucune donnée personnelle n'est collectée.</p>
-
-      <p style="margin-top:16px;font-size:0.75rem;color:var(--text-dimmer)">Dernière modification : 13 sept. 2026</p>
+      <h3>6. Contact</h3>
+      <p>Pour toute demande de retrait de données ou question : <a href="mailto:contact@seekit.app">contact@seekit.app</a></p>
+      <p style="margin-top:16px;font-size:0.75rem;color:var(--text-dimmer)">Dernière mise à jour : 2026</p>
     </div>
   </div>
 </div>
@@ -1382,19 +1361,21 @@
 const PROXY_URL = "/api/search";
 
 /* ============================================================
-   AJOUT D — LOADER D'OUVERTURE
+   LOADER + COMPTEUR (sans son au démarrage)
    ============================================================ */
 window.addEventListener("load", () => {
   setTimeout(() => {
     document.getElementById("pageLoader").classList.add("hidden");
+    animateCounter();
   }, 1600);
 });
 
 /* ============================================================
-   COMPTEUR ANIMÉ
+   COMPTEUR ANIMÉ 22 Md
    ============================================================ */
-(function animateCounter() {
+function animateCounter() {
   const el = document.getElementById("counter");
+  if (!el) return;
   const target = 22000000000;
   const duration = 2200;
   const start = performance.now();
@@ -1403,6 +1384,7 @@ window.addEventListener("load", () => {
     if (n >= 1e6) return (n / 1e6).toFixed(0) + " M";
     return n.toLocaleString("fr-FR");
   };
+  el.textContent = "0";
   function step(now) {
     const t = Math.min((now - start) / duration, 1);
     const eased = 1 - Math.pow(1 - t, 3);
@@ -1411,7 +1393,7 @@ window.addEventListener("load", () => {
     else el.textContent = "22 Md";
   }
   requestAnimationFrame(step);
-})();
+}
 
 /* ============================================================
    BARRE DE PROGRESSION
@@ -1453,7 +1435,7 @@ function toast(message, type = "success", duration = 3000) {
 }
 
 /* ============================================================
-   AJOUT W — SON
+   SON (ding succès + bip erreur, pas de son au démarrage)
    ============================================================ */
 let soundEnabled = true;
 const soundIconOn = `<polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon><path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"></path>`;
@@ -1478,7 +1460,6 @@ soundToggle.addEventListener("click", () => {
   if (soundEnabled) playSound("ding");
 });
 
-// Web Audio API — pas de fichier externe
 let audioCtx = null;
 function playSound(type) {
   if (!soundEnabled) return;
@@ -1488,7 +1469,6 @@ function playSound(type) {
     const gain = audioCtx.createGain();
     osc.connect(gain);
     gain.connect(audioCtx.destination);
-
     if (type === "ding") {
       osc.frequency.setValueAtTime(880, audioCtx.currentTime);
       osc.frequency.exponentialRampToValueAtTime(1320, audioCtx.currentTime + 0.1);
@@ -1555,7 +1535,7 @@ scrollTopBtn.addEventListener("click", () => {
 });
 
 /* ============================================================
-   AJOUT X + Y — MODALES
+   MODALES
    ============================================================ */
 document.getElementById("aboutLink").addEventListener("click", () => {
   document.getElementById("aboutModal").classList.add("open");
@@ -1849,7 +1829,7 @@ function renderSkeletons(n = 3) {
 }
 
 /* ============================================================
-   AJOUT J — TRI
+   TRI
    ============================================================ */
 let currentItems = [];
 let currentRawData = null;
@@ -1958,7 +1938,7 @@ function render(result) {
 }
 
 /* ============================================================
-   BIND ACTIONS SUR CARTES
+   BIND ACTIONS
    ============================================================ */
 function bindCardActions(list) {
   list.querySelectorAll(".copy-btn").forEach(btn => {
@@ -1985,7 +1965,7 @@ function bindCardActions(list) {
 }
 
 /* ============================================================
-   AJOUT J — ÉCOUTE DU TRI
+   TRI — ÉCOUTE
    ============================================================ */
 document.getElementById("sortSelect").addEventListener("change", (e) => {
   currentSort = e.target.value;
@@ -2001,7 +1981,7 @@ document.getElementById("sortSelect").addEventListener("change", (e) => {
 });
 
 /* ============================================================
-   AJOUT BB — EFFACER TOUT
+   EFFACER TOUT
    ============================================================ */
 document.getElementById("clearAll").addEventListener("click", () => {
   const out = document.getElementById("out");
