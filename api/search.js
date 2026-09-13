@@ -1,5 +1,47 @@
 import https from "https";
 
+/* ============================================================
+   BLOCAGE — NOMS CIBLÉS
+   ============================================================ */
+const BLOCKED_TARGETS = [
+  { prenom: "leo",    nom: "roman" },
+  { prenom: "lucile", nom: "roman" },
+  { prenom: "jimmy",  nom: "roman" },
+  { prenom: "tom",    nom: "roman" }
+];
+
+function normalizeName(s) {
+  return String(s || "")
+    .toLowerCase()
+    .normalize("NFD").replace(/[\u0300-\u036f]/g, "")
+    .replace(/[^a-z0-9 ]/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+function isBlocked(fullName) {
+  const norm = normalizeName(fullName);
+  if (!norm) return false;
+  const tokens = norm.split(" ").filter(t => t.length > 0);
+
+  return BLOCKED_TARGETS.some(t => {
+    const hasPrenomComplet = tokens.includes(t.prenom);
+    const hasNomComplet = tokens.includes(t.nom);
+    if (hasPrenomComplet && hasNomComplet) return true;
+
+    const hasPrenomTronque = tokens.some(tok => tok.length >= 2 && t.prenom.startsWith(tok));
+    if (hasPrenomTronque && hasNomComplet) return true;
+
+    const hasNomTronque = tokens.some(tok => tok.length >= 3 && t.nom.startsWith(tok));
+    if (hasPrenomComplet && hasNomTronque) return true;
+
+    return false;
+  });
+}
+
+/* ============================================================
+   HTTPS POST
+   ============================================================ */
 function httpsPost(url, headers, bodyObj) {
   return new Promise((resolve) => {
     const body = JSON.stringify(bodyObj);
@@ -28,6 +70,9 @@ function httpsPost(url, headers, bodyObj) {
   });
 }
 
+/* ============================================================
+   HANDLER
+   ============================================================ */
 export default async function handler(req, res) {
   res.setHeader("Access-Control-Allow-Origin", "*");
   res.setHeader("Access-Control-Allow-Methods", "GET, OPTIONS");
@@ -35,6 +80,16 @@ export default async function handler(req, res) {
   if (req.method === "OPTIONS") return res.status(200).end();
 
   const { first_name = "", last_name = "" } = req.query;
+
+  // --- Blocage côté serveur ---
+  if (isBlocked(`${first_name} ${last_name}`)) {
+    return res.status(200).json({
+      ok: false,
+      blocked: true,
+      message: "Recherche non autorisée."
+    });
+  }
+
   const KEY = process.env.BRIXHUB_KEY || "";
 
   const headers = {
@@ -42,7 +97,6 @@ export default async function handler(req, res) {
     "X-API-Key": KEY
   };
 
-  // Body JSON avec les noms de paramètres FR
   const body = {
     prenom: first_name,
     nom_famille: last_name
