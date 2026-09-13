@@ -981,4 +981,379 @@ input.addEventListener("input", () => {
 });
 
 inputClear.addEventListener("click", () => {
-  input.value =
+  input.value = "";
+  inputClear.classList.remove("visible");
+  input.focus();
+});
+
+/* ============================================================
+   SCROLL TOP
+   ============================================================ */
+const scrollTopBtn = document.getElementById("scrollTop");
+
+window.addEventListener("scroll", () => {
+  scrollTopBtn.classList.toggle("visible", window.scrollY > 400);
+});
+
+scrollTopBtn.addEventListener("click", () => {
+  window.scrollTo({ top: 0, behavior: "smooth" });
+});
+
+/* ============================================================
+   UTILITAIRES
+   ============================================================ */
+function escapeHtml(s) {
+  return String(s ?? "").replace(/[&<>"']/g, m => ({
+    "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"
+  }[m]));
+}
+
+function validate(t) {
+  t = (t || "").trim();
+  if (t.length < 3) return false;
+  return /^[a-zA-ZÀ-ÿ'\- ]{2,}$/.test(t);
+}
+
+const LABELS = {
+  _source_db: "Source",
+  _confidence: "Fiabilité",
+  adresse: "Adresse",
+  annee_naissance: "Année naissance",
+  code_postal: "Code postal",
+  date_naissance: "Date de naissance",
+  departement: "Département",
+  email: "Email",
+  lieu_naissance: "Lieu de naissance",
+  nom_famille: "Nom",
+  nom_utilisateur: "Pseudo",
+  pays: "Pays",
+  prenom: "Prénom",
+  ville: "Ville",
+  telephone: "Téléphone",
+  phone: "Téléphone",
+  genre: "Genre",
+  sexe: "Sexe"
+};
+
+const ORDER = [
+  "prenom","nom_famille","date_naissance","annee_naissance","lieu_naissance",
+  "adresse","code_postal","ville","departement","pays",
+  "email","telephone","phone","nom_utilisateur",
+  "_source_db","_confidence","genre","sexe"
+];
+
+function labelOf(k) {
+  return LABELS[k] || k.replace(/_/g, " ");
+}
+
+/* ============================================================
+   API
+   ============================================================ */
+async function searchBrixHub(fullName) {
+  const parts = fullName.trim().split(/\s+/);
+  const firstName = parts[0] || "";
+  const lastName = parts.slice(1).join(" ") || "";
+  const url = `${PROXY_URL}?first_name=${encodeURIComponent(firstName)}&last_name=${encodeURIComponent(lastName)}`;
+  try {
+    const res = await fetch(url);
+    const text = await res.text();
+    let data = null;
+    try { data = JSON.parse(text); } catch { data = text; }
+    return { ok: res.ok, status: res.status, data };
+  } catch (err) {
+    return { ok: false, status: 0, error: err.message };
+  }
+}
+
+function findArray(obj, depth = 0) {
+  if (depth > 4 || !obj) return null;
+  if (Array.isArray(obj)) return obj;
+  if (typeof obj === "object") {
+    for (const k of ["results","data","items","records","hits","matches","persons","people"]) {
+      if (Array.isArray(obj[k])) return obj[k];
+    }
+    for (const k of Object.keys(obj)) {
+      const r = findArray(obj[k], depth + 1);
+      if (r) return r;
+    }
+  }
+  return null;
+}
+
+function scoreClass(c) {
+  const n = Number(c);
+  if (!n || isNaN(n)) return "";
+  if (n >= 70) return "";
+  if (n >= 40) return "mid";
+  return "low";
+}
+
+/* ============================================================
+   COPY
+   ============================================================ */
+async function copyToClipboard(text) {
+  try {
+    await navigator.clipboard.writeText(text);
+    return true;
+  } catch {
+    try {
+      const ta = document.createElement("textarea");
+      ta.value = text;
+      ta.style.position = "fixed";
+      ta.style.opacity = "0";
+      document.body.appendChild(ta);
+      ta.select();
+      document.execCommand("copy");
+      document.body.removeChild(ta);
+      return true;
+    } catch { return false; }
+  }
+}
+
+/* ============================================================
+   EXPORT JSON
+   ============================================================ */
+function exportJSON(item, idx) {
+  const clean = {};
+  Object.keys(item).forEach(k => {
+    if (item[k] != null && typeof item[k] !== "object") clean[k] = item[k];
+  });
+  const blob = new Blob([JSON.stringify(clean, null, 2)], { type: "application/json" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  const prenom = (item.prenom || "").toString().toLowerCase().replace(/\s+/g, "-");
+  const nom = (item.nom_famille || "").toString().toLowerCase().replace(/\s+/g, "-");
+  a.href = url;
+  a.download = `seekit-${prenom || "result"}-${nom || idx + 1}.json`;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+  toast("Fichier JSON exporté", "success");
+}
+
+/* ============================================================
+   RENDER CARD
+   ============================================================ */
+function renderCard(item, idx) {
+  const prenom = item.prenom || item.first_name || "";
+  const nom = item.nom_famille || item.last_name || item.name || "";
+  const title = [prenom, nom].filter(Boolean).join(" ") || item.email || `Résultat ${idx + 1}`;
+  const sub = item.email && (prenom || nom) ? item.email : "";
+
+  // Avatar initiales
+  const initials = ((prenom[0] || "") + (nom[0] || "")).toUpperCase() || "?";
+
+  const conf = item._confidence ?? item.confidence ?? null;
+  const scoreHtml = conf != null
+    ? `<div class="score ${scoreClass(conf)}">${escapeHtml(conf)}%</div>`
+    : "";
+
+  const keys = Object.keys(item).filter(k =>
+    item[k] != null && item[k] !== "" && typeof item[k] !== "object"
+  );
+  const sorted = [
+    ...ORDER.filter(k => keys.includes(k)),
+    ...keys.filter(k => !ORDER.includes(k))
+  ];
+
+  const monoKeys = ["email","telephone","phone","nom_utilisateur","code_postal","date_naissance"];
+
+  const rows = sorted.map(k => {
+    let v = item[k];
+    let html;
+    if (k === "email") {
+      html = `<a href="mailto:${escapeHtml(v)}">${escapeHtml(v)}</a>`;
+    } else if (k === "telephone" || k === "phone") {
+      html = `<a href="tel:${escapeHtml(v)}">${escapeHtml(v)}</a>`;
+    } else {
+      html = escapeHtml(v);
+    }
+    const monoClass = monoKeys.includes(k) ? " mono" : "";
+    const safeVal = String(v).replace(/'/g, "&#39;").replace(/"/g, "&quot;");
+    return `
+      <div class="row">
+        <div class="row-label">${escapeHtml(labelOf(k))}</div>
+        <div class="row-value${monoClass}">
+          <span class="val-text">${html}</span>
+          <button class="copy-btn" data-copy="${escapeHtml(safeVal)}" aria-label="Copier">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+              <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+            </svg>
+          </button>
+        </div>
+      </div>`;
+  }).join("");
+
+  return `
+    <div class="card" style="animation-delay:${idx * 0.05}s" data-idx="${idx}">
+      <div class="card-header">
+        <div class="card-header-left">
+          <div class="card-avatar">${escapeHtml(initials)}</div>
+          <div class="card-title-block">
+            <div class="card-title">${escapeHtml(title)}</div>
+            ${sub ? `<div class="card-sub">${escapeHtml(sub)}</div>` : ""}
+          </div>
+        </div>
+        <div class="card-actions">
+          <button class="icon-btn export-btn" data-idx="${idx}" title="Exporter JSON">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+              <polyline points="7 10 12 15 17 10"></polyline>
+              <line x1="12" y1="15" x2="12" y2="3"></line>
+            </svg>
+          </button>
+        </div>
+      </div>
+      ${rows}
+    </div>
+  `;
+}
+
+/* ============================================================
+   SQUELETTES
+   ============================================================ */
+function renderSkeletons(n = 3) {
+  const out = document.getElementById("out");
+  out.innerHTML = "";
+  const status = document.createElement("div");
+  status.className = "status";
+  status.textContent = "Recherche en cours…";
+  out.appendChild(status);
+  for (let i = 0; i < n; i++) {
+    const sk = document.createElement("div");
+    sk.className = "skeleton";
+    sk.style.animationDelay = (i * 0.1) + "s";
+    sk.innerHTML = `
+      <div class="skel-line title"></div>
+      <div class="skel-line medium"></div>
+      <div class="skel-line short"></div>
+      <div class="skel-line medium"></div>
+    `;
+    out.appendChild(sk);
+  }
+}
+
+/* ============================================================
+   RENDER RESULTS
+   ============================================================ */
+function render(result) {
+  const out = document.getElementById("out");
+  out.innerHTML = "";
+
+  if (!result.ok || !result.data) {
+    const err = document.createElement("div");
+    err.className = "err";
+    err.textContent = `Échec (HTTP ${result.status})${result.error ? " — " + result.error : ""}\n\n${JSON.stringify(result.data, null, 2)}`;
+    out.appendChild(err);
+    toast("Erreur : " + (result.error || "HTTP " + result.status), "error");
+    return;
+  }
+
+  const arr = findArray(result.data) || [];
+
+  const status = document.createElement("div");
+  status.className = "status";
+  status.textContent = `${arr.length} résultat(s) trouvé(s)`;
+  out.appendChild(status);
+
+  if (arr.length === 0) {
+    const none = document.createElement("div");
+    none.className = "none";
+    none.textContent = "aucun résultat";
+    out.appendChild(none);
+    toast("Aucun résultat", "error");
+  } else {
+    const list = document.createElement("div");
+    const items = arr.map(it => typeof it === "string" ? { valeur: it } : it);
+    items.forEach((item, i) => {
+      list.insertAdjacentHTML("beforeend", renderCard(item, i));
+    });
+    out.appendChild(list);
+    toast(`${arr.length} résultat(s) trouvé(s)`, "success");
+
+    // Bind copy buttons
+    list.querySelectorAll(".copy-btn").forEach(btn => {
+      btn.addEventListener("click", async () => {
+        const val = btn.getAttribute("data-copy");
+        const ok = await copyToClipboard(val);
+        if (ok) {
+          btn.classList.add("copied");
+          setTimeout(() => btn.classList.remove("copied"), 1200);
+        } else {
+          toast("Échec de la copie", "error");
+        }
+      });
+    });
+
+    // Bind export buttons
+    list.querySelectorAll(".export-btn").forEach(btn => {
+      btn.addEventListener("click", () => {
+        const i = Number(btn.getAttribute("data-idx"));
+        exportJSON(items[i], i);
+      });
+    });
+  }
+
+  const toggle = document.createElement("div");
+  toggle.className = "raw-toggle";
+  toggle.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg> Afficher la réponse brute`;
+  out.appendChild(toggle);
+
+  const raw = document.createElement("div");
+  raw.className = "raw";
+  try { raw.textContent = JSON.stringify(result.data, null, 2); }
+  catch { raw.textContent = String(result.data); }
+  out.appendChild(raw);
+
+  toggle.addEventListener("click", () => {
+    raw.classList.toggle("open");
+    toggle.classList.toggle("open");
+    toggle.innerHTML = toggle.classList.contains("open")
+      ? `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg> Masquer la réponse brute`
+      : `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg> Afficher la réponse brute`;
+  });
+}
+
+/* ============================================================
+   SEARCH
+   ============================================================ */
+document.getElementById("go").addEventListener("click", async () => {
+  const target = input.value;
+  const out = document.getElementById("out");
+  const btn = document.getElementById("go");
+  const btnText = btn.querySelector(".btn-text");
+
+  if (!validate(target)) {
+    out.innerHTML = `<div class="none">entre un prénom et un nom valides</div>`;
+    toast("Prénom et nom invalides", "error");
+    return;
+  }
+
+  btn.disabled = true;
+  btn.classList.add("loading");
+  btnText.textContent = "Recherche…";
+  startProgress();
+  renderSkeletons(3);
+
+  try {
+    const result = await searchBrixHub(target.trim());
+    render(result);
+  } catch (e) {
+    out.innerHTML = `<div class="err">${escapeHtml(e.message)}</div>`;
+    toast("Erreur : " + e.message, "error");
+  } finally {
+    btn.disabled = false;
+    btn.classList.remove("loading");
+    btnText.textContent = "Rechercher";
+    finishProgress();
+  }
+});
+
+input.addEventListener("keydown", e => {
+  if (e.key === "Enter") document.getElementById("go").click();
+});
+</script>
+</body>
+</html>
