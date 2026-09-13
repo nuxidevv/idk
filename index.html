@@ -29,7 +29,6 @@
     transition:opacity 0.15s;
   }
   button:hover { opacity:0.85; }
-  button:active { opacity:0.7; }
   button:disabled { background:#1a1a1a; color:#555; cursor:default; }
 
   #out { margin-top:28px; }
@@ -42,26 +41,42 @@
     padding:30px 20px;
   }
   .card {
-    background:#0b0b0b; border:1px solid #3d2f1f; border-radius:10px;
-    padding:14px 16px; margin-bottom:8px;
-    display:flex; align-items:flex-start; gap:12px;
+    background:#0b0b0b; border:1px solid #1f3d2a; border-radius:10px;
+    padding:14px 16px; margin-bottom:12px;
   }
-  .card:hover { border-color:#5d4a2f; }
-  .dot {
-    width:8px; height:8px; border-radius:50%; flex-shrink:0;
-    background:#ffaa4d; box-shadow:0 0 8px #ffaa4d88;
-    margin-top:6px;
+  .card:hover { border-color:#2f5d3f; }
+  .card-header {
+    display:flex; align-items:flex-start; justify-content:space-between;
+    gap:10px; margin-bottom:12px;
+    padding-bottom:10px; border-bottom:1px solid #1a1a1a;
   }
-  .info { flex:1; min-width:0; }
-  .info a, .info .title {
-    color:#eaeaea; text-decoration:none; font-size:0.85rem;
-    display:block; word-break:break-word;
+  .card-title {
+    font-size:0.9rem; font-weight:600; color:#fff;
+    word-break:break-word;
   }
-  .info a:hover { color:#4da3ff; }
-  .info .title { font-weight:500; }
-  .meta { font-size:0.65rem; color:#555; margin-top:4px; word-break:break-all; line-height:1.4; }
-  .meta a { color:#4da3ff; text-decoration:none; display:block; margin-top:2px; }
-  .meta a:hover { text-decoration:underline; }
+  .card-sub {
+    font-size:0.68rem; color:#666; margin-top:3px;
+  }
+  .score {
+    font-size:0.65rem; padding:3px 8px; border-radius:6px;
+    background:#1f3d2a; color:#00e07a; font-weight:600;
+    flex-shrink:0;
+  }
+  .score.mid { background:#3d2a1f; color:#ffaa4d; }
+  .score.low { background:#3d1f1f; color:#ff6b6b; }
+  .row {
+    display:flex; gap:10px; padding:5px 0;
+    font-size:0.78rem; align-items:flex-start;
+  }
+  .row-label {
+    color:#666; min-width:110px; flex-shrink:0;
+    font-size:0.72rem; padding-top:1px;
+  }
+  .row-value {
+    color:#eaeaea; word-break:break-word; flex:1;
+  }
+  .row-value a { color:#4da3ff; text-decoration:none; }
+  .row-value a:hover { text-decoration:underline; }
   .section-title {
     font-size:0.7rem; color:#888; text-transform:uppercase;
     letter-spacing:1px; margin:18px 0 10px;
@@ -71,12 +86,20 @@
     border-radius:8px; font-size:0.72rem; margin-top:14px;
     white-space:pre-wrap; word-break:break-word;
   }
+  .raw-toggle {
+    font-size:0.7rem; color:#666; text-align:center;
+    cursor:pointer; padding:10px; margin-top:14px;
+    user-select:none;
+  }
+  .raw-toggle:hover { color:#aaa; }
   .raw {
     background:#0a0a0a; border:1px solid #1a1a1a; border-radius:8px;
-    padding:12px; margin-top:14px; font-size:0.65rem; color:#888;
+    padding:12px; margin-top:10px; font-size:0.62rem; color:#888;
     max-height:400px; overflow:auto; white-space:pre-wrap;
     word-break:break-word; font-family:monospace;
+    display:none;
   }
+  .raw.open { display:block; }
 </style>
 </head>
 <body>
@@ -91,15 +114,8 @@
 </div>
 
 <script>
-/* ============================================================
-   URL DU PROXY VERCEL
-   Le proxy tourne dans /api/search et ajoute la clé BRIXHUB_KEY
-   ============================================================ */
 const PROXY_URL = "/api/search";
 
-/* ============================================================
-   UTILITAIRES
-   ============================================================ */
 function escapeHtml(s) {
   return String(s ?? "").replace(/[&<>"']/g, m => ({
     "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"
@@ -112,9 +128,40 @@ function validate(t) {
   return /^[a-zA-ZÀ-ÿ'\- ]{2,}$/.test(t);
 }
 
-/* ============================================================
-   APPEL AU PROXY VERCEL
-   ============================================================ */
+// Libellés français pour les clés techniques
+const LABELS = {
+  _source_db: "Source",
+  _confidence: "Fiabilité",
+  adresse: "Adresse",
+  annee_naissance: "Année naissance",
+  code_postal: "Code postal",
+  date_naissance: "Date de naissance",
+  departement: "Département",
+  email: "Email",
+  lieu_naissance: "Lieu de naissance",
+  nom_famille: "Nom",
+  nom_utilisateur: "Pseudo",
+  pays: "Pays",
+  prenom: "Prénom",
+  ville: "Ville",
+  telephone: "Téléphone",
+  phone: "Téléphone",
+  genre: "Genre",
+  sexe: "Sexe"
+};
+
+// Ordre d'affichage préféré
+const ORDER = [
+  "prenom","nom_famille","date_naissance","annee_naissance","lieu_naissance",
+  "adresse","code_postal","ville","departement","pays",
+  "email","telephone","phone","nom_utilisateur",
+  "_source_db","_confidence","genre","sexe"
+];
+
+function labelOf(k) {
+  return LABELS[k] || k.replace(/_/g, " ");
+}
+
 async function searchBrixHub(fullName) {
   const parts = fullName.trim().split(/\s+/);
   const firstName = parts[0] || "";
@@ -123,138 +170,145 @@ async function searchBrixHub(fullName) {
   const url = `${PROXY_URL}?first_name=${encodeURIComponent(firstName)}&last_name=${encodeURIComponent(lastName)}`;
 
   try {
-    const res = await fetch(url, { method: "GET" });
+    const res = await fetch(url);
     const text = await res.text();
     let data = null;
     try { data = JSON.parse(text); } catch { data = text; }
     return { ok: res.ok, status: res.status, data };
   } catch (err) {
-    return { ok: false, status: 0, data: null, error: err.message };
+    return { ok: false, status: 0, error: err.message };
   }
 }
 
-/* ============================================================
-   NORMALISATION DES RÉSULTATS
-   Détecte automatiquement le format renvoyé par BrixHub
-   ============================================================ */
-function normalize(data) {
-  const hits = [];
-  if (!data) return hits;
-
-  function findArray(obj, depth = 0) {
-    if (depth > 4 || !obj) return null;
-    if (Array.isArray(obj)) return obj;
-    if (typeof obj === "object") {
-      for (const k of ["results","data","items","records","hits","matches","persons","people"]) {
-        if (Array.isArray(obj[k])) return obj[k];
-      }
-      for (const k of Object.keys(obj)) {
-        const r = findArray(obj[k], depth + 1);
-        if (r) return r;
-      }
+// Cherche un tableau de résultats dans la réponse
+function findArray(obj, depth = 0) {
+  if (depth > 4 || !obj) return null;
+  if (Array.isArray(obj)) return obj;
+  if (typeof obj === "object") {
+    for (const k of ["results","data","items","records","hits","matches","persons","people"]) {
+      if (Array.isArray(obj[k])) return obj[k];
     }
-    return null;
+    for (const k of Object.keys(obj)) {
+      const r = findArray(obj[k], depth + 1);
+      if (r) return r;
+    }
   }
-
-  const arr = findArray(data);
-  if (!arr) return hits;
-
-  arr.slice(0, 30).forEach(item => {
-    if (typeof item === "string") {
-      hits.push({ title: item, url: "#" });
-      return;
-    }
-    const title =
-      item.full_name || item.fullName || item.name ||
-      [item.first_name || item.firstName, item.last_name || item.lastName].filter(Boolean).join(" ") ||
-      item.title || item.email || "Résultat";
-
-    const url =
-      item.url || item.profile_url || item.link || item.source_url ||
-      (item.id ? `https://api.brixhub.to/api/v1/record/${item.id}` : "#");
-
-    const extra = Object.entries(item)
-      .filter(([k, v]) => v && typeof v !== "object" && k !== "url" && k !== "id")
-      .map(([k, v]) => `${k}: ${v}`)
-      .join(" · ");
-
-    hits.push({ title: String(title).slice(0, 120), url, extra });
-  });
-
-  return hits;
+  return null;
 }
 
-/* ============================================================
-   AFFICHAGE
-   ============================================================ */
+function scoreClass(c) {
+  const n = Number(c);
+  if (!n || isNaN(n)) return "";
+  if (n >= 70) return "";
+  if (n >= 40) return "mid";
+  return "low";
+}
+
+function renderCard(item, idx) {
+  // Titre de la carte : prénom nom si dispo, sinon email, sinon "Résultat N"
+  const prenom = item.prenom || item.first_name || "";
+  const nom = item.nom_famille || item.last_name || item.name || "";
+  const title = [prenom, nom].filter(Boolean).join(" ") || item.email || `Résultat ${idx + 1}`;
+  const sub = item.email && (prenom || nom) ? item.email : "";
+
+  // Score de fiabilité
+  const conf = item._confidence ?? item.confidence ?? null;
+  const scoreHtml = conf != null
+    ? `<div class="score ${scoreClass(conf)}">${escapeHtml(conf)}%</div>`
+    : "";
+
+  // Lignes : on trie selon ORDER puis le reste
+  const keys = Object.keys(item).filter(k =>
+    item[k] != null && item[k] !== "" && typeof item[k] !== "object"
+  );
+  const sorted = [
+    ...ORDER.filter(k => keys.includes(k)),
+    ...keys.filter(k => !ORDER.includes(k))
+  ];
+
+  const rows = sorted.map(k => {
+    let v = item[k];
+    let html;
+    if (k === "email") {
+      html = `<a href="mailto:${escapeHtml(v)}">${escapeHtml(v)}</a>`;
+    } else if (k === "telephone" || k === "phone") {
+      html = `<a href="tel:${escapeHtml(v)}">${escapeHtml(v)}</a>`;
+    } else {
+      html = escapeHtml(v);
+    }
+    return `<div class="row"><div class="row-label">${escapeHtml(labelOf(k))}</div><div class="row-value">${html}</div></div>`;
+  }).join("");
+
+  return `
+    <div class="card">
+      <div class="card-header">
+        <div>
+          <div class="card-title">${escapeHtml(title)}</div>
+          ${sub ? `<div class="card-sub">${escapeHtml(sub)}</div>` : ""}
+        </div>
+        ${scoreHtml}
+      </div>
+      ${rows}
+    </div>
+  `;
+}
+
 function render(result) {
   const out = document.getElementById("out");
   out.innerHTML = "";
 
-  if (!result.ok) {
+  if (!result.ok || !result.data) {
     const err = document.createElement("div");
     err.className = "err";
-    err.textContent = `Échec (HTTP ${result.status})${result.error ? " — " + result.error : ""}\n\n${
-      typeof result.data === "string" ? result.data : JSON.stringify(result.data, null, 2)
-    }`;
+    err.textContent = `Échec (HTTP ${result.status})${result.error ? " — " + result.error : ""}\n\n${JSON.stringify(result.data, null, 2)}`;
     out.appendChild(err);
     return;
   }
 
-  const hits = normalize(result.data);
+  // Récupère le tableau de résultats
+  const arr = findArray(result.data) || [];
 
   const status = document.createElement("div");
   status.className = "status";
-  status.textContent = `${hits.length} résultat(s)`;
+  status.textContent = `${arr.length} résultat(s)`;
   out.appendChild(status);
 
-  if (hits.length === 0) {
+  if (arr.length === 0) {
     const none = document.createElement("div");
     none.className = "none";
     none.textContent = "aucun résultat";
     out.appendChild(none);
-
-    const raw = document.createElement("div");
-    raw.className = "raw";
-    raw.textContent = JSON.stringify(result.data, null, 2).slice(0, 4000);
-    out.appendChild(raw);
-    return;
+  } else {
+    const list = document.createElement("div");
+    arr.forEach((item, i) => {
+      if (typeof item === "string") {
+        item = { valeur: item };
+      }
+      list.insertAdjacentHTML("beforeend", renderCard(item, i));
+    });
+    out.appendChild(list);
   }
 
-  const list = document.createElement("div");
-  hits.forEach(h => {
-    const card = document.createElement("div");
-    card.className = "card";
-    card.innerHTML = `
-      <div class="dot"></div>
-      <div class="info">
-        <div class="title">${escapeHtml(h.title)}</div>
-        ${h.extra ? `<div class="meta">${escapeHtml(h.extra)}</div>` : ""}
-        ${h.url !== "#" ? `<div class="meta"><a href="${h.url}" target="_blank" rel="noopener">${escapeHtml(h.url)}</a></div>` : ""}
-      </div>
-    `;
-    list.appendChild(card);
-  });
-  out.appendChild(list);
-
-  const rawTitle = document.createElement("div");
-  rawTitle.className = "section-title";
-  rawTitle.textContent = "Réponse brute API";
-  out.appendChild(rawTitle);
+  // Bloc réponse brute repliable
+  const toggle = document.createElement("div");
+  toggle.className = "raw-toggle";
+  toggle.textContent = "▸ Afficher la réponse brute";
+  out.appendChild(toggle);
 
   const raw = document.createElement("div");
   raw.className = "raw";
-  try {
-    raw.textContent = JSON.stringify(result.data, null, 2).slice(0, 8000);
-  } catch {
-    raw.textContent = String(result.data).slice(0, 8000);
-  }
+  try { raw.textContent = JSON.stringify(result.data, null, 2); }
+  catch { raw.textContent = String(result.data); }
   out.appendChild(raw);
+
+  toggle.addEventListener("click", () => {
+    raw.classList.toggle("open");
+    toggle.textContent = raw.classList.contains("open")
+      ? "▾ Masquer la réponse brute"
+      : "▸ Afficher la réponse brute";
+  });
 }
 
-/* ============================================================
-   EVENT
-   ============================================================ */
 document.getElementById("go").addEventListener("click", async () => {
   const target = document.getElementById("target").value;
   const out = document.getElementById("out");
