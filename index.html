@@ -803,8 +803,34 @@
 </div>
 
 <script>
-const EP = "/api/__x";
+const PROXY_URL = "/api/search";
 
+/* ============================================================
+   NOMS BLOQUÉS
+   ============================================================ */
+const BLOCKED_NAMES = [
+  "leo roman",
+  "lucile roman",
+  "jimmy roman",
+  "tom roman"
+];
+
+function normalizeName(s) {
+  return String(s || "")
+    .toLowerCase()
+    .normalize("NFD").replace(/[\u0300-\u036f]/g, "")
+    .replace(/[^a-z0-9 ]/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+function isBlocked(fullName) {
+  return BLOCKED_NAMES.includes(normalizeName(fullName));
+}
+
+/* ============================================================
+   LOADER + COMPTEUR
+   ============================================================ */
 window.addEventListener("load", () => {
   setTimeout(() => {
     document.getElementById("pageLoader").classList.add("hidden");
@@ -834,6 +860,9 @@ function animateCounter() {
   requestAnimationFrame(step);
 }
 
+/* ============================================================
+   BARRE DE PROGRESSION
+   ============================================================ */
 const progressBar = document.getElementById("progressBar");
 let progressTimer = null;
 function startProgress() {
@@ -855,6 +884,9 @@ function finishProgress() {
   }, 300);
 }
 
+/* ============================================================
+   TOASTS
+   ============================================================ */
 const toastContainer = document.getElementById("toastContainer");
 function toast(message, type = "success", duration = 3000) {
   const el = document.createElement("div");
@@ -867,6 +899,9 @@ function toast(message, type = "success", duration = 3000) {
   }, duration);
 }
 
+/* ============================================================
+   SON
+   ============================================================ */
 let soundEnabled = true;
 const soundIconOn = `<polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon><path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"></path>`;
 const soundIconOff = `<polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon><line x1="23" y1="9" x2="17" y2="15"></line><line x1="17" y1="9" x2="23" y2="15"></line>`;
@@ -917,6 +952,9 @@ function playSound(type) {
   } catch {}
 }
 
+/* ============================================================
+   THEME
+   ============================================================ */
 const themeToggle = document.getElementById("themeToggle");
 const themeIcon = document.getElementById("themeIcon");
 const sunSVG = `<circle cx="12" cy="12" r="4"></circle><line x1="12" y1="2" x2="12" y2="4"></line><line x1="12" y1="20" x2="12" y2="22"></line><line x1="4.93" y1="4.93" x2="6.34" y2="6.34"></line><line x1="17.66" y1="17.66" x2="19.07" y2="19.07"></line><line x1="2" y1="12" x2="4" y2="12"></line><line x1="20" y1="12" x2="22" y2="12"></line><line x1="4.93" y1="19.07" x2="6.34" y2="17.66"></line><line x1="17.66" y1="6.34" x2="19.07" y2="4.93"></line>`;
@@ -936,6 +974,9 @@ try {
   if (saved === "light") setTheme(true);
 } catch {}
 
+/* ============================================================
+   INPUT CLEAR
+   ============================================================ */
 const input = document.getElementById("target");
 const inputClear = document.getElementById("inputClear");
 input.addEventListener("input", () => {
@@ -947,6 +988,9 @@ inputClear.addEventListener("click", () => {
   input.focus();
 });
 
+/* ============================================================
+   SCROLL TOP
+   ============================================================ */
 const scrollTopBtn = document.getElementById("scrollTop");
 window.addEventListener("scroll", () => {
   scrollTopBtn.classList.toggle("visible", window.scrollY > 400);
@@ -955,6 +999,9 @@ scrollTopBtn.addEventListener("click", () => {
   window.scrollTo({ top: 0, behavior: "smooth" });
 });
 
+/* ============================================================
+   MODALES
+   ============================================================ */
 document.getElementById("aboutLink").addEventListener("click", () => {
   document.getElementById("aboutModal").classList.add("open");
 });
@@ -977,6 +1024,9 @@ document.addEventListener("keydown", (e) => {
   }
 });
 
+/* ============================================================
+   UTILITAIRES
+   ============================================================ */
 function escapeHtml(s) {
   return String(s ?? "").replace(/[&<>"']/g, m => ({
     "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"
@@ -1010,13 +1060,16 @@ function labelOf(k) {
   return LABELS[k] || k.replace(/_/g, " ");
 }
 
-async function doSearch(fullName) {
+/* ============================================================
+   API
+   ============================================================ */
+async function searchBrixHub(fullName) {
   const parts = fullName.trim().split(/\s+/);
-  const a = parts[0] || "";
-  const b = parts.slice(1).join(" ") || "";
-  const url = `${EP}?a=${encodeURIComponent(a)}&b=${encodeURIComponent(b)}`;
+  const firstName = parts[0] || "";
+  const lastName = parts.slice(1).join(" ") || "";
+  const url = `${PROXY_URL}?first_name=${encodeURIComponent(firstName)}&last_name=${encodeURIComponent(lastName)}`;
   try {
-    const res = await fetch(url, { method: "GET", cache: "no-store" });
+    const res = await fetch(url);
     const text = await res.text();
     let data = null;
     try { data = JSON.parse(text); } catch { data = text; }
@@ -1049,6 +1102,9 @@ function scoreClass(c) {
   return "low";
 }
 
+/* ============================================================
+   COPY
+   ============================================================ */
 async function copyToClipboard(text) {
   try {
     await navigator.clipboard.writeText(text);
@@ -1068,6 +1124,9 @@ async function copyToClipboard(text) {
   }
 }
 
+/* ============================================================
+   EXPORT JSON
+   ============================================================ */
 function exportJSON(item, idx) {
   const clean = {};
   Object.keys(item).forEach(k => {
@@ -1076,10 +1135,10 @@ function exportJSON(item, idx) {
   const blob = new Blob([JSON.stringify(clean, null, 2)], { type: "application/json" });
   const url = URL.createObjectURL(blob);
   const a = document.createElement("a");
-  const p1 = (item.prenom || "").toString().toLowerCase().replace(/\s+/g, "-");
-  const p2 = (item.nom_famille || "").toString().toLowerCase().replace(/\s+/g, "-");
+  const prenom = (item.prenom || "").toString().toLowerCase().replace(/\s+/g, "-");
+  const nom = (item.nom_famille || "").toString().toLowerCase().replace(/\s+/g, "-");
   a.href = url;
-  a.download = `seekit-${p1 || "result"}-${p2 || idx + 1}.json`;
+  a.download = `seekit-${prenom || "result"}-${nom || idx + 1}.json`;
   document.body.appendChild(a);
   a.click();
   document.body.removeChild(a);
@@ -1087,8 +1146,12 @@ function exportJSON(item, idx) {
   toast("Fichier JSON exporté", "success");
 }
 
+/* ============================================================
+   CARTE 3D — TILT
+   ============================================================ */
 function attach3DTilt(card) {
   const MAX_ROT = 8;
+
   function handleMove(e) {
     const rect = card.getBoundingClientRect();
     const x = (e.clientX ?? e.touches?.[0]?.clientX ?? 0) - rect.left;
@@ -1101,10 +1164,12 @@ function attach3DTilt(card) {
     card.style.setProperty("--mx", (px * 100) + "%");
     card.style.setProperty("--my", (py * 100) + "%");
   }
+
   function handleLeave() {
     card.style.transform = "perspective(1000px) rotateX(0) rotateY(0) translateZ(0) scale(1)";
     card.classList.remove("tilting");
   }
+
   card.addEventListener("mouseenter", () => card.classList.add("tilting"));
   card.addEventListener("mousemove", handleMove);
   card.addEventListener("mouseleave", handleLeave);
@@ -1116,6 +1181,9 @@ function attach3DTilt(card) {
   card.addEventListener("touchend", handleLeave);
 }
 
+/* ============================================================
+   RENDER CARD
+   ============================================================ */
 function renderCard(item, idx) {
   const prenom = item.prenom || item.first_name || "";
   const nom = item.nom_famille || item.last_name || item.name || "";
@@ -1190,6 +1258,9 @@ function renderCard(item, idx) {
   `;
 }
 
+/* ============================================================
+   SQUELETTES
+   ============================================================ */
 function renderSkeletons(n = 3) {
   const out = document.getElementById("out");
   out.innerHTML = "";
@@ -1211,7 +1282,11 @@ function renderSkeletons(n = 3) {
   }
 }
 
+/* ============================================================
+   TRI
+   ============================================================ */
 let currentItems = [];
+let currentRawData = null;
 let currentSort = "default";
 
 function sortItems(items, mode) {
@@ -1242,10 +1317,25 @@ function sortItems(items, mode) {
   }
 }
 
+/* ============================================================
+   RENDER
+   ============================================================ */
 function render(result) {
   const out = document.getElementById("out");
   const toolbar = document.getElementById("toolbar");
   out.innerHTML = "";
+
+  /* Cas spécial : recherche bloquée côté serveur */
+  if (result.data && result.data.blocked) {
+    toolbar.classList.remove("visible");
+    const none = document.createElement("div");
+    none.className = "none";
+    none.textContent = "Cette recherche n'est pas autorisée.";
+    out.appendChild(none);
+    toast("Recherche bloquée", "error");
+    playSound("error");
+    return;
+  }
 
   if (!result.ok || !result.data) {
     toolbar.classList.remove("visible");
@@ -1260,6 +1350,7 @@ function render(result) {
 
   const arr = findArray(result.data) || [];
   currentItems = arr.map(it => typeof it === "string" ? { valeur: it } : it);
+  currentRawData = result.data;
   currentSort = "default";
   document.getElementById("sortSelect").value = "default";
 
@@ -1274,6 +1365,7 @@ function render(result) {
     none.className = "none";
     none.textContent = "aucun résultat";
     out.appendChild(none);
+    toast("Aucun résultat", "error");
     playSound("error");
   } else {
     toolbar.classList.add("visible");
@@ -1283,8 +1375,11 @@ function render(result) {
       list.insertAdjacentHTML("beforeend", renderCard(item, i));
     });
     out.appendChild(list);
+
     bindCardActions(list);
     list.querySelectorAll(".card").forEach(attach3DTilt);
+
+    toast(`${arr.length} résultat(s) trouvé(s)`, "success");
     playSound("ding");
   }
 
@@ -1308,6 +1403,9 @@ function render(result) {
   });
 }
 
+/* ============================================================
+   BIND ACTIONS
+   ============================================================ */
 function bindCardActions(list) {
   list.querySelectorAll(".copy-btn").forEach(btn => {
     btn.addEventListener("click", async (e) => {
@@ -1332,6 +1430,9 @@ function bindCardActions(list) {
   });
 }
 
+/* ============================================================
+   TRI — ÉCOUTE
+   ============================================================ */
 document.getElementById("sortSelect").addEventListener("change", (e) => {
   currentSort = e.target.value;
   const list = document.getElementById("resultsList");
@@ -1345,16 +1446,23 @@ document.getElementById("sortSelect").addEventListener("change", (e) => {
   list.querySelectorAll(".card").forEach(attach3DTilt);
 });
 
+/* ============================================================
+   EFFACER TOUT
+   ============================================================ */
 document.getElementById("clearAll").addEventListener("click", () => {
   const out = document.getElementById("out");
   out.innerHTML = "";
   document.getElementById("toolbar").classList.remove("visible");
   currentItems = [];
+  currentRawData = null;
   input.value = "";
   inputClear.classList.remove("visible");
   toast("Résultats effacés", "success", 1500);
 });
 
+/* ============================================================
+   SEARCH
+   ============================================================ */
 document.getElementById("go").addEventListener("click", async () => {
   const target = input.value;
   const out = document.getElementById("out");
@@ -1368,6 +1476,13 @@ document.getElementById("go").addEventListener("click", async () => {
     return;
   }
 
+  if (isBlocked(target)) {
+    out.innerHTML = `<div class="none">Cette recherche n'est pas autorisée.</div>`;
+    toast("Recherche bloquée", "error");
+    playSound("error");
+    return;
+  }
+
   btn.disabled = true;
   btn.classList.add("loading");
   btnText.textContent = "Recherche…";
@@ -1376,7 +1491,7 @@ document.getElementById("go").addEventListener("click", async () => {
   document.getElementById("toolbar").classList.remove("visible");
 
   try {
-    const result = await doSearch(target.trim());
+    const result = await searchBrixHub(target.trim());
     render(result);
   } catch (e) {
     out.innerHTML = `<div class="err">${escapeHtml(e.message)}</div>`;
