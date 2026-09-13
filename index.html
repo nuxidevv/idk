@@ -15,12 +15,11 @@
   .wrap { width:100%; max-width:680px; }
   h1 { font-size:1.1rem; font-weight:600; margin-bottom:4px; color:#fff; }
   .sub { font-size:0.75rem; color:#555; margin-bottom:32px; }
-  .row { display:flex; gap:10px; margin-bottom:12px; }
   input {
     background:#0d0d0d; border:1px solid #1e1e1e; color:#eaeaea;
     padding:12px 14px; border-radius:8px; font-size:0.85rem;
     font-family:inherit; outline:none;
-    width:100%; flex:1;
+    width:100%; margin-bottom:12px;
   }
   input:focus { border-color:#333; }
   button {
@@ -33,17 +32,17 @@
   button:active { opacity:0.7; }
   button:disabled { background:#1a1a1a; color:#555; cursor:default; }
 
-  .criteria {
-    margin-bottom:12px;
+  .criteria-box {
+    background:#0a0a0a; border:1px solid #1a1a1a; border-radius:8px;
+    padding:12px; margin-bottom:12px;
   }
-  .criteria-header {
-    display:flex; justify-content:space-between; align-items:center;
-    font-size:0.72rem; color:#666; margin-bottom:10px;
-    cursor:pointer; user-select:none;
+  .criteria-title {
+    font-size:0.7rem; color:#666; margin-bottom:10px;
+    letter-spacing:0.5px; text-transform:uppercase;
   }
-  .criteria-header:hover { color:#999; }
-  .criteria-list { display:none; gap:8px; flex-wrap:wrap; margin-bottom:14px; }
-  .criteria-list.open { display:flex; }
+  .criteria-grid {
+    display:flex; flex-wrap:wrap; gap:6px; margin-bottom:10px;
+  }
   .chip {
     background:#0d0d0d; border:1px solid #1e1e1e;
     padding:6px 10px; border-radius:6px;
@@ -55,6 +54,28 @@
     background:#fff; color:#000; border-color:#fff;
     font-weight:600;
   }
+  .criteria-input-row {
+    display:flex; gap:6px; margin-bottom:8px;
+  }
+  .criteria-input-row input {
+    margin-bottom:0; font-size:0.8rem; padding:10px 12px;
+  }
+  .criteria-input-row button {
+    width:auto; padding:10px 16px; font-size:0.8rem; flex-shrink:0;
+  }
+  .criteria-active {
+    display:flex; flex-wrap:wrap; gap:6px; margin-top:10px;
+  }
+  .criteria-tag {
+    background:#1f3d5a; color:#a8d4ff;
+    padding:5px 10px; border-radius:6px;
+    font-size:0.7rem; font-weight:500;
+    display:flex; align-items:center; gap:6px;
+  }
+  .criteria-tag span {
+    cursor:pointer; opacity:0.6; font-weight:bold;
+  }
+  .criteria-tag span:hover { opacity:1; }
 
   #out { margin-top:28px; }
   .status {
@@ -68,7 +89,7 @@
   .card {
     background:#0b0b0b; border:1px solid #1f3d2a; border-radius:10px;
     padding:14px 16px; margin-bottom:8px;
-    display:flex; align-items:center; gap:12px;
+    display:flex; align-items:flex-start; gap:12px;
   }
   .card:hover { border-color:#2f5d3f; }
   .card.dork-card { border-color:#1f3d5a; }
@@ -76,20 +97,20 @@
   .dot {
     width:8px; height:8px; border-radius:50%; flex-shrink:0;
     background:#00e07a; box-shadow:0 0 8px #00e07a88;
+    margin-top:6px;
   }
   .dot.blue { background:#4da3ff; box-shadow:0 0 8px #4da3ff88; }
-  .dot.red  { background:#ff4d4d; box-shadow:0 0 8px #ff4d4d88; }
   .dot.gray { background:#666; box-shadow:none; }
-  .dot.orange { background:#ffaa4d; box-shadow:0 0 8px #ffaa4d88; }
   .info { flex:1; min-width:0; }
   .info a, .info .title {
     color:#eaeaea; text-decoration:none; font-size:0.85rem;
-    display:block; overflow:hidden; text-overflow:ellipsis;
-    white-space:nowrap;
+    display:block; word-break:break-word;
   }
   .info a:hover { color:#4da3ff; }
-  .info .title { font-weight:500; white-space:normal; }
-  .meta { font-size:0.65rem; color:#555; margin-top:3px; word-break:break-all; }
+  .info .title { font-weight:500; }
+  .meta { font-size:0.65rem; color:#555; margin-top:4px; word-break:break-all; line-height:1.4; }
+  .meta a { color:#4da3ff; text-decoration:none; display:block; margin-top:2px; }
+  .meta a:hover { text-decoration:underline; }
   .badge {
     display:inline-block; font-size:0.6rem; padding:2px 6px;
     border-radius:4px; margin-left:6px; font-weight:600;
@@ -113,16 +134,11 @@
   <h1>OSINT</h1>
   <div class="sub">recherche approfondie par prénom nom</div>
 
-  <div class="row">
-    <input id="target" placeholder="prénom nom..." autocomplete="off">
-  </div>
+  <input id="target" placeholder="prénom nom..." autocomplete="off">
 
-  <div class="criteria">
-    <div class="criteria-header" id="criteriaToggle">
-      <span>+ Critères additionnels</span>
-      <span id="criteriaCount">0 sélectionné</span>
-    </div>
-    <div class="criteria-list" id="criteriaList">
+  <div class="criteria-box">
+    <div class="criteria-title">Critères additionnels</div>
+    <div class="criteria-grid" id="criteriaGrid">
       <div class="chip" data-crit="email">Email</div>
       <div class="chip" data-crit="username">Pseudo</div>
       <div class="chip" data-crit="phone">Téléphone</div>
@@ -139,7 +155,11 @@
       <div class="chip" data-crit="facebook">Facebook</div>
       <div class="chip" data-crit="instagram">Instagram</div>
     </div>
-    <input id="extraValue" placeholder="valeur du critère (ex: Paris, Google, 1990...)" autocomplete="off">
+    <div class="criteria-input-row">
+      <input id="extraValue" placeholder="valeur (ex: Paris, Google, 1990...)" autocomplete="off">
+      <button id="addCrit">+ Ajouter</button>
+    </div>
+    <div class="criteria-active" id="activeCriteria"></div>
   </div>
 
   <button id="go">Rechercher</button>
@@ -157,64 +177,75 @@ window.addEventListener("error", e => {
 });
 
 /* ============================================================
-   PROXY CORS (multi-fallback)
+   PROXY CORS avec timeout court (2s par proxy)
    ============================================================ */
 const PROXIES = [
   u => `https://api.allorigins.win/raw?url=${encodeURIComponent(u)}`,
-  u => `https://corsproxy.io/?${encodeURIComponent(u)}`,
-  u => `https://api.codetabs.com/v1/proxy?quest=${encodeURIComponent(u)}`
+  u => `https://api.codetabs.com/v1/proxy?quest=${encodeURIComponent(u)}`,
+  u => `https://corsproxy.io/?${encodeURIComponent(u)}`
 ];
 
-async function P(url) {
-  for (const proxy of PROXIES) {
-    try {
-      const r = await fetch(proxy(url));
-      if (r.ok) return r;
-    } catch {}
+async function fetchWithTimeout(url, ms) {
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), ms);
+  try {
+    const r = await fetch(url, { signal: controller.signal });
+    clearTimeout(timer);
+    return r;
+  } catch (e) {
+    clearTimeout(timer);
+    throw e;
   }
-  throw new Error("proxy failed");
+}
+
+async function P(url) {
+  // Lance les 3 proxies en parallèle, prend le premier qui répond
+  const promises = PROXIES.map(p =>
+    fetchWithTimeout(p(url), 6000).then(r => r.ok ? r : Promise.reject())
+  );
+  return Promise.any(promises);
 }
 
 /* ============================================================
-   APIs OFFICIELLES PSEUDO (pour la recherche par nom)
+   APIs OFFICIELLES PSEUDO (rapides, CORS direct)
    ============================================================ */
 async function vGitHub(u) {
   try {
-    const r = await fetch(`https://api.github.com/users/${u}`);
+    const r = await fetchWithTimeout(`https://api.github.com/users/${u}`, 5000);
     if (r.status === 200) {
       const j = await r.json();
-      return { exists:true, confidence:1, reason:`${j.public_repos} repos · ${j.followers} followers`, url:`https://github.com/${u}` };
+      return { exists:true, confidence:1, reason:`${j.public_repos} repos · ${j.followers} followers` };
     }
     return { exists:false, confidence:1, reason:"404" };
-  } catch { return { exists:false, confidence:0, reason:"erreur réseau" }; }
+  } catch { return { exists:false, confidence:0, reason:"timeout" }; }
 }
 
 async function vReddit(u) {
   try {
-    const r = await fetch(`https://www.reddit.com/user/${u}/about.json`);
+    const r = await fetchWithTimeout(`https://www.reddit.com/user/${u}/about.json`, 5000);
     if (r.status !== 200) return { exists:false, confidence:1, reason:"404" };
     const j = await r.json();
     if (j?.data?.name) {
-      return { exists:true, confidence:1, reason:`karma: ${j.data.link_karma + j.data.comment_karma}`, url:`https://www.reddit.com/user/${u}` };
+      return { exists:true, confidence:1, reason:`karma: ${j.data.link_karma + j.data.comment_karma}` };
     }
     return { exists:false, confidence:1, reason:"pas de donnée" };
-  } catch { return { exists:false, confidence:0, reason:"erreur réseau" }; }
+  } catch { return { exists:false, confidence:0, reason:"timeout" }; }
 }
 
 async function vGitLab(u) {
   try {
-    const r = await fetch(`https://gitlab.com/api/v4/users?username=${u}`);
+    const r = await fetchWithTimeout(`https://gitlab.com/api/v4/users?username=${u}`, 5000);
     if (r.status !== 200) return { exists:false, confidence:1, reason:"404" };
     const j = await r.json();
     if (Array.isArray(j) && j.length > 0) {
-      return { exists:true, confidence:1, reason:j[0].name || j[0].username, url:`https://gitlab.com/${u}` };
+      return { exists:true, confidence:1, reason:j[0].name || j[0].username };
     }
     return { exists:false, confidence:1, reason:"liste vide" };
-  } catch { return { exists:false, confidence:0, reason:"erreur réseau" }; }
+  } catch { return { exists:false, confidence:0, reason:"timeout" }; }
 }
 
 /* ============================================================
-   CHECKER HTML avec signatures
+   CHECKER HTML
    ============================================================ */
 function htmlCheck(options) {
   const { negatives = [], positives = [], minScore = 0.4 } = options;
@@ -241,16 +272,16 @@ function htmlCheck(options) {
       return {
         exists: ratio >= minScore,
         confidence: Math.min(0.5 + ratio * 0.4, 0.9),
-        reason: hits.length ? `${hits.slice(0,2).join(", ")}` : `${found}/${positives.length} signaux`
+        reason: hits.length ? hits.slice(0,2).join(", ") : `${found}/${positives.length} signaux`
       };
     } catch {
-      return { exists:false, confidence:0, reason:"proxy inaccessible" };
+      return { exists:false, confidence:0, reason:"timeout" };
     }
   };
 }
 
 /* ============================================================
-   PLATEFORMES PSEUDO
+   PLATEFORMES — réduites aux plus fiables pour rapidité
    ============================================================ */
 const PLATFORMS = [
   ["GitHub", u=>`https://github.com/${u}`, vGitHub],
@@ -272,10 +303,6 @@ const PLATFORMS = [
     negatives: ["content isn't available","page not found"],
     positives: ["og:title","profile_id","cover_photo"]
   })],
-  ["Telegram", u=>`https://t.me/${u}`, htmlCheck({
-    negatives: ["if you have telegram, you can contact"],
-    positives: ["tgme_page_title","tgme_page_photo"]
-  })],
   ["YouTube", u=>`https://www.youtube.com/@${u}`, htmlCheck({
     negatives: ["this page isn't available","404"],
     positives: ["channelid","subscriber_count","og:title"]
@@ -286,15 +313,11 @@ const PLATFORMS = [
   })],
   ["Pinterest", u=>`https://www.pinterest.com/${u}/`, htmlCheck({
     negatives: ["page not found"],
-    positives: ["og:title","profile","pins","followers"]
+    positives: ["og:title","profile","pins"]
   })],
   ["Medium", u=>`https://medium.com/@${u}`, htmlCheck({
     negatives: ["out of nothing","404"],
     positives: ["og:title","profile","followers"]
-  })],
-  ["DeviantArt", u=>`https://www.deviantart.com/${u}`, htmlCheck({
-    negatives: ["not found","does not exist"],
-    positives: ["og:title","deviation","watchers"]
   })],
   ["Steam", u=>`https://steamcommunity.com/id/${u}`, htmlCheck({
     negatives: ["the specified profile could not be found"],
@@ -306,15 +329,11 @@ const PLATFORMS = [
   })],
   ["Behance", u=>`https://www.behance.net/${u}`, htmlCheck({
     negatives: ["page not found","404"],
-    positives: ["og:title","profile","projects","followers"]
+    positives: ["og:title","profile","projects"]
   })],
   ["Dribbble", u=>`https://dribbble.com/${u}`, htmlCheck({
     negatives: ["page not found","404"],
-    positives: ["og:title","profile","shots","followers"]
-  })],
-  ["Patreon", u=>`https://www.patreon.com/${u}`, htmlCheck({
-    negatives: ["page not found","404"],
-    positives: ["og:title","patron","creator"]
+    positives: ["og:title","profile","shots"]
   })],
   ["Mastodon", u=>`https://mastodon.social/@${u}`, htmlCheck({
     negatives: ["the page you are looking for isn't here"],
@@ -330,15 +349,11 @@ const PLATFORMS = [
   })],
   ["VK", u=>`https://vk.com/${u}`, htmlCheck({
     negatives: ["page not found"],
-    positives: ["og:title","profile","friends","photos"]
+    positives: ["og:title","profile","friends"]
   })],
   ["Flickr", u=>`https://www.flickr.com/people/${u}`, htmlCheck({
     negatives: ["page not found","404"],
     positives: ["og:title","flickr","photostream"]
-  })],
-  ["Imgur", u=>`https://imgur.com/user/${u}`, htmlCheck({
-    negatives: ["page not found","404"],
-    positives: ["og:title","imgur","profile"]
   })],
   ["Quora", u=>`https://www.quora.com/profile/${u}`, htmlCheck({
     negatives: ["page not found","404","we couldn't find"],
@@ -348,288 +363,273 @@ const PLATFORMS = [
     negatives: ["page not found","404"],
     positives: ["og:title","vimeo","profile"]
   })],
-  ["Bandcamp", u=>`https://bandcamp.com/${u}`, htmlCheck({
-    negatives: ["page not found","404"],
-    positives: ["og:title","bandcamp","artist"]
-  })],
-  ["Substack", u=>`https://${u}.substack.com`, htmlCheck({
-    negatives: ["page not found","404"],
-    positives: ["og:title","substack","subscribe"]
-  })],
-  ["WordPress", u=>`https://${u}.wordpress.com`, htmlCheck({
-    negatives: ["not found","doesn't exist"],
-    positives: ["og:title","wordpress","blog"]
-  })],
   ["Dev.to", u=>`https://dev.to/${u}`, htmlCheck({
     negatives: ["not found","404"],
     positives: ["og:title","dev.to","profile"]
-  })],
-  ["CodePen", u=>`https://codepen.io/${u}`, htmlCheck({
-    negatives: ["page not found","404"],
-    positives: ["og:title","codepen","profile"]
   })],
   ["HackerNews", u=>`https://news.ycombinator.com/user?id=${u}`, htmlCheck({
     negatives: ["no such user","sorry"],
     positives: ["karma","created","about"]
   })],
-  ["9GAG", u=>`https://9gag.com/u/${u}`, htmlCheck({
-    negatives: ["not found","404"],
-    positives: ["og:title","9gag","profile"]
-  })],
   ["ArtStation", u=>`https://www.artstation.com/${u}`, htmlCheck({
     negatives: ["not found","404"],
     positives: ["og:title","artstation","profile"]
-  })],
-  ["Product Hunt", u=>`https://www.producthunt.com/@${u}`, htmlCheck({
-    negatives: ["not found","404"],
-    positives: ["og:title","product hunt","profile"]
   })]
 ];
 
 /* ============================================================
-   GOOGLE DORKS — moteurs de recherche (via proxy)
+   GOOGLE DORKS
    ============================================================ */
-
-// Génère les variantes de recherche
 function buildDorks(fullName, criteria) {
-  const [first, ...rest] = fullName.trim().split(/\s+/);
-  const last = rest.join(" ") || "";
-  const f = first || "";
-  const l = last;
-
-  const crit = criteria.crit || "";
-  const val = criteria.value || "";
-
-  // Dorks de base (toujours exécutés)
   const dorks = [
-    { label: "Nom complet exact",          q: `"${fullName}"` },
-    { label: "Nom + LinkedIn",             q: `"${fullName}" site:linkedin.com` },
-    { label: "Nom + Facebook",             q: `"${fullName}" site:facebook.com` },
-    { label: "Nom + Instagram",            q: `"${fullName}" site:instagram.com` },
-    { label: "Nom + Twitter/X",            q: `"${fullName}" site:twitter.com OR site:x.com` },
-    { label: "Nom + GitHub",               q: `"${fullName}" site:github.com` },
-    { label: "Nom + PDF",                  q: `"${fullName}" filetype:pdf` },
-    { label: "Nom + CV / Resume",          q: `"${fullName}" (CV OR resume OR curriculum)` },
-    { label: "Nom + Email",                q: `"${fullName}" (email OR mail OR contact)` },
-    { label: "Nom + Téléphone",            q: `"${fullName}" (téléphone OR phone OR tel)` },
-    { label: "Nom sur Pastebin",           q: `"${fullName}" site:pastebin.com` },
-    { label: "Nom sur Documents publics",  q: `"${fullName}" filetype:docx OR filetype:xlsx OR filetype:pptx` },
+    { label: "Nom complet exact",     q: `"${fullName}"` },
+    { label: "Nom + LinkedIn",        q: `"${fullName}" site:linkedin.com` },
+    { label: "Nom + Facebook",        q: `"${fullName}" site:facebook.com` },
+    { label: "Nom + Instagram",       q: `"${fullName}" site:instagram.com` },
+    { label: "Nom + GitHub",          q: `"${fullName}" site:github.com` },
+    { label: "Nom + PDF",             q: `"${fullName}" filetype:pdf` },
+    { label: "Nom + CV",              q: `"${fullName}" (CV OR resume)` },
+    { label: "Nom + Email",           q: `"${fullName}" (email OR contact)` },
   ];
 
-  // Dork selon critère
-  if (crit && val) {
+  // Ajoute un dork par critère actif
+  for (const { crit, value } of criteria) {
     const critMap = {
-      email:    `"${fullName}" "${val}"`,
-      username: `"${fullName}" "${val}"`,
-      phone:    `"${fullName}" "${val}"`,
-      city:     `"${fullName}" "${val}"`,
-      country:  `"${fullName}" "${val}"`,
-      company:  `"${fullName}" "${val}" (LinkedIn OR site:linkedin.com)`,
-      school:   `"${fullName}" "${val}"`,
-      job:      `"${fullName}" "${val}"`,
-      birth:    `"${fullName}" "${val}"`,
-      site:     `"${fullName}" site:${val}`,
-      linkedin: `"${fullName}" site:linkedin.com "${val}"`,
-      twitter:  `"${fullName}" (site:twitter.com OR site:x.com) "${val}"`,
-      github:   `"${fullName}" site:github.com "${val}"`,
-      facebook: `"${fullName}" site:facebook.com "${val}"`,
-      instagram:`"${fullName}" site:instagram.com "${val}"`,
+      email:    `"${fullName}" "${value}"`,
+      username: `"${fullName}" "${value}"`,
+      phone:    `"${fullName}" "${value}"`,
+      city:     `"${fullName}" "${value}"`,
+      country:  `"${fullName}" "${value}"`,
+      company:  `"${fullName}" "${value}" (LinkedIn OR site:linkedin.com)`,
+      school:   `"${fullName}" "${value}"`,
+      job:      `"${fullName}" "${value}"`,
+      birth:    `"${fullName}" "${value}"`,
+      site:     `"${fullName}" site:${value}`,
+      linkedin: `"${fullName}" site:linkedin.com "${value}"`,
+      twitter:  `"${fullName}" (site:twitter.com OR site:x.com) "${value}"`,
+      github:   `"${fullName}" site:github.com "${value}"`,
+      facebook: `"${fullName}" site:facebook.com "${value}"`,
+      instagram:`"${fullName}" site:instagram.com "${value}"`,
     };
     if (critMap[crit]) {
-      dorks.unshift({ label: `Critère : ${crit} = ${val}`, q: critMap[crit] });
+      dorks.push({ label: `${crit}: ${value}`, q: critMap[crit] });
     }
   }
 
   return dorks;
 }
 
-// Vérifie si un résultat est valide via DuckDuckGo HTML
+// DuckDuckGo HTML — récupère les résultats
 async function searchDork(query) {
   try {
-    // Utilise DuckDuckGo HTML (pas d'API, mais accessible via proxy)
     const ddgUrl = `https://html.duckduckgo.com/html/?q=${encodeURIComponent(query)}`;
     const r = await P(ddgUrl);
     if (r.status !== 200) return { found:false, count:0, hits:[] };
     const html = await r.text();
 
-    // Extrait les résultats (liens + titres)
     const results = [];
-    const regex = /<a[^>]*class="result__a"[^>]*href="([^"]+)"[^>]*>(.*?)<\/a>/g;
+    // Regex sur les liens de résultats DDG
+    const regex = /<a[^>]*class="result__a"[^>]*href="([^"]+)"[^>]*>([\s\S]*?)<\/a>/g;
     let m;
-    while ((m = regex.exec(html)) !== null && results.length < 5) {
-      const url = decodeURIComponent(m[1].replace(/^.*uddg=/, "").replace(/&rut=.*$/, ""));
-      const title = m[2].replace(/<[^>]+>/g, "").trim();
-      if (title && url && !url.includes("duckduckgo.com")) {
-        results.push({ title, url });
+    while ((m = regex.exec(html)) !== null && results.length < 4) {
+      let url = m[1];
+      // DDG encode l'URL réelle dans uddg=
+      const uddg = url.match(/uddg=([^&]+)/);
+      if (uddg) url = decodeURIComponent(uddg[1]);
+      const title = m[2].replace(/<[^>]+>/g, "").replace(/&amp;/g,"&").trim();
+      if (title && url && url.startsWith("http")) {
+        results.push({ title: title.slice(0,80), url });
       }
     }
 
     return { found: results.length > 0, count: results.length, hits: results };
   } catch (e) {
-    return { found:false, count:0, hits:[], error:true };
+    return { found:false, count:0, hits:[] };
   }
 }
 
 /* ============================================================
-   RENDU — RECHERCHE PROFONDE PRÉNOM NOM
+   RECHERCHE PROFONDE — AFFICHAGE AU FUR ET À MESURE
    ============================================================ */
 async function renderDeepSearch(fullName, criteria) {
   const out = document.getElementById("out");
-  out.innerHTML = `<div class="status" id="status">préparation…</div>`;
+  out.innerHTML = "";
 
-  // 1) Génère les dorks
   const dorks = buildDorks(fullName, criteria);
 
-  // 2) Génère les variantes de pseudo possibles
-  const [first, ...rest] = fullName.trim().toLowerCase().split(/\s+/);
-  const last = rest.join(" ");
-  const usernameVariants = [
+  // Variantes de pseudo
+  const parts = fullName.trim().toLowerCase().split(/\s+/);
+  const first = parts[0];
+  const last = parts.slice(1).join("");
+  const variants = [...new Set([
     first + last,
     first + "." + last,
     first + "_" + last,
     first[0] + last,
     first + last[0],
     first + "-" + last
-  ].filter(u => u && u.length >= 2);
+  ])].filter(u => u && u.length >= 3);
 
-  // 3) Lance TOUT en parallèle
-  document.getElementById("status").textContent = `analyse de ${dorks.length} dorks + ${usernameVariants.length} variantes…`;
+  // Compteur global
+  const total = dorks.length + (variants.length * PLATFORMS.length);
+  let done = 0;
+  let foundCount = 0;
 
-  const dorkPromises = dorks.map(async d => ({ type:"dork", label:d.label, query:d.q, result: await searchDork(d.q) }));
+  const statusEl = document.createElement("div");
+  statusEl.className = "status";
+  statusEl.textContent = `0/${total} analysé…`;
+  out.appendChild(statusEl);
 
-  const platformPromises = [];
-  for (const variant of usernameVariants) {
-    for (const [name, urlFn, checker] of PLATFORMS) {
-      const url = urlFn(variant);
-      platformPromises.push(
-        Promise.resolve(checker(variant, url)).then(res => ({ type:"platform", platform:name, variant, url, result:res })).catch(() => null)
-      );
-    }
+  // Sections créées à l'avance
+  const sectionDorks = document.createElement("div");
+  const dorksList = document.createElement("div");
+  sectionDorks.innerHTML = `<div class="section-title">Google Dorks</div>`;
+  sectionDorks.appendChild(dorksList);
+  out.appendChild(sectionDorks);
+
+  const sectionPlatforms = document.createElement("div");
+  const platformsList = document.createElement("div");
+  sectionPlatforms.innerHTML = `<div class="section-title">Profils plateformes</div>`;
+  sectionPlatforms.appendChild(platformsList);
+  out.appendChild(sectionPlatforms);
+
+  const noDorkEl = document.createElement("div");
+  noDorkEl.className = "none";
+  noDorkEl.textContent = "aucun dork positif";
+  dorksList.appendChild(noDorkEl);
+
+  const noPlatEl = document.createElement("div");
+  noPlatEl.className = "none";
+  noPlatEl.textContent = "aucun profil trouvé";
+  platformsList.appendChild(noPlatEl);
+
+  let dorkFound = 0;
+  let platFound = 0;
+
+  function updateStatus() {
+    statusEl.textContent = `${done}/${total} analysé · ${foundCount} résultat(s)`;
   }
 
-  const [dorkResults, platformResults] = await Promise.all([
-    Promise.all(dorkPromises),
-    Promise.all(platformPromises)
-  ]);
-
-  // 4) Filtre et affiche
-  out.innerHTML = "";
-
-  // --- Résultats dorks ---
-  const foundDorks = dorkResults.filter(d => d.result.found);
-  addSection(out, `Google Dorks — ${foundDorks.length}/${dorks.length} positifs`);
-
-  if (foundDorks.length === 0) {
-    out.innerHTML += `<div class="none">aucun résultat de dork</div>`;
-  } else {
-    foundDorks.forEach(d => {
+  // 1) Lance tous les dorks en parallèle
+  dorks.forEach(async (dork) => {
+    const result = await searchDork(dork.q);
+    done++;
+    if (result.found) {
+      foundCount++;
+      dorkFound++;
+      if (dorkFound === 1) noDorkEl.remove();
       const card = document.createElement("div");
       card.className = "card dork-card";
-      const hitsHtml = d.result.hits.slice(0,3).map(h =>
-        `<div class="meta" style="margin-left:0;">→ <a href="${h.url}" target="_blank" rel="noopener" style="color:#4da3ff;">${escapeHtml(h.title.slice(0,70))}</a></div>`
+      const hitsHtml = result.hits.slice(0,3).map(h =>
+        `<a href="${h.url}" target="_blank" rel="noopener">${escapeHtml(h.title)}</a>`
       ).join("");
       card.innerHTML = `
         <div class="dot blue"></div>
         <div class="info">
-          <div class="title">${escapeHtml(d.label)}
-            <span class="badge ok">${d.result.count}</span>
+          <div class="title">${escapeHtml(dork.label)}
+            <span class="badge ok">${result.count}</span>
           </div>
-          <div class="meta">${escapeHtml(d.query)}</div>
-          ${hitsHtml}
+          <div class="meta">${escapeHtml(dork.q)}</div>
+          <div class="meta">${hitsHtml}</div>
         </div>
       `;
-      out.appendChild(card);
-    });
-  }
-
-  // --- Résultats plateformes ---
-  const foundPlatforms = platformResults.filter(p => p && p.result.exists && p.result.confidence >= 0.5);
-
-  addSection(out, `Plateformes — ${foundPlatforms.length} profil(s)`);
-
-  if (foundPlatforms.length === 0) {
-    out.innerHTML += `<div class="none">aucun profil trouvé via variantes de pseudo</div>`;
-  } else {
-    // Déduplique par plateforme (garde la meilleure variante)
-    const best = {};
-    for (const p of foundPlatforms) {
-      if (!best[p.platform] || best[p.platform].result.confidence < p.result.confidence) {
-        best[p.platform] = p;
-      }
+      dorksList.appendChild(card);
     }
-    Object.values(best).forEach(p => {
-      const conf = Math.round((p.result.confidence || 0) * 100);
-      const badgeCls = p.result.confidence >= 0.85 ? "ok" : "warn";
-      const card = document.createElement("div");
-      card.className = "card";
-      card.innerHTML = `
-        <div class="dot"></div>
-        <div class="info">
-          <a href="${p.url}" target="_blank" rel="noopener">${p.platform}
-            <span class="badge ${badgeCls}">${conf}%</span>
-          </a>
-          <div class="meta">${escapeHtml(p.url)}</div>
-          <div class="meta">variante : ${escapeHtml(p.variant)} · ${escapeHtml(p.result.reason || "")}</div>
-        </div>
-      `;
-      out.appendChild(card);
+    updateStatus();
+  });
+
+  // 2) Lance toutes les plateformes × variantes
+  variants.forEach(variant => {
+    PLATFORMS.forEach(async ([name, urlFn, checker]) => {
+      const url = urlFn(variant);
+      let res;
+      try {
+        res = await checker(variant, url);
+      } catch {
+        res = { exists:false, confidence:0, reason:"erreur" };
+      }
+      done++;
+      if (res && res.exists && res.confidence >= 0.5) {
+        foundCount++;
+        platFound++;
+        if (platFound === 1) noPlatEl.remove();
+        const conf = Math.round((res.confidence || 0) * 100);
+        const badgeCls = res.confidence >= 0.85 ? "ok" : "warn";
+        const card = document.createElement("div");
+        card.className = "card";
+        card.innerHTML = `
+          <div class="dot"></div>
+          <div class="info">
+            <a href="${url}" target="_blank" rel="noopener">${name}
+              <span class="badge ${badgeCls}">${conf}%</span>
+            </a>
+            <div class="meta">${escapeHtml(url)}</div>
+            <div class="meta">variante: ${escapeHtml(variant)} · ${escapeHtml(res.reason || "")}</div>
+          </div>
+        `;
+        platformsList.appendChild(card);
+      }
+      updateStatus();
     });
-  }
+  });
 }
 
 /* ============================================================
-   UI — critères
+   UI — CRITÈRES MULTIPLES
    ============================================================ */
-const activeCriteria = { crit: null, value: "" };
-
-document.getElementById("criteriaToggle").addEventListener("click", () => {
-  document.getElementById("criteriaList").classList.toggle("open");
-});
+const activeCriteria = [];
+let selectedCrit = null;
 
 document.querySelectorAll(".chip").forEach(chip => {
   chip.addEventListener("click", () => {
     const crit = chip.dataset.crit;
-    const isActive = chip.classList.contains("active");
-
-    // Désactive tous les autres
+    // Toggle : un seul chip actif à la fois pour saisir sa valeur
     document.querySelectorAll(".chip").forEach(c => c.classList.remove("active"));
-
-    if (isActive) {
-      activeCriteria.crit = null;
+    if (selectedCrit === crit) {
+      selectedCrit = null;
     } else {
       chip.classList.add("active");
-      activeCriteria.crit = crit;
+      selectedCrit = crit;
     }
-    updateCriteriaCount();
+    document.getElementById("extraValue").focus();
   });
 });
 
-document.getElementById("extraValue").addEventListener("input", e => {
-  activeCriteria.value = e.target.value.trim();
-  updateCriteriaCount();
+document.getElementById("addCrit").addEventListener("click", () => {
+  const val = document.getElementById("extraValue").value.trim();
+  if (!selectedCrit || !val) return;
+
+  // Évite les doublons
+  if (!activeCriteria.some(c => c.crit === selectedCrit && c.value === val)) {
+    activeCriteria.push({ crit: selectedCrit, value: val });
+  }
+
+  // Reset
+  document.getElementById("extraValue").value = "";
+  document.querySelectorAll(".chip").forEach(c => c.classList.remove("active"));
+  selectedCrit = null;
+
+  renderActiveCriteria();
 });
 
-function updateCriteriaCount() {
-  const el = document.getElementById("criteriaCount");
-  if (activeCriteria.crit && activeCriteria.value) {
-    el.textContent = `1 actif`;
-    el.style.color = "#00e07a";
-  } else {
-    el.textContent = "0 sélectionné";
-    el.style.color = "";
-  }
+function renderActiveCriteria() {
+  const el = document.getElementById("activeCriteria");
+  el.innerHTML = "";
+  activeCriteria.forEach((c, i) => {
+    const tag = document.createElement("div");
+    tag.className = "criteria-tag";
+    tag.innerHTML = `${escapeHtml(c.crit)}: ${escapeHtml(c.value)} <span data-i="${i}">×</span>`;
+    tag.querySelector("span").addEventListener("click", () => {
+      activeCriteria.splice(i, 1);
+      renderActiveCriteria();
+    });
+    el.appendChild(tag);
+  });
 }
 
 /* ============================================================
    UTILITAIRES
    ============================================================ */
-function addSection(parent, title) {
-  const s = document.createElement("div");
-  s.className = "section-title";
-  s.textContent = title;
-  parent.appendChild(s);
-}
-
 function escapeHtml(s) {
   return String(s ?? "").replace(/[&<>"']/g, m => ({
     "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"
@@ -638,7 +638,6 @@ function escapeHtml(s) {
 
 function validate(t) {
   t = (t || "").trim();
-  if (!t) return false;
   if (t.length < 3) return false;
   return /^[a-zA-ZÀ-ÿ'\- ]{2,}$/.test(t);
 }
@@ -659,7 +658,7 @@ document.getElementById("go").addEventListener("click", () => {
   btn.disabled = true;
   btn.textContent = "Recherche en cours…";
 
-  renderDeepSearch(target.trim(), activeCriteria).finally(() => {
+  renderDeepSearch(target.trim(), [...activeCriteria]).finally(() => {
     btn.disabled = false;
     btn.textContent = "Rechercher";
   });
