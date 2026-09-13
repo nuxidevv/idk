@@ -42,19 +42,16 @@
     padding:30px 20px;
   }
   .card {
-    background:#0b0b0b; border:1px solid #1f3d2a; border-radius:10px;
+    background:#0b0b0b; border:1px solid #3d2f1f; border-radius:10px;
     padding:14px 16px; margin-bottom:8px;
     display:flex; align-items:flex-start; gap:12px;
   }
-  .card:hover { border-color:#2f5d3f; }
-  .card.tool-card { border-color:#3d2f1f; }
-  .card.tool-card:hover { border-color:#5d4a2f; }
+  .card:hover { border-color:#5d4a2f; }
   .dot {
     width:8px; height:8px; border-radius:50%; flex-shrink:0;
-    background:#00e07a; box-shadow:0 0 8px #00e07a88;
+    background:#ffaa4d; box-shadow:0 0 8px #ffaa4d88;
     margin-top:6px;
   }
-  .dot.orange { background:#ffaa4d; box-shadow:0 0 8px #ffaa4d88; }
   .info { flex:1; min-width:0; }
   .info a, .info .title {
     color:#eaeaea; text-decoration:none; font-size:0.85rem;
@@ -85,10 +82,9 @@
 <body>
 <div class="wrap">
   <h1>OSINT</h1>
-  <div class="sub">recherche par Prénom Nom</div>
+  <div class="sub">recherche par prénom nom</div>
 
   <input id="target" placeholder="prénom nom..." autocomplete="off">
-
   <button id="go">Rechercher</button>
 
   <div id="out"></div>
@@ -96,18 +92,10 @@
 
 <script>
 /* ============================================================
-   CONFIGURATION BRIXHUB
+   URL DU PROXY VERCEL
+   Le proxy tourne dans /api/search et ajoute la clé BRIXHUB_KEY
    ============================================================ */
-const BRIXHUB_API_KEY = "brix_kTDklqpV-orjSqnZ9mFSU7YqkzCdJVFJhY4Ka1Rni71WWoIh"; // <-- insérer la clé API ici
-const BRIXHUB_BASE = "https://api.brixhub.to/api/v1/search";
-
-/* ============================================================
-   CAPTURE D'ERREURS GLOBALES
-   ============================================================ */
-window.addEventListener("error", e => {
-  const out = document.getElementById("out");
-  if (out) out.innerHTML = `<div class="err">Erreur JS : ${e.message}</div>`;
-});
+const PROXY_URL = "/api/search";
 
 /* ============================================================
    UTILITAIRES
@@ -125,119 +113,40 @@ function validate(t) {
 }
 
 /* ============================================================
-   APPEL BRIXHUB — plusieurs tentatives d'auth / URL
-   L'API est testée avec plusieurs combinaisons :
-   - clé dans header Authorization Bearer
-   - clé dans header X-API-Key
-   - clé en query string ?api_key=
+   APPEL AU PROXY VERCEL
    ============================================================ */
-
-// Tentative 1 : Authorization Bearer + first_name / last_name
-async function brixhubCall1(firstName, lastName) {
-  const url = `${BRIXHUB_BASE}?first_name=${encodeURIComponent(firstName)}&last_name=${encodeURIComponent(lastName)}`;
-  const res = await fetch(url, {
-    method: "GET",
-    headers: {
-      "Accept": "application/json",
-      "Authorization": `Bearer ${BRIXHUB_API_KEY}`
-    }
-  });
-  return { url, status: res.status, ok: res.ok, body: res.ok ? await res.json().catch(()=>null) : await res.text().catch(()=>null) };
-}
-
-// Tentative 2 : header X-API-Key
-async function brixhubCall2(firstName, lastName) {
-  const url = `${BRIXHUB_BASE}?first_name=${encodeURIComponent(firstName)}&last_name=${encodeURIComponent(lastName)}`;
-  const res = await fetch(url, {
-    method: "GET",
-    headers: {
-      "Accept": "application/json",
-      "X-API-Key": BRIXHUB_API_KEY
-    }
-  });
-  return { url, status: res.status, ok: res.ok, body: res.ok ? await res.json().catch(()=>null) : await res.text().catch(()=>null) };
-}
-
-// Tentative 3 : clé en query string
-async function brixhubCall3(firstName, lastName) {
-  const url = `${BRIXHUB_BASE}?first_name=${encodeURIComponent(firstName)}&last_name=${encodeURIComponent(lastName)}&api_key=${encodeURIComponent(BRIXHUB_API_KEY)}`;
-  const res = await fetch(url, {
-    method: "GET",
-    headers: { "Accept": "application/json" }
-  });
-  return { url, status: res.status, ok: res.ok, body: res.ok ? await res.json().catch(()=>null) : await res.text().catch(()=>null) };
-}
-
-// Tentative 4 : paramètre "q" (nom complet)
-async function brixhubCall4(fullName) {
-  const url = `${BRIXHUB_BASE}?q=${encodeURIComponent(fullName)}`;
-  const res = await fetch(url, {
-    method: "GET",
-    headers: {
-      "Accept": "application/json",
-      "Authorization": `Bearer ${BRIXHUB_API_KEY}`
-    }
-  });
-  return { url, status: res.status, ok: res.ok, body: res.ok ? await res.json().catch(()=>null) : await res.text().catch(()=>null) };
-}
-
-// Tentative 5 : paramètre "name"
-async function brixhubCall5(fullName) {
-  const url = `${BRIXHUB_BASE}?name=${encodeURIComponent(fullName)}`;
-  const res = await fetch(url, {
-    method: "GET",
-    headers: {
-      "Accept": "application/json",
-      "Authorization": `Bearer ${BRIXHUB_API_KEY}`
-    }
-  });
-  return { url, status: res.status, ok: res.ok, body: res.ok ? await res.json().catch(()=>null) : await res.text().catch(()=>null) };
-}
-
-// Lance les 5 tentatives et retourne la première qui répond OK avec des données
 async function searchBrixHub(fullName) {
   const parts = fullName.trim().split(/\s+/);
   const firstName = parts[0] || "";
   const lastName = parts.slice(1).join(" ") || "";
 
-  const attempts = [
-    { name: "Bearer + first_name/last_name", fn: () => brixhubCall1(firstName, lastName) },
-    { name: "X-API-Key + first_name/last_name", fn: () => brixhubCall2(firstName, lastName) },
-    { name: "query api_key + first_name/last_name", fn: () => brixhubCall3(firstName, lastName) },
-    { name: "Bearer + q=nom complet", fn: () => brixhubCall4(fullName) },
-    { name: "Bearer + name=nom complet", fn: () => brixhubCall5(fullName) }
-  ];
+  const url = `${PROXY_URL}?first_name=${encodeURIComponent(firstName)}&last_name=${encodeURIComponent(lastName)}`;
 
-  const logs = [];
-  for (const a of attempts) {
-    try {
-      const r = await a.fn();
-      logs.push({ tentative: a.name, url: r.url, status: r.status, ok: r.ok, body: r.body });
-      if (r.ok && r.body) {
-        return { ok: true, attempts: logs, data: r.body, usedAttempt: a.name };
-      }
-    } catch (err) {
-      logs.push({ tentative: a.name, error: err.message });
-    }
+  try {
+    const res = await fetch(url, { method: "GET" });
+    const text = await res.text();
+    let data = null;
+    try { data = JSON.parse(text); } catch { data = text; }
+    return { ok: res.ok, status: res.status, data };
+  } catch (err) {
+    return { ok: false, status: 0, data: null, error: err.message };
   }
-  return { ok: false, attempts: logs, data: null };
 }
 
 /* ============================================================
-   NORMALISATION DES RÉSULTATS BRIXHUB
+   NORMALISATION DES RÉSULTATS
+   Détecte automatiquement le format renvoyé par BrixHub
    ============================================================ */
-function normalizeBrixHubResults(data) {
+function normalize(data) {
   const hits = [];
   if (!data) return hits;
 
-  // Recherche récursive d'un tableau dans la structure
   function findArray(obj, depth = 0) {
     if (depth > 4 || !obj) return null;
     if (Array.isArray(obj)) return obj;
     if (typeof obj === "object") {
-      const keys = ["results","data","items","records","hits","matches","entries","list","persons","people","response"];
-      for (const k of keys) {
-        if (obj[k] && Array.isArray(obj[k])) return obj[k];
+      for (const k of ["results","data","items","records","hits","matches","persons","people"]) {
+        if (Array.isArray(obj[k])) return obj[k];
       }
       for (const k of Object.keys(obj)) {
         const r = findArray(obj[k], depth + 1);
@@ -250,7 +159,7 @@ function normalizeBrixHubResults(data) {
   const arr = findArray(data);
   if (!arr) return hits;
 
-  arr.slice(0, 20).forEach(item => {
+  arr.slice(0, 30).forEach(item => {
     if (typeof item === "string") {
       hits.push({ title: item, url: "#" });
       return;
@@ -258,11 +167,10 @@ function normalizeBrixHubResults(data) {
     const title =
       item.full_name || item.fullName || item.name ||
       [item.first_name || item.firstName, item.last_name || item.lastName].filter(Boolean).join(" ") ||
-      item.title || item.email || "Résultat BrixHub";
+      item.title || item.email || "Résultat";
 
     const url =
-      item.url || item.profile_url || item.profileUrl ||
-      item.link || item.source_url || item.sourceUrl ||
+      item.url || item.profile_url || item.link || item.source_url ||
       (item.id ? `https://api.brixhub.to/api/v1/record/${item.id}` : "#");
 
     const extra = Object.entries(item)
@@ -277,75 +185,58 @@ function normalizeBrixHubResults(data) {
 }
 
 /* ============================================================
-   AFFICHAGE DES RÉSULTATS
+   AFFICHAGE
    ============================================================ */
-function renderResults(result, fullName) {
+function render(result) {
   const out = document.getElementById("out");
   out.innerHTML = "";
 
-  // Status
-  const statusEl = document.createElement("div");
-  statusEl.className = "status";
-  out.appendChild(statusEl);
-
   if (!result.ok) {
-    statusEl.textContent = "aucune tentative n'a abouti";
     const err = document.createElement("div");
     err.className = "err";
-    err.textContent = "Tentatives échouées :\n" +
-      result.attempts.map(a =>
-        `• ${a.tentative} → ${a.error ? "ERR " + a.error : "HTTP " + a.status}`
-      ).join("\n");
+    err.textContent = `Échec (HTTP ${result.status})${result.error ? " — " + result.error : ""}\n\n${
+      typeof result.data === "string" ? result.data : JSON.stringify(result.data, null, 2)
+    }`;
     out.appendChild(err);
-
-    // Affiche le détail brut pour diagnostic
-    const raw = document.createElement("div");
-    raw.className = "raw";
-    raw.textContent = JSON.stringify(result.attempts, null, 2).slice(0, 5000);
-    out.appendChild(raw);
     return;
   }
 
-  // Normalisation
-  const hits = normalizeBrixHubResults(result.data);
-  statusEl.textContent = `${hits.length} résultat(s) — via ${result.usedAttempt}`;
+  const hits = normalize(result.data);
 
-  // Section titre
-  const section = document.createElement("div");
-  section.innerHTML = `<div class="section-title">BrixHub API</div>`;
-  out.appendChild(section);
-
-  const list = document.createElement("div");
-  section.appendChild(list);
+  const status = document.createElement("div");
+  status.className = "status";
+  status.textContent = `${hits.length} résultat(s)`;
+  out.appendChild(status);
 
   if (hits.length === 0) {
     const none = document.createElement("div");
     none.className = "none";
-    none.textContent = "aucun résultat exploitable";
-    list.appendChild(none);
-  } else {
-    hits.forEach(h => {
-      const card = document.createElement("div");
-      card.className = "card tool-card";
-      const urlHtml = h.url && h.url !== "#"
-        ? `<a href="${h.url}" target="_blank" rel="noopener">${escapeHtml(h.url)}</a>`
-        : "";
-      const extraHtml = h.extra
-        ? `<div class="meta">${escapeHtml(h.extra)}</div>`
-        : "";
-      card.innerHTML = `
-        <div class="dot orange"></div>
-        <div class="info">
-          <div class="title">${escapeHtml(h.title)}</div>
-          ${extraHtml}
-          <div class="meta">${urlHtml}</div>
-        </div>
-      `;
-      list.appendChild(card);
-    });
+    none.textContent = "aucun résultat";
+    out.appendChild(none);
+
+    const raw = document.createElement("div");
+    raw.className = "raw";
+    raw.textContent = JSON.stringify(result.data, null, 2).slice(0, 4000);
+    out.appendChild(raw);
+    return;
   }
 
-  // Bloc réponse brute (repliable visuellement via scroll)
+  const list = document.createElement("div");
+  hits.forEach(h => {
+    const card = document.createElement("div");
+    card.className = "card";
+    card.innerHTML = `
+      <div class="dot"></div>
+      <div class="info">
+        <div class="title">${escapeHtml(h.title)}</div>
+        ${h.extra ? `<div class="meta">${escapeHtml(h.extra)}</div>` : ""}
+        ${h.url !== "#" ? `<div class="meta"><a href="${h.url}" target="_blank" rel="noopener">${escapeHtml(h.url)}</a></div>` : ""}
+      </div>
+    `;
+    list.appendChild(card);
+  });
+  out.appendChild(list);
+
   const rawTitle = document.createElement("div");
   rawTitle.className = "section-title";
   rawTitle.textContent = "Réponse brute API";
@@ -361,29 +252,6 @@ function renderResults(result, fullName) {
   out.appendChild(raw);
 }
 
- const CORS_PROXY = "https://api.allorigins.win/raw?url=";
-
-async function searchBrixHubViaProxy(fullName) {
-  const parts = fullName.trim().split(/\s+/);
-  const firstName = parts[0] || "";
-  const lastName = parts.slice(1).join(" ") || "";
-
-  const apiUrl = `${BRIXHUB_BASE}?first_name=${encodeURIComponent(firstName)}&last_name=${encodeURIComponent(lastName)}`;
-  const proxiedUrl = CORS_PROXY + encodeURIComponent(apiUrl);
-
-  const res = await fetch(proxiedUrl, {
-    method: "GET",
-    headers: {
-      "Accept": "application/json",
-      "Authorization": `Bearer ${BRIXHUB_API_KEY}`
-    }
-  });
-
-  if (!res.ok) return { ok: false, status: res.status, data: null };
-  const data = await res.json();
-  return { ok: true, status: res.status, data };
-}
- 
 /* ============================================================
    EVENT
    ============================================================ */
@@ -398,13 +266,13 @@ document.getElementById("go").addEventListener("click", async () => {
   }
 
   btn.disabled = true;
-  btn.textContent = "Recherche en cours…";
+  btn.textContent = "Recherche…";
 
   try {
     const result = await searchBrixHub(target.trim());
-    renderResults(result, target.trim());
+    render(result);
   } catch (e) {
-    out.innerHTML = `<div class="err">Erreur : ${escapeHtml(e.message)}</div>`;
+    out.innerHTML = `<div class="err">${escapeHtml(e.message)}</div>`;
   } finally {
     btn.disabled = false;
     btn.textContent = "Rechercher";
