@@ -361,6 +361,29 @@ function renderResults(result, fullName) {
   out.appendChild(raw);
 }
 
+ const CORS_PROXY = "https://api.allorigins.win/raw?url=";
+
+async function searchBrixHubViaProxy(fullName) {
+  const parts = fullName.trim().split(/\s+/);
+  const firstName = parts[0] || "";
+  const lastName = parts.slice(1).join(" ") || "";
+
+  const apiUrl = `${BRIXHUB_BASE}?first_name=${encodeURIComponent(firstName)}&last_name=${encodeURIComponent(lastName)}`;
+  const proxiedUrl = CORS_PROXY + encodeURIComponent(apiUrl);
+
+  const res = await fetch(proxiedUrl, {
+    method: "GET",
+    headers: {
+      "Accept": "application/json",
+      "Authorization": `Bearer ${BRIXHUB_API_KEY}`
+    }
+  });
+
+  if (!res.ok) return { ok: false, status: res.status, data: null };
+  const data = await res.json();
+  return { ok: true, status: res.status, data };
+}
+ 
 /* ============================================================
    EVENT
    ============================================================ */
