@@ -3,342 +3,286 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>OSINT Deep Search</title>
+<title>OSINT AI — Recherche Email / Username / Nom</title>
 <style>
-*{margin:0;padding:0;box-sizing:border-box;font-family:-apple-system,BlinkMacSystemFont,'SF Pro Display','Segoe UI',Roboto,sans-serif;-webkit-font-smoothing:antialiased}
-html,body{width:100%;min-height:100vh;overflow-x:hidden}
-body{background:linear-gradient(135deg,#eef2f7 0%,#e0e7f1 25%,#d4dced 50%,#e2e8f4 75%,#eef2f7 100%);background-size:400% 400%;animation:bgShift 18s ease infinite;color:#1d1d1f;display:flex;flex-direction:column;min-height:100vh}
-@keyframes bgShift{0%{background-position:0% 50%}50%{background-position:100% 50%}100%{background-position:0% 50%}}
-.bubble{position:fixed;border-radius:50%;filter:blur(70px);opacity:.55;z-index:0;pointer-events:none}
-.bubble.b1{width:500px;height:500px;background:radial-gradient(circle,rgba(120,180,255,.7),rgba(120,180,255,0));top:-150px;left:-150px;animation:fl1 22s ease-in-out infinite}
-.bubble.b2{width:600px;height:600px;background:radial-gradient(circle,rgba(180,140,255,.6),rgba(180,140,255,0));bottom:-200px;right:-200px;animation:fl2 26s ease-in-out infinite}
-.bubble.b3{width:400px;height:400px;background:radial-gradient(circle,rgba(140,220,255,.6),rgba(140,220,255,0));top:40%;left:55%;animation:fl3 30s ease-in-out infinite}
-@keyframes fl1{0%,100%{transform:translate(0,0) scale(1)}33%{transform:translate(80px,60px) scale(1.1)}66%{transform:translate(-40px,100px) scale(.95)}}
-@keyframes fl2{0%,100%{transform:translate(0,0) scale(1)}50%{transform:translate(-100px,-80px) scale(1.15)}}
-@keyframes fl3{0%,100%{transform:translate(0,0) scale(1)}25%{transform:translate(60px,-50px) scale(1.05)}75%{transform:translate(-80px,70px) scale(.9)}}
-header{position:sticky;top:0;z-index:100;width:100%;padding:12px 24px;background:rgba(255,255,255,.5);backdrop-filter:blur(40px) saturate(200%);-webkit-backdrop-filter:blur(40px) saturate(200%);border-bottom:1px solid rgba(255,255,255,.7);box-shadow:0 4px 24px rgba(0,0,0,.05),inset 0 1px 0 rgba(255,255,255,.9);display:flex;align-items:center;justify-content:space-between}
-.header-left{display:flex;align-items:center;gap:12px}
-.logo{width:34px;height:34px;border-radius:10px;background:linear-gradient(135deg,rgba(0,122,255,.95),rgba(120,90,255,.95));display:flex;align-items:center;justify-content:center;color:#fff;font-size:13px;font-weight:800;box-shadow:0 4px 14px rgba(0,122,255,.35),inset 0 1px 0 rgba(255,255,255,.5)}
-.header-title{font-size:15px;font-weight:700;letter-spacing:-.3px;color:#1d1d1f}
-.header-title span{color:#6c5ce7;font-weight:600}
-.header-right{display:flex;gap:8px;align-items:center}
-.status-dot{width:8px;height:8px;border-radius:50%;background:#20bf6b;box-shadow:0 0 8px rgba(32,191,107,.8);animation:pulse 2s ease-in-out infinite}
-@keyframes pulse{0%,100%{opacity:1}50%{opacity:.5}}
-.status-text{font-size:12px;color:#6e6e73;font-transform-weight:500}
-.header-chip{padding:7px 14:px;font-size:12px;font-weight:500;color:#3a3a3c;background:rguppba(255,255,255,.6);backdrop-filter:blur(20ercasepx);border:1px solid rgba(255,255;,255,.9);border-radius:18px;lettercursor:pointer;transition:all .3s}
-.header-chip:hover{background:rgba(255,255,255,.9);transform:translateY(-1px)}
-main{position:relative;z-index:1;width:100%;max-width:1100px;margin:0 auto;padding:32px 24px 80px;flex:1}
-.hero{text-align:center;margin-bottom:28px}
-.hero h1{font-size:38px;font-weight:800;letter-spacing:-1.4px;line-height:1.1;background:linear-gradient(135deg,#1d1d1f 0%,#6c5ce7 60%,#007aff 100%);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;margin-bottom:10px}
-.hero p{font-size:15px;color:#6e6e73;max-width:620px;margin:0 auto;line-height:1.55}
-.stats-bar{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-top:24px}
-.stat{background:rgba(255,255,255,.55);backdrop-filter:blur(30px);border:1px solid rgba(255,255,255,.85);border-radius:16px;padding:16px;text-align:center;box-shadow:0 4px 16px rgba(0,0,0,.04),inset 0 1px 0 rgba(255,255,255,.9);transition:transform .3s}
-.stat:hover{transform:translateY(-2px)}
-.stat-val{font-size:22px;font-weight:800;color:#1d1d1f;letter-spacing:-.5px}
-.stat-lbl{font-size:11px;color:#8e8e93;font-weight:600;text-spacing:.5px;margin-top:4px}
-.search-card{background:rgba(255,255,255,.55);backdrop-filter:blur(40px) saturate(200%);-webkit-backdrop-filter:blur(40px) saturate(200%);border:1px solid rgba(255,255,255,.85);border-radius:24px;padding:24px;box-shadow:0 12px 40px rgba(0,0,0,.08),inset 0 1px 0 rgba(255,255,255,.95);margin-top:24px}
-.tabs{display:flex;gap:6px;padding:5px;background:rgba(255,255,255,.45);backdrop-filter:blur(20px);border:1px solid rgba(255,255,255,.8);border-radius:14px;margin-bottom:16px;overflow-x:auto;scrollbar-width:none}
-.tabs::-webkit-scrollbar{display:none}
-.tab{flex:1;min-width:100px;padding:10px 12px;font-size:12.5px;font-weight:600;color:#6e6e73;background:transparent;border:none;border-radius:10px;cursor:pointer;transition:all .3s;white-space:nowrap}
-.tab.active{color:#fff;background:linear-gradient(20135deg,rgba(0,122,255,.95),rgba(120,90,255,.95));box-shadow:0 4px 14px rgba(0,122,255,.35),inset 0 1px 0 rgba(255,255,255,.4);transform:scale(1.02)}
-.tab:hover:not(.active){color:#1d1d1f;background:rgba(255,255,255,.6)}
-.search-row{display:flex;gap:10px;align-items:stretch}
-.input-wrap{position:relative;flex:1}
-.input-wrap input{width:100%;padding:16px 20px;font-size:15px;font-weight:500;color:#1d1d1f;background:rgba(255,255,255,.7);backdrop-filter:blur(px);border:1px solid rgba(255,255,255,.95);border-radius:16px;outline:none;transition:all .3s;box-shadow:0 2px 10px rgba(0,0,0,.04),inset 0 1px 0 rgba(255,255,255,.9)}
-.input-wrap input::placeholder{color:#a1a1a6;font-weight:400}
-.input-wrap input:focus{background:rgba(255,255,255,.95);border-color:rgba(0,122,255,.5);box-shadow:0 6px 24px rgba(0,122,255,.18),0 0 0 4px rgba(0,122,255,.12);transform:translateY(-1px)}
-.btn-search{padding:16px 32px;font-size:14px;font-weight:700;color:#fff;background:linear-gradient(135deg,rgba(0,122,255,.95) 0%,rgba(120,90,255,.95) 100%);border:1px solid rgba(255,255,255,.4);border-radius:16px;cursor:pointer;transition:all .3s;box-shadow:0 6px 20px rgba(0,122,255,.35),inset 0 1px 0 rgba(255,255,255,.45);white-space:nowrap}
-.btn-search:hover{transform:translateY(-2px);box-shadow:0 10px 28px rgba(0,122,255,.5)}
-.btn-search:active{transform:translateY(0) scale(.98)}
-.btn-search:disabled{opacity:.6;cursor:not-allowed;transform:none}
-.history-row{display:flex;flex-wrap:wrap;gap:6px;margin-top:14px}
-.chip{padding:6px 12px;font-size:11.5px;font-weight:500;color:#3a3a3c;background:rgba(255,255,255,.55);backdrop-filter:blur(10px);border:1px solid rgba(255,255,255,.85);border-radius:20px;cursor:pointer;transition:all .25s}
-.chip:hover{background:rgba(255,255,255,.9);transform:translateY(-1px)}
-.loader{display:none;margin-top:28px;background:rgba(255,255,255,.55);backdrop-filter:blur(40px);border:1px solid rgba(255,255,255,.85);border-radius:24px;padding:28px;box-shadow:0 12px 40px rgba(0,0,0,.08),inset 0 1px 0 rgba(255,255,255,.95)}
-.loader.active{display:block}
-.loader-head{display:flex;align-items:center;gap:12px;margin-bottom:20px;padding-bottom:16px;border-bottom:1px solid rgba(0,0,0,.06)}
-.spinner{width:36px;height:36px;border:3px solid rgba(0,122,255,.15);border-top-color:#007aff;border-right-color:#6c5ce7;border-radius:50%;animation:spin .9s linear infinite;flex-shrink:0}
-@keyframes spin{to{transform:rotate(360deg)}}
-.loader-title{font-size:15px;font-weight:700;color:#1d1d1f}
-.loader-sub{font-size:12px;color:#8e8e93;font-weight:500;margin-top:2px}
-.loader-steps{display:flex;flex-direction:column;gap:8px}
-.loader-step{display:flex;align-items:center;gap:10px;font-size:13px;color:#8e8e93;font-weight:500;padding:8px 12px;border-radius:10px;background:rgba(255,255,255,.4);border:1px solid rgba(255,255,255,.6);transition:all .3s}
-.loader-step.active{color:#007aff;background:rgba(0,122,255,.08);border-color:rgba(0,122,255,.25)}
-.loader-step.done{color:#20bf6b;background:rgba(32,191,107,.08);border-color:rgba(32,191,107,.2)}
-.step-dot{width:16px;height:16px;border-radius:50%;border:2px solid currentColor;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:800}
-.loader-step.active .step-dot{border-color:#007aff;background:rgba(0,122,255,.15)}
-.loader-step.done .step-dot{border-color:#20bf6b;background:#20bf6b;color:#fff}
-.loader-step.done .step-dot::after{content:'✓'}
-.loader-progress{margin-top:20px;height:4px;background:rgba(0,122,255,.12);border-radius:2px;overflow:hidden}
-.loader-bar{height:100%;width:0%;background:linear-gradient(90deg,#007aff,#6c5ce7);border-radius:2px;transition:width .5s}
-.results{margin-top:28px;display:none}
-.results.active{display:block}
-.results-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;padding:0 4px}
-.results-count{font-size:12px;font-weight:700;color:#6e6e73;text-transform:uppercase;letter-spacing:.6px}
-.results-actions{display:flex;gap:6px}
-.mini-btn{padding:6px 12px;font-size:11.5px;font-weight:600;color:#3a3a3c;background:rgba(255,255,255,.6);backdrop-filter:blur(10px);border:1px solid rgba(255,255,255,.85);border-radius:10px;cursor:pointer;transition:all .2s}
-.mini-btn:hover{background:rgba(255,255,255,.95);transform:translateY(-1px)}
-.agent-block{background:linear-gradient(135deg,rgba(18,20,28,.94),rgba(28,24,48,.94));backdrop-filter:blur(30px);border:1px solid rgba(120,140,200,.25);border-radius:20px;padding:22px 24px;margin-bottom:16px;box-shadow:0 12px 40px rgba(0,0,0,.25),inset 0 1px 0 rgba(255,255,255,.08);font-family:'SF Mono','Monaco','Consolas',monospace}
-.agent-head{display:flex;align-items:center;gap:10px;margin-bottom:14px;padding-bottom:12px;border-bottom:1px solid rgba(120,140,200,.15)}
-.agent-avatar{width:32px;height:32px;border-radius:8px;background:linear-gradient(135deg,#007aff,#6c5ce7);display:flex;align-items:center;justify-content:center;color:#fff;font-size:11px;font-weight:800;box-shadow:0 4px 12px rgba(0,122,255,.4)}
-.agent-name{font-size:13px;font-weight:700;color:#fff}
-.agent-role{font-size:10.5px;color:#7a86a0;font-weight:500;margin-top:1px}
-.agent-status{font-size:11px;color:#20bf6b;font-weight:600;margin-left:auto;display:flex;align-items:center;gap:6px}
-.agent-status::before{content:'';width:6px;height:6px;border-radius:50%;background:#20bf6b;box-shadow:0 0 6px #20bf6b}
-.agent-text{font-size:13px;color:#c8d0e0;line-height:1.75;white-space:pre-wrap;word-break:break-word}
-.agent-text .hl{color:#4dabff;font-weight:600}
-.agent-text .warn{color:#ffb84d;font-weight:600}
-.agent-text .danger{color:#ff5c5c;font-weight:600}
-.agent-text .ok{color:#20bf6b;font-weight:600}
-.result-card{background:rgba(255,255,255,.6);backdrop-filter:blur(30px);border:1px solid rgba(255,255,255,.9);border-radius:18px;padding:18px 20px;margin-bottom:10px;box-shadow:0 4px 16px rgba(0,0,0,.05),inset 0 1px 0 rgba(255,255,255,.9);transition:all .3s}
-.result-card:hover{background:rgba(255,255,255,.85);transform:translateY(-2px);box-shadow:0 10px 32px rgba(0,0,0,.09)}
-.card-head{display:flex;align-items:center;gap:10px;margin-bottom:12px}
-.card-badge{width:26px;height:26px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:800;color:#fff;flex-shrink:0}
-.card-badge.src-local{background:linear-gradient(135deg,#95a5a6,#7f8c8d)}
-.card-badge.src-dns{background:linear-gradient(135deg,#26de81,#20bf6b)}
-.card-badge.src-hibp{background:linear-gradient(135deg,#ff4757,#c0392b)}
-.card-badge.src-github{background:linear-gradient(135deg,#2d3436,#1e272e)}
-.card-badge.src-web{background:linear-gradient(135deg,#45aaf2,#2d98da)}
-.card-badge.src-reddit{background:linear-gradient(135deg,#ff6b35,#e8491d)}
-.card-badge.src-intel{background:linear-gradient(135deg,#a29bfe,#6c5ce7)}
-.card-badge.src-osint{background:linear-gradient(135deg,#fd9644,#eb3b5a)}
-.card-title{font-size:14px;font-weight:700;color:#1d1d1f}
-.card-source{font-size:10.5px;color:#8e8e93;font-weight:600;margin-left:auto;padding:3px 8px;background:rgba(142,142,147,.1);border-radius:6px;text-transform:uppercase}
-.card-body{font-size:13px;color:#3a3a3c;line-height:1.65;word-break:break-word}
-.card-body a{color:#007aff;text-decoration:none;font-weight:600}
-.card-body a:hover{color:#6c5ce7;text-decoration:underline}
-.kv{display:flex;padding:6px 0;border-bottom:1px solid rgba(0,0,0,.04)}
-.kv:last-child{border-bottom:none}
-.kv-key{font-weight:600;color:#6e6e73;min-width:140px;flex-shrink:0;font-size:12px}
-.kv-val{color:#1d1d1f;font-size:12.5px;word-break:break-word;font-family:'SF Mono','Monaco','Consolas',monospace}
-.badge{display:inline-block;padding:2px 8px;font-size:10.5px;font-weight:700;border-radius:6px;background:rgba(0,122,255,.12);color:#007aff;margin-right:4px;text-transform:uppercase}
-.badge.danger{background:rgba(255,71,87,.12);color:#ff4757}
-.badge.success{background:rgba(38,222,129,.15);color:#20bf6b}
-.badge.warn{background:rgba(253,150,68,.15);color:#eb8c00}
-footer{position:relative;z-index:1;padding:18px 24px;text-align:center;font-size:11.5px;color:#8e8e93;font-weight:500;border-top:1px solid rgba(255,255,255,.6);background:rgba(255,255,255,.3);backdrop-filter:blur(20px)}
-@media(max-width:720px){header{padding:10px 16px}.header-title{font-size:13px}.status-text{display:none}main{padding:20px 14px 60px}.hero h1{font-size:26px}.hero p{font-size:13px}.stats-bar{grid-template-columns:repeat(2,1fr)}.search-card{padding:16px}.search-row{flex-direction:column}.btn-search{width:100%}.kv{flex-direction:column}.kv-key{min-width:auto;margin-bottom:2px}.card-source{display:none}}
+  /* Reset technique */
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body {
+    background:#0a0a0a;
+    color:#e0e0e0;
+    font-family:'Courier New', monospace;
+    min-height:100vh;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    padding:40px 20px;
+  }
+  h1 {
+    color:#00ff9d;
+    font-size:1.6rem;
+    letter-spacing:2px;
+    margin-bottom:8px;
+    text-shadow:0 0 10px #00ff9d55;
+  }
+  .sub {
+    color:#555;
+    font-size:0.75rem;
+    margin-bottom:30px;
+    letter-spacing:1px;
+  }
+  .panel {
+    width:100%;
+    max-width:720px;
+    background:#111;
+    border:1px solid #1f1f1f;
+    border-radius:10px;
+    padding:24px;
+    box-shadow:0 0 30px #000000aa;
+  }
+  label {
+    display:block;
+    font-size:0.7rem;
+    color:#00ff9d;
+    margin-bottom:6px;
+    letter-spacing:1px;
+  }
+  input, select {
+    width:100%;
+    background:#0a0a0a;
+    border:1px solid #222;
+    color:#e0e0e0;
+    padding:12px;
+    border-radius:6px;
+    font-family:inherit;
+    font-size:0.85rem;
+    margin-bottom:16px;
+    outline:none;
+    transition:border 0.2s;
+  }
+  input:focus, select:focus { border-color:#00ff9d; }
+  button {
+    width:100%;
+    background:#00ff9d;
+    color:#000;
+    border:none;
+    padding:14px;
+    border-radius:6px;
+    font-family:inherit;
+    font-weight:bold;
+    font-size:0.85rem;
+    letter-spacing:1px;
+    cursor:pointer;
+    transition:background 0.2s;
+  }
+  button:hover { background:#00cc7d; }
+  button:disabled { background:#333; color:#666; cursor:not-allowed; }
+  .results {
+    margin-top:24px;
+    background:#0a0a0a;
+    border:1px solid #1f1f1f;
+    border-radius:8px;
+    padding:16px;
+    min-height:120px;
+    font-size:0.8rem;
+    line-height:1.6;
+    white-space:pre-wrap;
+    word-break:break-all;
+  }
+  .tag {
+    display:inline-block;
+    background:#00ff9d22;
+    color:#00ff9d;
+    border:1px solid #00ff9d55;
+    border-radius:4px;
+    padding:2px 8px;
+    font-size:0.7rem;
+    margin:2px;
+  }
+  .err { color:#ff4d4d; }
+  .ok { color:#00ff9d; }
+  .info { color:#888; }
+  .loader {
+    display:none;
+    color:#00ff9d;
+    font-size:0.75rem;
+    margin-top:12px;
+  }
+  .footer {
+    margin-top:20px;
+    font-size:0.65rem;
+    color:#333;
+    text-align:center;
+  }
 </style>
 </head>
 <body>
 
-<div class="bubble b1"></div>
-<div class="bubble b2"></div>
-<div class="bubble b3"></div>
+<h1>OSINT AI TERMINAL</h1>
+<div class="sub">RECHERCHE : EMAIL / USERNAME / NOM / PRÉNOM</div>
 
-<header>
-  <div class="header-left">
-    <div class="logo">OS</div>
-    <div class="header-title">OSINT <span>Deep Search</span></div>
-  </div>
-  <div class="header-right">
-    <div class="status-dot"></div>
-    <div class="status-text" id="statusText">Agent actif</div>
-    <button class="header-chip" id="clearBtn">Effacer</button>
-    <button class="header-chip" id="exportBtn">Exporter</button>
-  </div>
-</header>
+<div class="panel">
+  <label>TYPE DE RECHERCHE</label>
+  <select id="type">
+    <option value="email">Email</option>
+    <option value="username">Username</option>
+    <option value="fullname">Prénom + Nom</option>
+  </select>
 
-<main>
-  <div class="hero">
-    <h1>Recherche approfondie</h1>
-    <p>Analyse multi-sources en temps réel. L'agent corrèle les données publiques, vérifie les fuites, trace les identités numériques et restitue un rapport structuré avec sources.</p>
-  </div>
+  <label>CIBLE</label>
+  <input id="target" type="text" placeholder="ex: john.doe@mail.com / johndoe / John Doe">
 
-  <div class="stats-bar">
-    <div class="stat"><div class="stat-val" id="statSearches">0</div><div class="stat-lbl">Recherches</div></div>
-    <div class="stat"><div class="stat-val">14</div><div class="stat-lbl">Sources</div></div>
-    <div class="stat"><div class="stat-val" id="statFinds">0</div><div class="stat-lbl">Trouvailles</div></div>
-    <div class="stat"><div class="stat-val" id="statTime">0s</div><div class="stat-lbl">Dernière analyse</div></div>
-  </div>
-
-  <div class="search-card">
-    <div class="tabs" id="tabs">
-      <button class="tab active" data-type="auto">Auto</button>
-      <button class="tab" data-type="email">Email</button>
-      <button class="tab" data-type="username">Pseudonyme</button>
-      <button class="tab" data-type="name">Nom</button>
-      <button class="tab" data-type="phone">Téléphone</button>
-    </div>
-
-    <div class="search-row">
-      <div class="input-wrap">
-        <input type="text" id="searchInput" placeholder="Entrez une cible : email, pseudonyme, nom, numéro..." autocomplete="off" spellcheck="false">
-      </div>
-      <button class="btn-search" id="searchBtn" type="button">Lancer l'analyse</button>
-    </div>
-
-    <div class="history-row" id="history"></div>
-  </div>
-
-  <div class="loader" id="loader">
-    <div class="loader-head">
-      <div class="spinner"></div>
-      <div>
-        <div class="loader-title" id="loaderTitle">Analyse en cours</div>
-        <div class="loader-sub" id="loaderSub">Initialisation de l'agent</div>
-      </div>
-    </div>
-    <div class="loader-steps" id="loaderSteps"></div>
-    <div class="loader-progress"><div class="loader-bar" id="loaderBar"></div></div>
-  </div>
+  <button id="go">LANCER LA RECHERCHE</button>
+  <div class="loader" id="loader">> Analyse en cours...</div>
 
   <div class="results" id="results">
-    <div class="results-header">
-      <div class="results-count" id="resultsCount">0 résultat</div>
-      <div class="results-actions">
-        <button class="mini-btn" id="copyAllBtn" type="button">Copier le rapport</button>
-      </div>
-    </div>
-    <div id="resultsList"></div>
+    <span class="info">> En attente d'une requête.</span>
   </div>
-</main>
+</div>
 
-<footer>OSINT Deep Search — Sources publiques uniquement — Usage légal et éthique</footer>
+<div class="footer">Mod made by me — usage local uniquement</div>
 
 <script>
-(function(){
-  'use strict';
+/* ============================================================
+   MOTEUR OSINT — GÉNÉRATION DE DORKS + LIENS OUTILS + IA LOCALE
+   ============================================================ */
 
-  var $ = function(id){ return document.getElementById(id); };
-  var searchInput  = $('searchInput');
-  var searchBtn    = $('searchBtn');
-  var resultsDiv   = $('results');
-  var resultsList  = $('resultsList');
-  var resultsCount = $('resultsCount');
-  var loader       = $('loader');
-  var loaderTitle  = $('loaderTitle');
-  var loaderSub    = $('loaderSub');
-  var loaderSteps  = $('loaderSteps');
-  var loaderBar    = $('loaderBar');
-  var historyDiv   = $('history');
-  var tabs         = $('tabs');
-  var clearBtn     = $('clearBtn');
-  var exportBtn    = $('exportBtn');
-  var copyAllBtn   = $('copyAllBtn');
-  var statusText   = $('statusText');
-  var statSearches = $('statSearches');
-  var statFinds    = $('statFinds');
-  var statTime     = $('statTime');
-
-  var currentType = 'auto';
-  var currentResults = [];
-  var currentAgentReport = '';
-  var searchHistory = [];
-  var stats = { searches: 0, finds: 0 };
-
-  try { searchHistory = JSON.parse(localStorage.getItem('osint_history') || '[]'); } catch(e){ searchHistory = []; }
-  try { var s = JSON.parse(localStorage.getItem('osint_stats') || 'null'); if (s) stats = s; } catch(e){}
-
-  function escapeHtml(str){
-    if (str === null || str === undefined) return '';
-    return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#039;');
-  }
-  function linkify(text){
-    var urlRegex = /(https?:\/\/[^\s<]+)/g;
-    return escapeHtml(text).replace(urlRegex,'<a href="$1" target="_blank" rel="noopener">$1</a>');
-  }
-  function detectType(query){
-    var emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    var phoneRegex = /^[\+]?[\d\s\-\.\(\)]{7,20}$/;
-    var usernameRegex = /^[a-zA-Z0-9_\.\-]{3,30}$/;
-    if (emailRegex.test(query)) return 'email';
-    if (phoneRegex.test(query) && query.replace(/\D/g,'').length >= 7 && query.replace(/\D/g,'').length <= 15) return 'phone';
-    if (usernameRegex.test(query) && query.indexOf(' ') === -1 && query.indexOf('@') === -1) return 'username';
-    return 'name';
-  }
-  function sleep(ms){ return new Promise(function(r){ setTimeout(r, ms); }); }
-
-  function buildLoaderSteps(steps){
-    loaderSteps.innerHTML = '';
-    steps.forEach(function(s, i){
-      var el = document.createElement('div');
-      el.className = 'loader-step';
-      el.id = 'step-' + i;
-      el.innerHTML = '<div class="step-dot"></div><div>' + escapeHtml(s) + '</div>';
-      loaderSteps.appendChild(el);
-    });
-  }
-  function markStep(i, state){
-    var el = document.getElementById('step-' + i);
-    if (!el) return;
-    el.classList.remove('active','done');
-    if (state === 'active') el.classList.add('active');
-    if (state === 'done') el.classList.add('done');
-  }
-  function setProgress(pct, text){
-    loaderBar.style.width = pct + '%';
-    if (text) loaderSub.textContent = text;
-  }
-
-  function pushResult(type, icon, title, source, html){
-    currentResults.push({ type:type, icon:icon, title:title, source:source, html:html });
-  }
-
-  /* ============================================================
-     EMAIL
-     ============================================================ */
-  async function searchEmail(email){
-    var domain = email.split('@')[1] || '';
-    var local = email.split('@')[0] || '';
-
-    pushResult('email','local','Analyse syntaxique','Local',
-      '<div class="kv"><div class="kv-key">Email</div><div class="kv-val">' + escapeHtml(email) + '</div></div>' +
-      '<div class="kv"><div class="kv-key">Partie locale</div><div class="kv-val">' + escapeHtml(local) + ' (' + local.length + ' car.)</div></div>' +
-      '<div class="kv"><div class="kv-key">Domaine</div><div class="kv-val">' + escapeHtml(domain) + '</div></div>' +
-      '<div class="kv"><div class="kv-key">Format</div><div class="kv-val"><span class="badge success">Valide</span></div></div>'
-    );
-
-    try {
-      var r = await fetch('https://dns.google/resolve?name=' + encodeURIComponent(domain) + '&type=MX');
-      var d = await r.json();
-      if (d.Answer && d.Answer.length){
-        var mx = d.Answer.filter(function(x){ return x.type === 15; }).map(function(x){ return x.data; });
-        pushResult('email','dns','Enregistrements MX','Google DNS',
-          mx.length ? mx.map(function(m){ return '<div class="kv"><div class="kv-key">Serveur mail</div><div class="kv-val">' + escapeHtml(m) + '</div></div>'; }).join('')
-                    : '<div class="kv-val">Aucun MX</div>'
-        );
-      } else {
-        pushResult('email','dns','Enregistrements MX','Google DNS',
-          '<div class="kv-val"><span class="badge warn">Aucun</span> Domaine sans serveur mail</div>');
-      }
-    } catch(e){
-      pushResult('email','dns','Enregistrements MX','Google DNS',
-        '<div class="kv-val"><span class="badge warn">Erreur</span> DNS injoignable</div>');
+// Génère les Google Dorks selon le type et la cible
+function buildDorks(type, target) {
+  const t = target.trim();
+  const dorks = [];
+  if (type === "email") {
+    dorks.push(`"${t}"`);
+    dorks.push(`"${t}" site:pastebin.com`);
+    dorks.push(`"${t}" filetype:pdf`);
+    dorks.push(`"${t}" -site:${t.split("@")[1] || "example.com"}`);
+  } else if (type === "username") {
+    dorks.push(`"${t}" site:github.com`);
+    dorks.push(`"${t}" site:twitter.com OR site:x.com`);
+    dorks.push(`"${t}" site:reddit.com`);
+    dorks.push(`"${t}" inurl:profile`);
+    dorks.push(`intitle:"${t}"`);
+  } else {
+    // Prénom + Nom : dorks croisés
+    const parts = t.split(" ");
+    if (parts.length >= 2) {
+      dorks.push(`"${parts[0]}" "${parts[1]}"`);
+      dorks.push(`"${parts[0]} ${parts[1]}" site:linkedin.com`);
+      dorks.push(`"${parts[0]} ${parts[1]}" site:facebook.com`);
+      dorks.push(`"${parts[0]} ${parts[1]}" filetype:pdf`);
+      dorks.push(`"${parts[0]} ${parts[1]}" email OR contact`);
+      dorks.push(`"${parts[1]}" "${parts[0]}" site:github.com`);
+    } else {
+      dorks.push(`"${t}"`);
     }
-
-    try {
-      var r2 = await fetch('https://dns.google/resolve?name=' + encodeURIComponent(domain) + '&type=A');
-      var d2 = await r2.json();
-      if (d2.Answer && d2.Answer.length){
-        var ips = d2.Answer.filter(function(x){ return x.type === 1; }).map(function(x){ return x.data; });
-        pushResult('email','dns','Enregistrements A','Google DNS',
-          ips.length ? ips.map(function(ip){ return '<div class="kv"><div class="kv-key">Adresse IP</div><div class="kv-val">' + escapeHtml(ip) + '</div></div>'; }).join('')
-                     : '<div class="kv-val">Aucune IP</div>'
-        );
-      }
-    } catch(e){}
-
-    pushResult('email','osint','Vérifications croisées','OSINT',
-      '<div class="kv"><div class="kv-key">HaveIBeenPwned</div><div class="kv-val"><a href="https://haveibeenpwned.com/account/' + encodeURIComponent(email) + '" target="_blank" rel="noopener">Consulter les fuites</a></div></div>' +
-      '<div class="kv"><div class="kv-key">Hunter.io</div><div class="kv-val"><a href="https://hunter.io/email-verifier/' + encodeURIComponent(email) + '" target="_blank" rel="noopener">Vérifier la délivrabilité</a></div></div>' +
-      '<div class="kv"><div class="kv-key">Epieos</div><div class="kv-val"><a href="https://epieos.com/?q=' + encodeURIComponent(email) + '" target="_blank" rel="noopener">Recherche inversée Gmail</a></div></div>' +
-      '<div class="kv"><div class="kv-key">Google</div><div class="kv-val"><a href="https://www.google.com/search?q=' + encodeURIComponent('"' + email + '"') + '" target="_blank" rel="noopener">Rechercher sur Google</a></div></div>'
-    );
-
-    return currentResults;
   }
+  return dorks;
+}
 
-  /* ============================================================
-     USERNAME
-     ============================================================ */
-  async function searchUsername(username){
-    pushResult('username','local','Analyse du pseudonyme','Local',
-      '<div class="kv"><div class="kv-key">Pseudonyme</div><div class="kv-val">' + escapeHtml(username) + '</div></div>' +
-      '<div class="kv"><div class="kv-key">Longueur</div><div class="kv-val">' + username.length + ' caractères</div></div>'
-    );
+// Construit les URLs de moteurs de recherche à partir des dorks
+function buildSearchLinks(dorks) {
+  return dorks.map(d => {
+    const encoded = encodeURIComponent(d);
+    return {
+      dork: d,
+      google: `https://www.google.com/search?q=${encoded}`,
+      bing: `https://www.bing.com/search?q=${encoded}`,
+      duck: `https://duckduckgo.com/?q=${encoded}`
+    };
+  });
+}
 
-    try {
-      var r = await fetch('https://api.github.com/users/' + encodeURIComponent(username));
-      if (r.status === 200){
-        var u = await r.json();
-        pushResult('username','github','Profil GitHub
+// Outils OSINT externes (liens directs, pas d'API pour rester local)
+function buildTools(type, target) {
+  const t = encodeURIComponent(target.trim());
+  const tools = [];
+  if (type === "email") {
+    tools.push({ name: "Have I Been Pwned", url: `https://haveibeenpwned.com/account/${t}` });
+    tools.push({ name: "Hunter.io", url: `https://hunter.io/search/${t}` });
+    tools.push({ name: "Epieos", url: `https://epieos.com/?q=${t}` });
+    tools.push({ name: "EmailRep", url: `https://emailrep.io/${t}` });
+  } else if (type === "username") {
+    tools.push({ name: "Namechk", url: `https://namechk.com/?q=${t}` });
+    tools.push({ name: "WhatsMyName", url: `https://whatsmyname.app/?q=${t}` });
+    tools.push({ name: "Sherlock (local)", url: `#` });
+    tools.push({ name: "GitHub Search", url: `https://github.com/search?q=${t}&type=users` });
+  } else {
+    tools.push({ name: "TruePeopleSearch", url: `https://www.truepeoplesearch.com/results?name=${t}` });
+    tools.push({ name: "FastPeopleSearch", url: `https://www.fastpeoplesearch.com/name/${t}` });
+    tools.push({ name: "LinkedIn", url: `https://www.linkedin.com/search/results/all/?keywords=${t}` });
+    tools.push({ name: "Facebook", url: `https://www.facebook.com/search/top?q=${t}` });
+  }
+  return tools;
+}
+
+// "IA" locale : scoring de probabilité basé sur heuristiques
+function aiScore(type, target) {
+  let score = 0;
+  const t = target.trim();
+  if (type === "email") {
+    if (/^[^@]+@[^@]+\.[^@]+$/.test(t)) score += 40;
+    if (/gmail|yahoo|outlook|hotmail|proton/i.test(t)) score += 20;
+    if (/\d/.test(t)) score += 10;
+    if (t.length > 15) score += 10;
+  } else if (type === "username") {
+    if (/^[a-zA-Z0-9_.]+$/.test(t)) score += 30;
+    if (t.length >= 6 && t.length <= 15) score += 30;
+    if (/\d/.test(t)) score += 15;
+  } else {
+    const parts = t.split(" ");
+    if (parts.length >= 2) score += 40;
+    if (parts.every(p => /^[A-Za-zÀ-ÿ-]+$/.test(p))) score += 30;
+    if (t.length > 8) score += 10;
+  }
+  return Math.min(score, 100);
+}
+
+// Rendu des résultats dans le DOM
+function render(type, target) {
+  const results = document.getElementById("results");
+  const dorks = buildDorks(type, target);
+  const links = buildSearchLinks(dorks);
+  const tools = buildTools(type, target);
+  const score = aiScore(type, target);
+
+  let html = "";
+  html += `<span class="ok">> CIBLE : ${target}</span>\n`;
+  html += `<span class="info">> TYPE : ${type}</span>\n`;
+  html += `<span class="info">> SCORE IA (pertinence) : ${score}/100</span>\n\n`;
+
+  html += `<span class="ok">[ GOOGLE DORKS ]</span>\n`;
+  links.forEach((l, i) => {
+    html += `${i + 1}. ${l.dork}\n`;
+    html += `   <a href="${l.google}" target="_blank" style="color:#00ff9d">Google</a> | `;
+    html += `<a href="${l.bing}" target="_blank" style="color:#00ff9d">Bing</a> | `;
+    html += `<a href="${l.duck}" target="_blank" style="color:#00ff9d">DuckDuckGo</a>\n`;
+  });
+
+  html += `\n<span class="ok">[ OUTILS OSINT ]</span>\n`;
+  tools.forEach(t => {
+    html += `<span class="tag"><a href="${t.url}" target="_blank" style="color:#00ff9d;text-decoration:none">${t.name}</a></span>`;
+  });
+
+  results.innerHTML = html;
+}
+
+// Événement bouton
+document.getElementById("go").addEventListener("click", () => {
+  const type = document.getElementById("type").value;
+  const target = document.getElementById("target").value;
+  if (!target.trim()) {
+    document.getElementById("results").innerHTML = `<span class="err">> ERREUR : cible vide.</span>`;
+    return;
+  }
+  const loader = document.getElementById("loader");
+  loader.style.display = "block";
+  document.getElementById("go").disabled = true;
+  // Simulation latence IA
+  setTimeout(() => {
+    loader.style.display = "none";
+    document.getElementById("go").disabled = false;
+    render(type, target);
+  }, 600);
+});
+</script>
+</body>
+</html>
