@@ -1,4 +1,5 @@
 import https from "https";
+import crypto from "crypto";
 
 const BLOCKED_TARGETS = [
   { prenom: "leo",    nom: "roman" },
@@ -30,6 +31,15 @@ function isBlocked(fullName) {
     if (hasPrenomComplet && hasNomTronque) return true;
     return false;
   });
+}
+
+function verifySession(token, secret) {
+  if (!token || !token.includes(".")) return null;
+  const [data, sig] = token.split(".");
+  const expected = crypto.createHmac("sha256", secret).update(data).digest("base64url");
+  if (sig !== expected) return null;
+  try { return JSON.parse(Buffer.from(data, "base64url").toString()); }
+  catch { return null; }
 }
 
 function httpsPost(url, headers, bodyObj) {
@@ -79,10 +89,56 @@ export default async function handler(req, res) {
 
   const { first_name = "", last_name = "" } = req.query;
 
+  // 1. Vérification Discord — session obligatoire
+  const cookie = req.headers.cookie || "";
+  const match = cookie.match(/seek_session=([^;]+)/);
+  if (!match) {
+    return res.status(401).json({
+      ok: false,
+      locked: true,
+      message: "Connecte-toi avec Discord pour lancer une recherche"
+    });
+  }
+
+  const session = verifySession(match[1], process.env.SESSION_SECRET);
+  if (!session) {
+    return res.status(401).json({
+      ok: false,
+      locked: true,
+      message: "Session expirée — reconnecte-toi avec Discord"
+    });
+  }
+
+  // 2. Vérification appartenance au serveur Discord
+  const GUILD_ID = process.env.DISCORD_GUILD_ID;
+  const BOT_TOKEN = process.env.DISCORD_BOT_TOKEN;
+
+  try {
+    const memberRes = await fetch(
+      `https://discord.com/api/guilds/${GUILD_ID}/members/${session.id}`,
+      { headers: { Authorization: `Bot ${BOT_TOKEN}` } }
+    );
+    if (!memberRes.ok) {
+      return res.status(403).json({
+        ok: false,
+        locked: true,
+        message: "Tu dois rejoindre le serveur Discord pour continuer"
+      });
+    }
+  } catch (e) {
+    return res.status(500).json({
+      ok: false,
+      locked: true,
+      message: "Vérification Discord impossible — réessaye"
+    });
+  }
+
+  // 3. Vérification noms bloqués
   if (isBlocked(`${first_name} ${last_name}`)) {
     return res.status(200).json(emptyResponse(first_name, last_name));
   }
 
+  // 4. Appel BrixHub
   const KEY = process.env.BRIXHUB_KEY || "";
 
   const headers = {
