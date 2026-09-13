@@ -3,112 +3,517 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>OSINT</title>
+<title>OSINT — Recherche</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
 <style>
   * { margin:0; padding:0; box-sizing:border-box; }
+
+  :root {
+    --bg:#000;
+    --card:#0a0a0a;
+    --border:#1a1a1a;
+    --border-hover:#2a2a2a;
+    --text:#eaeaea;
+    --text-dim:#666;
+    --text-dimmer:#444;
+    --accent:#fff;
+    --green:#00e07a;
+    --green-dim:#0a2a1a;
+    --orange:#ffaa4d;
+    --orange-dim:#2a1a0a;
+    --red:#ff6b6b;
+    --blue:#4da3ff;
+  }
+
+  html, body { height:100%; }
+
   body {
-    background:#000; color:#eaeaea;
-    font-family:-apple-system, 'Segoe UI', Roboto, sans-serif;
-    min-height:100vh; display:flex; justify-content:center;
+    background:#000;
+    color:var(--text);
+    font-family:'Inter', -apple-system, 'Segoe UI', Roboto, sans-serif;
+    min-height:100vh;
+    display:flex;
+    justify-content:center;
     padding:60px 20px;
+    overflow-x:hidden;
+    position:relative;
   }
-  .wrap { width:100%; max-width:680px; }
-  h1 { font-size:1.1rem; font-weight:600; margin-bottom:4px; color:#fff; }
-  .sub { font-size:0.75rem; color:#555; margin-bottom:32px; }
+
+  /* Fond animé subtil */
+  body::before {
+    content:'';
+    position:fixed;
+    top:-50%; left:-50%;
+    width:200%; height:200%;
+    background:
+      radial-gradient(circle at 20% 30%, rgba(0,224,122,0.04) 0%, transparent 40%),
+      radial-gradient(circle at 80% 70%, rgba(77,163,255,0.04) 0%, transparent 40%),
+      radial-gradient(circle at 50% 50%, rgba(255,170,77,0.02) 0%, transparent 50%);
+    animation:bgFloat 20s ease-in-out infinite;
+    pointer-events:none;
+    z-index:0;
+  }
+
+  @keyframes bgFloat {
+    0%,100% { transform:translate(0,0) scale(1); }
+    50% { transform:translate(-2%,2%) scale(1.05); }
+  }
+
+  /* Grille en fond */
+  body::after {
+    content:'';
+    position:fixed;
+    inset:0;
+    background-image:
+      linear-gradient(rgba(255,255,255,0.015) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(255,255,255,0.015) 1px, transparent 1px);
+    background-size:40px 40px;
+    pointer-events:none;
+    z-index:0;
+    mask-image:radial-gradient(ellipse at center, black 20%, transparent 80%);
+    -webkit-mask-image:radial-gradient(ellipse at center, black 20%, transparent 80%);
+  }
+
+  .wrap {
+    width:100%; max-width:680px;
+    position:relative; z-index:1;
+  }
+
+  /* Header */
+  .header {
+    margin-bottom:36px;
+    animation:fadeUp 0.6s ease-out;
+  }
+
+  .logo {
+    display:flex; align-items:center; gap:10px;
+    margin-bottom:8px;
+  }
+
+  .logo-mark {
+    width:28px; height:28px;
+    border-radius:8px;
+    background:linear-gradient(135deg, #fff 0%, #888 100%);
+    display:flex; align-items:center; justify-content:center;
+    position:relative;
+    overflow:hidden;
+  }
+
+  .logo-mark::after {
+    content:'';
+    position:absolute;
+    inset:0;
+    background:linear-gradient(135deg, transparent 40%, rgba(255,255,255,0.4) 50%, transparent 60%);
+    animation:shimmer 3s ease-in-out infinite;
+  }
+
+  @keyframes shimmer {
+    0% { transform:translateX(-100%); }
+    100% { transform:translateX(100%); }
+  }
+
+  .logo-mark svg {
+    width:16px; height:16px;
+    color:#000;
+    position:relative; z-index:1;
+  }
+
+  h1 {
+    font-size:1.35rem;
+    font-weight:700;
+    color:#fff;
+    letter-spacing:-0.02em;
+  }
+
+  .sub {
+    font-size:0.75rem;
+    color:var(--text-dim);
+    letter-spacing:0.02em;
+    display:flex;
+    align-items:center;
+    gap:6px;
+  }
+
+  .sub::before {
+    content:'';
+    width:4px; height:4px;
+    border-radius:50%;
+    background:var(--green);
+    box-shadow:0 0 8px var(--green);
+    animation:pulse 2s ease-in-out infinite;
+  }
+
+  @keyframes pulse {
+    0%,100% { opacity:1; transform:scale(1); }
+    50% { opacity:0.4; transform:scale(0.8); }
+  }
+
+  /* Input */
+  .input-wrap {
+    position:relative;
+    margin-bottom:12px;
+    animation:fadeUp 0.6s ease-out 0.1s backwards;
+  }
+
+  .input-icon {
+    position:absolute;
+    left:14px; top:50%;
+    transform:translateY(-50%);
+    width:16px; height:16px;
+    color:var(--text-dimmer);
+    pointer-events:none;
+    transition:color 0.2s;
+  }
+
   input {
-    background:#0d0d0d; border:1px solid #1e1e1e; color:#eaeaea;
-    padding:12px 14px; border-radius:8px; font-size:0.85rem;
-    font-family:inherit; outline:none;
-    width:100%; margin-bottom:12px;
+    background:#0a0a0a;
+    border:1px solid var(--border);
+    color:var(--text);
+    padding:14px 14px 14px 42px;
+    border-radius:10px;
+    font-size:0.9rem;
+    font-family:inherit;
+    outline:none;
+    width:100%;
+    transition:border-color 0.2s, background 0.2s, box-shadow 0.2s;
   }
-  input:focus { border-color:#333; }
+
+  input::placeholder { color:var(--text-dimmer); }
+
+  input:focus {
+    border-color:#333;
+    background:#0d0d0d;
+    box-shadow:0 0 0 4px rgba(255,255,255,0.03);
+  }
+
+  input:focus ~ .input-icon { color:#888; }
+
+  /* Button */
   button {
-    width:100%; background:#fff; color:#000; border:none;
-    padding:13px; border-radius:8px; font-size:0.85rem;
-    font-weight:600; cursor:pointer;
-    transition:opacity 0.15s;
+    width:100%;
+    background:#fff;
+    color:#000;
+    border:none;
+    padding:14px;
+    border-radius:10px;
+    font-size:0.88rem;
+    font-weight:600;
+    cursor:pointer;
+    font-family:inherit;
+    letter-spacing:0.01em;
+    transition:transform 0.15s, opacity 0.15s, box-shadow 0.2s;
+    position:relative;
+    overflow:hidden;
+    animation:fadeUp 0.6s ease-out 0.2s backwards;
   }
-  button:hover { opacity:0.85; }
-  button:disabled { background:#1a1a1a; color:#555; cursor:default; }
+
+  button:hover:not(:disabled) {
+    opacity:0.9;
+    box-shadow:0 8px 24px rgba(255,255,255,0.1);
+  }
+
+  button:active:not(:disabled) { transform:scale(0.99); }
+
+  button:disabled {
+    background:#1a1a1a;
+    color:#555;
+    cursor:default;
+  }
+
+  button::after {
+    content:'';
+    position:absolute;
+    inset:0;
+    background:linear-gradient(135deg, transparent 30%, rgba(0,0,0,0.1) 50%, transparent 70%);
+    transform:translateX(-100%);
+    transition:transform 0.6s;
+  }
+
+  button:hover:not(:disabled)::after { transform:translateX(100%); }
+
+  /* Loading spinner dans le bouton */
+  button .spinner {
+    display:none;
+    width:14px; height:14px;
+    border:2px solid rgba(0,0,0,0.2);
+    border-top-color:#000;
+    border-radius:50%;
+    animation:spin 0.7s linear infinite;
+    margin-right:8px;
+    vertical-align:middle;
+  }
+
+  button.loading .spinner { display:inline-block; }
+
+  @keyframes spin { to { transform:rotate(360deg); } }
 
   #out { margin-top:28px; }
+
+  /* Status */
   .status {
-    font-size:0.72rem; color:#666; text-align:center;
-    margin-bottom:14px; letter-spacing:0.5px;
+    font-size:0.72rem;
+    color:var(--text-dim);
+    text-align:center;
+    margin-bottom:18px;
+    letter-spacing:0.02em;
+    animation:fadeUp 0.4s ease-out;
   }
+
   .none {
-    color:#666; font-size:0.82rem; text-align:center;
-    padding:30px 20px;
+    color:var(--text-dim);
+    font-size:0.85rem;
+    text-align:center;
+    padding:40px 20px;
+    animation:fadeUp 0.4s ease-out;
   }
+
+  /* Cards */
   .card {
-    background:#0b0b0b; border:1px solid #1f3d2a; border-radius:10px;
-    padding:14px 16px; margin-bottom:12px;
+    background:var(--card);
+    border:1px solid var(--border);
+    border-radius:12px;
+    padding:16px 18px;
+    margin-bottom:12px;
+    transition:border-color 0.2s, transform 0.2s, box-shadow 0.2s;
+    animation:cardIn 0.5s cubic-bezier(0.22, 1, 0.36, 1) backwards;
+    position:relative;
+    overflow:hidden;
   }
-  .card:hover { border-color:#2f5d3f; }
+
+  .card::before {
+    content:'';
+    position:absolute;
+    top:0; left:0;
+    width:2px; height:100%;
+    background:linear-gradient(180deg, var(--green), transparent);
+    opacity:0.4;
+  }
+
+  .card:hover {
+    border-color:var(--border-hover);
+    transform:translateY(-1px);
+    box-shadow:0 8px 24px rgba(0,0,0,0.4);
+  }
+
+  .card:hover::before { opacity:1; }
+
+  @keyframes cardIn {
+    from { opacity:0; transform:translateY(12px); }
+    to { opacity:1; transform:translateY(0); }
+  }
+
   .card-header {
-    display:flex; align-items:flex-start; justify-content:space-between;
-    gap:10px; margin-bottom:12px;
-    padding-bottom:10px; border-bottom:1px solid #1a1a1a;
+    display:flex;
+    align-items:flex-start;
+    justify-content:space-between;
+    gap:12px;
+    margin-bottom:14px;
+    padding-bottom:12px;
+    border-bottom:1px solid #141414;
   }
+
   .card-title {
-    font-size:0.9rem; font-weight:600; color:#fff;
+    font-size:0.95rem;
+    font-weight:600;
+    color:#fff;
     word-break:break-word;
+    letter-spacing:-0.01em;
   }
+
   .card-sub {
-    font-size:0.68rem; color:#666; margin-top:3px;
+    font-size:0.7rem;
+    color:var(--text-dim);
+    margin-top:4px;
+    font-family:'JetBrains Mono', monospace;
   }
+
   .score {
-    font-size:0.65rem; padding:3px 8px; border-radius:6px;
-    background:#1f3d2a; color:#00e07a; font-weight:600;
+    font-size:0.65rem;
+    padding:4px 9px;
+    border-radius:6px;
+    background:var(--green-dim);
+    color:var(--green);
+    font-weight:700;
     flex-shrink:0;
+    font-family:'JetBrains Mono', monospace;
+    border:1px solid rgba(0,224,122,0.2);
   }
-  .score.mid { background:#3d2a1f; color:#ffaa4d; }
-  .score.low { background:#3d1f1f; color:#ff6b6b; }
+
+  .score.mid {
+    background:var(--orange-dim);
+    color:var(--orange);
+    border-color:rgba(255,170,77,0.2);
+  }
+
+  .score.low {
+    background:#2a0a0a;
+    color:var(--red);
+    border-color:rgba(255,107,107,0.2);
+  }
+
   .row {
-    display:flex; gap:10px; padding:5px 0;
-    font-size:0.78rem; align-items:flex-start;
+    display:flex;
+    gap:14px;
+    padding:6px 0;
+    font-size:0.78rem;
+    align-items:flex-start;
   }
+
   .row-label {
-    color:#666; min-width:110px; flex-shrink:0;
-    font-size:0.72rem; padding-top:1px;
+    color:var(--text-dim);
+    min-width:110px;
+    flex-shrink:0;
+    font-size:0.7rem;
+    padding-top:2px;
+    text-transform:uppercase;
+    letter-spacing:0.05em;
+    font-weight:500;
   }
+
   .row-value {
-    color:#eaeaea; word-break:break-word; flex:1;
+    color:var(--text);
+    word-break:break-word;
+    flex:1;
+    font-size:0.82rem;
   }
-  .row-value a { color:#4da3ff; text-decoration:none; }
-  .row-value a:hover { text-decoration:underline; }
+
+  .row-value.mono {
+    font-family:'JetBrains Mono', monospace;
+    font-size:0.75rem;
+  }
+
+  .row-value a {
+    color:var(--blue);
+    text-decoration:none;
+    transition:color 0.15s;
+  }
+
+  .row-value a:hover {
+    color:#6fb5ff;
+    text-decoration:underline;
+  }
+
   .section-title {
-    font-size:0.7rem; color:#888; text-transform:uppercase;
-    letter-spacing:1px; margin:18px 0 10px;
+    font-size:0.7rem;
+    color:#888;
+    text-transform:uppercase;
+    letter-spacing:1.5px;
+    margin:22px 0 12px;
+    font-weight:600;
   }
+
   .err {
-    background:#1a0a0a; color:#ff6b6b; padding:12px;
-    border-radius:8px; font-size:0.72rem; margin-top:14px;
-    white-space:pre-wrap; word-break:break-word;
+    background:#1a0a0a;
+    color:var(--red);
+    padding:14px 16px;
+    border-radius:10px;
+    font-size:0.75rem;
+    margin-top:14px;
+    white-space:pre-wrap;
+    word-break:break-word;
+    border:1px solid rgba(255,107,107,0.2);
+    animation:fadeUp 0.4s ease-out;
   }
+
+  /* Raw toggle */
   .raw-toggle {
-    font-size:0.7rem; color:#666; text-align:center;
-    cursor:pointer; padding:10px; margin-top:14px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    gap:6px;
+    font-size:0.72rem;
+    color:var(--text-dim);
+    cursor:pointer;
+    padding:12px;
+    margin-top:14px;
     user-select:none;
+    border-radius:8px;
+    transition:color 0.15s, background 0.15s;
   }
-  .raw-toggle:hover { color:#aaa; }
+
+  .raw-toggle:hover {
+    color:#aaa;
+    background:rgba(255,255,255,0.02);
+  }
+
+  .raw-toggle svg {
+    width:12px; height:12px;
+    transition:transform 0.25s;
+  }
+
+  .raw-toggle.open svg { transform:rotate(90deg); }
+
   .raw {
-    background:#0a0a0a; border:1px solid #1a1a1a; border-radius:8px;
-    padding:12px; margin-top:10px; font-size:0.62rem; color:#888;
-    max-height:400px; overflow:auto; white-space:pre-wrap;
-    word-break:break-word; font-family:monospace;
+    background:#080808;
+    border:1px solid var(--border);
+    border-radius:10px;
+    padding:14px;
+    margin-top:10px;
+    font-size:0.65rem;
+    color:#777;
+    max-height:400px;
+    overflow:auto;
+    white-space:pre-wrap;
+    word-break:break-word;
+    font-family:'JetBrains Mono', monospace;
+    line-height:1.6;
     display:none;
+    animation:fadeUp 0.3s ease-out;
   }
+
   .raw.open { display:block; }
+
+  /* Animations utilitaires */
+  @keyframes fadeUp {
+    from { opacity:0; transform:translateY(8px); }
+    to { opacity:1; transform:translateY(0); }
+  }
+
+  /* Scrollbar */
+  ::-webkit-scrollbar { width:6px; height:6px; }
+  ::-webkit-scrollbar-track { background:transparent; }
+  ::-webkit-scrollbar-thumb { background:#222; border-radius:3px; }
+  ::-webkit-scrollbar-thumb:hover { background:#333; }
+
+  /* Sélection */
+  ::selection { background:rgba(0,224,122,0.3); color:#fff; }
+
+  @media (max-width:480px) {
+    body { padding:40px 16px; }
+    .row { flex-direction:column; gap:2px; }
+    .row-label { min-width:0; }
+  }
 </style>
 </head>
 <body>
 <div class="wrap">
-  <h1>OSINT</h1>
-  <div class="sub">recherche par prénom nom</div>
+  <div class="header">
+    <div class="logo">
+      <div class="logo-mark">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="11" cy="11" r="8"></circle>
+          <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+        </svg>
+      </div>
+      <h1>OSINT</h1>
+    </div>
+    <div class="sub">recherche par prénom nom</div>
+  </div>
 
-  <input id="target" placeholder="prénom nom..." autocomplete="off">
-  <button id="go">Rechercher</button>
+  <div class="input-wrap">
+    <input id="target" placeholder="prénom nom..." autocomplete="off" spellcheck="false">
+    <svg class="input-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <circle cx="11" cy="11" r="8"></circle>
+      <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+    </svg>
+  </div>
+
+  <button id="go">
+    <span class="spinner"></span>
+    <span class="btn-text">Rechercher</span>
+  </button>
 
   <div id="out"></div>
 </div>
@@ -128,7 +533,6 @@ function validate(t) {
   return /^[a-zA-ZÀ-ÿ'\- ]{2,}$/.test(t);
 }
 
-// Libellés français pour les clés techniques
 const LABELS = {
   _source_db: "Source",
   _confidence: "Fiabilité",
@@ -150,7 +554,6 @@ const LABELS = {
   sexe: "Sexe"
 };
 
-// Ordre d'affichage préféré
 const ORDER = [
   "prenom","nom_famille","date_naissance","annee_naissance","lieu_naissance",
   "adresse","code_postal","ville","departement","pays",
@@ -180,7 +583,6 @@ async function searchBrixHub(fullName) {
   }
 }
 
-// Cherche un tableau de résultats dans la réponse
 function findArray(obj, depth = 0) {
   if (depth > 4 || !obj) return null;
   if (Array.isArray(obj)) return obj;
@@ -205,19 +607,16 @@ function scoreClass(c) {
 }
 
 function renderCard(item, idx) {
-  // Titre de la carte : prénom nom si dispo, sinon email, sinon "Résultat N"
   const prenom = item.prenom || item.first_name || "";
   const nom = item.nom_famille || item.last_name || item.name || "";
   const title = [prenom, nom].filter(Boolean).join(" ") || item.email || `Résultat ${idx + 1}`;
   const sub = item.email && (prenom || nom) ? item.email : "";
 
-  // Score de fiabilité
   const conf = item._confidence ?? item.confidence ?? null;
   const scoreHtml = conf != null
     ? `<div class="score ${scoreClass(conf)}">${escapeHtml(conf)}%</div>`
     : "";
 
-  // Lignes : on trie selon ORDER puis le reste
   const keys = Object.keys(item).filter(k =>
     item[k] != null && item[k] !== "" && typeof item[k] !== "object"
   );
@@ -225,6 +624,8 @@ function renderCard(item, idx) {
     ...ORDER.filter(k => keys.includes(k)),
     ...keys.filter(k => !ORDER.includes(k))
   ];
+
+  const monoKeys = ["email","telephone","phone","nom_utilisateur","code_postal","date_naissance"];
 
   const rows = sorted.map(k => {
     let v = item[k];
@@ -236,11 +637,12 @@ function renderCard(item, idx) {
     } else {
       html = escapeHtml(v);
     }
-    return `<div class="row"><div class="row-label">${escapeHtml(labelOf(k))}</div><div class="row-value">${html}</div></div>`;
+    const monoClass = monoKeys.includes(k) ? " mono" : "";
+    return `<div class="row"><div class="row-label">${escapeHtml(labelOf(k))}</div><div class="row-value${monoClass}">${html}</div></div>`;
   }).join("");
 
   return `
-    <div class="card">
+    <div class="card" style="animation-delay:${idx * 0.05}s">
       <div class="card-header">
         <div>
           <div class="card-title">${escapeHtml(title)}</div>
@@ -265,12 +667,11 @@ function render(result) {
     return;
   }
 
-  // Récupère le tableau de résultats
   const arr = findArray(result.data) || [];
 
   const status = document.createElement("div");
   status.className = "status";
-  status.textContent = `${arr.length} résultat(s)`;
+  status.textContent = `${arr.length} résultat(s) trouvé(s)`;
   out.appendChild(status);
 
   if (arr.length === 0) {
@@ -281,18 +682,15 @@ function render(result) {
   } else {
     const list = document.createElement("div");
     arr.forEach((item, i) => {
-      if (typeof item === "string") {
-        item = { valeur: item };
-      }
+      if (typeof item === "string") item = { valeur: item };
       list.insertAdjacentHTML("beforeend", renderCard(item, i));
     });
     out.appendChild(list);
   }
 
-  // Bloc réponse brute repliable
   const toggle = document.createElement("div");
   toggle.className = "raw-toggle";
-  toggle.textContent = "▸ Afficher la réponse brute";
+  toggle.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg> Afficher la réponse brute`;
   out.appendChild(toggle);
 
   const raw = document.createElement("div");
@@ -303,9 +701,10 @@ function render(result) {
 
   toggle.addEventListener("click", () => {
     raw.classList.toggle("open");
-    toggle.textContent = raw.classList.contains("open")
-      ? "▾ Masquer la réponse brute"
-      : "▸ Afficher la réponse brute";
+    toggle.classList.toggle("open");
+    toggle.innerHTML = toggle.classList.contains("open")
+      ? `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg> Masquer la réponse brute`
+      : `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg> Afficher la réponse brute`;
   });
 }
 
@@ -313,6 +712,7 @@ document.getElementById("go").addEventListener("click", async () => {
   const target = document.getElementById("target").value;
   const out = document.getElementById("out");
   const btn = document.getElementById("go");
+  const btnText = btn.querySelector(".btn-text");
 
   if (!validate(target)) {
     out.innerHTML = `<div class="none">entre un prénom et un nom valides</div>`;
@@ -320,7 +720,8 @@ document.getElementById("go").addEventListener("click", async () => {
   }
 
   btn.disabled = true;
-  btn.textContent = "Recherche…";
+  btn.classList.add("loading");
+  btnText.textContent = "Recherche…";
 
   try {
     const result = await searchBrixHub(target.trim());
@@ -329,7 +730,8 @@ document.getElementById("go").addEventListener("click", async () => {
     out.innerHTML = `<div class="err">${escapeHtml(e.message)}</div>`;
   } finally {
     btn.disabled = false;
-    btn.textContent = "Rechercher";
+    btn.classList.remove("loading");
+    btnText.textContent = "Rechercher";
   }
 });
 
