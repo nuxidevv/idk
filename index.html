@@ -3,251 +3,697 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>OSINT DEBUG</title>
+<title>OSINT</title>
 <style>
+  * { margin:0; padding:0; box-sizing:border-box; }
   body {
     background:#000; color:#eaeaea;
-    font-family:-apple-system, sans-serif;
-    padding:20px; font-size:14px;
+    font-family:--colorapple-system, 'Segoe UI',:# Roboto, sans-serif;
+   333 min-height:100vh; display:flex;; justify-content:center;
+    padding:60 }
+px 20px;
   }
-  h1 { font-size:16px; margin-bottom:16px; }
-  input, select, button {
-    width:100%; padding:12px; margin-bottom:10px;
-    background:#111; color:#eee; border:1px solid #333;
-    border-radius:6px; font-size:14px;
+   .wrap { width:100%; max-width:680px; }
+  h1 { font-size:1.1rem; font-weight:600; margin-bottom:4px; color:#fff; }
+  .sub { font-size:0.75rem; color:#555; margin-bottom:24px; }
+  .row { display:flex; gap:10px; margin-bottom:12px; }
+  select, input {
+    background:#0d0d0d; border:1px solid #1e1e1e; color:#eaeaea;
+    padding:12px 14px; border-radius:8px; font-size:0.85rem;
+    font-family:inherit; outline:none;
   }
-  button { background:#fff; color:#000; font-weight:bold; }
-  #log {
-    background:#0a0a0a; border:1px solid #222; border-radius:6px;
-    padding:12px; margin-top:16px;
-    font-family:monospace; font-size:11px;
-    white-space:pre-wrap; word-break:break-all;
-    max-height:70vh; overflow-y:auto;
+  select { width:150px; }
+  input { flex:1; }
+  select:focus, input:focus { border button {
+    width:100%; background:#fff; color:#000; border:none;
+    padding:13px; border-radius:8px; font-size:0.85rem;
+    font-weight:600; cursor:pointer;
   }
-  .ok { color:#0f0; }
-  .err { color:#f55; }
-  .info { color:#4da3ff; }
-  .warn { color:#fa4; }
+  button:hover { opacity:0.85; }
+  #out { margin-top:24px; }
+  .status {
+    font-size:0.72rem; color:#666; text-align:center;
+    margin-bottom:14px; letter-spacing:0.5px;
+  }
+  .none { color:#666; font-size:0.82rem; text-align:center; padding:30px 20px; }
+  .card {
+    background:#0b0b0b; border:1px solid #1f3d2a; border-radius:10px;
+    padding:14px 16px; margin-bottom:8px;
+    display:flex; align-items:center; gap:12px;
+  }
+  .card.info-card { border-color:#1f3d5a; }
+  .dot {
+    width:8px; height:8px; border-radius:50%; flex-shrink:0;
+    background:#00e07a; box-shadow:0 0 8px #00e07a88;
+  }
+  .dot.blue { background:#4da3ff; box-shadow:0 0 8px #4da3ff88; }
+  .dot.red  { background:#ff4d4d; box-shadow:0 0 8px #ff4d4d88; }
+  .dot.gray { background:#666; box-shadow:none; }
+  .dot.orange { background:#ffaa4d; box-shadow:0 0 8px #ffaa4d88; }
+  .info { flex:1; min-width:0; }
+  .info a, .info .title {
+    color:#eaeaea; text-decoration:none; font-size:0.85rem;
+    display:block; overflow:hidden; text-overflow:ellipsis;
+    white-space:nowrap;
+  }
+  .info a:hover { color:#4da3ff; }
+  .info .title { font-weight:500; white-space:normal; }
+  .meta { font-size:0.65rem; color:#555; margin-top:3px; word-break:break-all; }
+  .badge {
+    display:inline-block; font-size:0.6rem; padding:2px 6px;
+    border-radius:4px; margin-left:6px; font-weight:600;
+    vertical-align:middle;
+  }
+  .badge.ok { background:#1f3d2a; color:#00e07a; }
+  .badge.warn { background:#3d2a1f; color:#ffaa4d; }
+  .badge.neg { background:#3d1f1f; color:#ff6b6b; }
+  .section-title {
+    font-size:0.7rem; color:#888; text-transform:uppercase;
+    letter-spacing:1px; margin:18px 0 10px;
+  }
+  .err {
+    background:#1a0a0a; color:#ff6b6b; padding:12px;
+    border-radius:8px; font-size:0.72rem; margin-top:14px;
+    white-space:pre-wrap; word-break:break-word;
+  }
 </style>
 </head>
 <body>
-  <h1>OSINT DEBUG</h1>
+<div class="wrap">
+  <h1>OSINT</h1>
+  <div class="sub">email · pseudo · prénom nom</div>
 
-  <select id="type">
-    <option value="email">Email</option>
-    <option value="username">Pseudo</option>
-    <option value="fullname">Prénom Nom</option>
-  </select>
-  <input id="target" placeholder="cible..." autocomplete="off">
+  <div class="row">
+    <select id="type">
+      <option value="email">Email</option>
+      <option value="username">Pseudo</option>
+      <option value="fullname">Prénom Nom</option>
+    </select>
+    <input id="target" placeholder="cible..." autocomplete="off">
+  </div>
   <button id="go">Rechercher</button>
 
-  <div id="log">En attente…</div>
+  <div id="out"></div>
+</div>
 
 <script>
-/* ---------- Affichage ---------- */
-const logEl = document.getElementById("log");
-function log(msg, cls = "") {
-  const line = document.createElement("div");
-  if (cls) line.className = cls;
-  line.textContent = msg;
-  logEl.appendChild(line);
-  logEl.scrollTop = logEl.scrollHeight;
-}
-function clearLog() { logEl.innerHTML = ""; }
-
-/* ---------- Debug global ---------- */
+/* ============================================================
+   CAPTURE D'ERREURS
+   ============================================================ */
 window.addEventListener("error", e => {
-  log("❌ ERREUR: " + e.message + " (ligne " + e.lineno + ")", "err");
-});
-window.addEventListener("unhandledrejection", e => {
-  log("❌ PROMESSE REJETÉE: " + (e.reason?.message || e.reason), "err");
+  const out = document.getElementById("out");
+  if (out) out.innerHTML = `<div class="err">Erreur : ${e.message}</div>`;
 });
 
-/* ---------- Proxy CORS simple ---------- */
-async function fetchViaProxy(url) {
-  // Essai 1 : allorigins
-  try {
-    log("→ proxy 1 (allorigins)…", "info");
-    const r = await fetch("https://api.allorigins.win/raw?url=" + encodeURIComponent(url));
-    log("  status: " + r.status, "info");
-    if (r.ok) return r;
-  } catch (e) {
-    log("  proxy 1 échec: " + e.message, "warn");
+/* ============================================================
+   PROXY CORS (multi-fallback)
+   ============================================================ */
+const PROXIES = [
+  u => `https://api.allorigins.win/raw?url=${encodeURIComponent(u)}`,
+  u => `https://corsproxy.io/?${encodeURIComponent(u)}`,
+  u => `https://api.codetabs.com/v1/proxy?quest=${encodeURIComponent(u)}`
+];
+
+async function P(url) {
+  for (const proxy of PROXIES) {
+    try {
+      const r = await fetch(proxy(url));
+      if (r.ok) return r;
+    } catch {}
   }
-  // Essai 2 : codetabs
-  try {
-    log("→ proxy 2 (codetabs)…", "info");
-    const r = await fetch("https://api.codetabs.com/v1/proxy?quest=" + encodeURIComponent(url));
-    log("  status: " + r.status, "info");
-    if (r.ok) return r;
-  } catch (e) {
-    log("  proxy 2 échec: " + e.message, "warn");
-  }
-  throw new Error("tous les proxies ont échoué");
+  throw new Error("proxy failed");
 }
 
-/* ---------- Recherche email ---------- */
-async function searchEmail(email) {
-  log("=== EMAIL: " + email + " ===", "info");
+/* ============================================================
+   APIs OFFICIELLES (pas de clé)
+   ============================================================ */
+async function vGitHub(u) {
+  try {
+    const r = await fetch(`https://api.github.com/users/${u}`);
+    if (r.status === 200) {
+      const j = await r.json();
+      return { exists:true, confidence:1, reason:`${j.public_repos} repos · ${j.followers} followers` };
+    }
+    return { exists:false, confidence:1, reason:"404" };
+  } catch { return { exists:false, confidence:0, reason:"erreur réseau" }; }
+}
 
-  if (!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(email)) {
-    log("❌ format d'email invalide", "err");
+async function vReddit(u) {
+  try {
+    const r = await fetch(`https://www.reddit.com/user/${u}/about.json`);
+    if (r.status !== 200) return { exists:false, confidence:1, reason:"404" };
+    const j = await r.json();
+    if (j?.data?.name) {
+      return { exists:true, confidence:1, reason:`karma: ${j.data.link_karma + j.data.comment_karma}` };
+    }
+    return { exists:false, confidence:1, reason:"pas de donnée" };
+  } catch { return { exists:false, confidence:0, reason:"erreur réseau" }; }
+}
+
+async function vGitLab(u) {
+  try {
+    const r = await fetch(`https://gitlab.com/api/v4/users?username=${u}`);
+    if (r.status !== 200) return { exists:false, confidence:1, reason:"404" };
+    const j = await r.json();
+    if (Array.isArray(j) && j.length > 0) {
+      return { exists:true, confidence:1, reason:j[0].name || j[0].username };
+    }
+    return { exists:false, confidence:1, reason:"liste vide" };
+  } catch { return { exists:false, confidence:0, reason:"erreur réseau" }; }
+}
+
+/* ============================================================
+   CHECKER HTML avec signatures positives/négatives
+   ============================================================ */
+function htmlCheck(options) {
+  const { negatives = [], positives = [], minScore = 0.4 } = options;
+  return async (u) => {
+    try {
+      const r = await P(u);
+      if (r.status !== 200) return { exists:false, confidence:1, reason:`HTTP ${r.status}` };
+      const html = await r.text();
+      const low = html.toLowerCase();
+
+      for (const n of negatives) {
+        if (low.includes(n.toLowerCase())) {
+          return { exists:false, confidence:0.9, reason:`marqueur négatif` };
+        }
+      }
+
+      let found = 0;
+      const hits = [];
+      for (const p of positives) {
+        if (low.includes(p.toLowerCase())) { found++; hits.push(p); }
+      }
+
+      const ratio = positives.length > 0 ? found / positives.length : 0.5;
+      return {
+        exists: ratio >= minScore,
+        confidence: Math.min(0.5 + ratio * 0.4, 0.9),
+        reason: hits.length ? `${hits.slice(0,2).join(", ")}` : `${found}/${positives.length} signaux`
+      };
+    } catch {
+      return { exists:false, confidence:0, reason:"proxy inaccessible" };
+    }
+  };
+}
+
+/* ============================================================
+   PLATEFORMES
+   ============================================================ */
+const PLATFORMS = [
+  ["GitHub", u=>`https://github.com/${u}`, vGitHub],
+  ["GitLab", u=>`https://gitlab.com/${u}`, vGitLab],
+  ["Reddit", u=>`https://www.reddit.com/user/${u}`, vReddit],
+  ["Instagram", u=>`https://www.instagram.com/${u}/`, htmlCheck({
+    negatives: ["sorry, this page isn't available","page not found"],
+    positives: ["og:title","profile_pic_url","biography","followers"]
+  })],
+  ["TikTok", u=>`https://www.tiktok.com/@${u}`, htmlCheck({
+    negatives: ["couldn't find this account","not found"],
+    positives: ["uniqueid","nickname","followercount","avatarLarger"]
+  })],
+  ["Twitter / X", u=>`https://x.com/${u}`, htmlCheck({
+    negatives: ["this account doesn","doesn't exist"],
+    positives: ["og:title","screen_name","followers_count"]
+  })],
+  ["Facebook", u=>`https://www.facebook.com/${u}`, htmlCheck({
+    negatives: ["content isn't available","page not found"],
+    positives: ["og:title","profile_id","cover_photo"]
+  })],
+  ["Telegram", u=>`https://t.me/${u}`, htmlCheck({
+    negatives: ["if you have telegram, you can contact"],
+    positives: ["tgme_page_title","tgme_page_photo"]
+  })],
+  ["YouTube", u=>`https://www.youtube.com/@${u}`, htmlCheck({
+    negatives: ["this page isn't available","404"],
+    positives: ["channelid","subscriber_count","og:title"]
+  })],
+  ["Twitch", u=>`https://www.twitch.tv/${u}`, htmlCheck({
+    negatives: ["page not found","does not exist"],
+    positives: ["og:title","channel","follower"]
+  })],
+  ["Pinterest", u=>`https://www.pinterest.com/${u}/`, htmlCheck({
+    negatives: ["page not found"],
+    positives: ["og:title","profile","pins","followers"]
+  })],
+  ["Medium", u=>`https://medium.com/@${u}`, htmlCheck({
+    negatives: ["out of nothing","404"],
+    positives: ["og:title","profile","followers"]
+  })],
+  ["DeviantArt", u=>`https://www.deviantart.com/${u}`, htmlCheck({
+    negatives: ["not found","does not exist"],
+    positives: ["og:title","deviation","watchers"]
+  })],
+  ["Steam", u=>`https://steamcommunity.com/id/${u}`, htmlCheck({
+    negatives: ["the specified profile could not be found"],
+    positives: ["profile_header","persona_name"]
+  })],
+  ["SoundCloud", u=>`https://soundcloud.com/${u}`, htmlCheck({
+    negatives: ["we can't find that user","404"],
+    positives: ["og:title","followers_count","tracks"]
+  })],
+  ["Behance", u=>`https://www.behance.net/${u}`, htmlCheck({
+    negatives: ["page not found","404"],
+    positives: ["og:title","profile","projects","followers"]
+  })],
+  ["Dribbble", u=>`https://dribbble.com/${u}`, htmlCheck({
+    negatives: ["page not found","404"],
+    positives: ["og:title","profile","shots","followers"]
+  })],
+  ["Patreon", u=>`https://www.patreon.com/${u}`, htmlCheck({
+    negatives: ["page not found","404"],
+    positives: ["og:title","patron","creator"]
+  })],
+  ["Mastodon", u=>`https://mastodon.social/@${u}`, htmlCheck({
+    negatives: ["the page you are looking for isn't here"],
+    positives: ["og:title","profile","statuses_count","followers_count"]
+  })],
+  ["Bluesky", u=>`https://bsky.app/profile/${u}`, htmlCheck({
+    negatives: ["not found","profile not found"],
+    positives: ["og:title","did:plc","followersCount"]
+  })],
+  ["Threads", u=>`https://www.threads.net/@${u}`, htmlCheck({
+    negatives: ["sorry, this page isn't available"],
+    positives: ["og:title","threads","followers"]
+  })],
+  ["VK", u=>`https://vk.com/${u}`, htmlCheck({
+    negatives: ["page not found"],
+    positives: ["og:title","profile","friends","photos"]
+  })],
+  ["Flickr", u=>`https://www.flickr.com/people/${u}`, htmlCheck({
+    negatives: ["page not found","404"],
+    positives: ["og:title","flickr","photostream"]
+  })],
+  ["Imgur", u=>`https://imgur.com/user/${u}`, htmlCheck({
+    negatives: ["page not found","404"],
+    positives: ["og:title","imgur","profile"]
+  })],
+  ["Quora", u=>`https://www.quora.com/profile/${u}`, htmlCheck({
+    negatives: ["page not found","404","we couldn't find"],
+    positives: ["og:title","quora","profile"]
+  })],
+  ["Vimeo", u=>`https://vimeo.com/${u}`, htmlCheck({
+    negatives: ["page not found","404"],
+    positives: ["og:title","vimeo","profile"]
+  })],
+  ["Dailymotion", u=>`https://www.dailymotion.com/${u}`, htmlCheck({
+    negatives: ["page not found","404"],
+    positives: ["og:title","dailymotion","channel"]
+  })],
+  ["Bandcamp", u=>`https://bandcamp.com/${u}`, htmlCheck({
+    negatives: ["page not found","404"],
+    positives: ["og:title","bandcamp","artist"]
+  })],
+  ["Substack", u=>`https://${u}.substack.com`, htmlCheck({
+    negatives: ["page not found","404"],
+    positives: ["og:title","substack","subscribe"]
+  })],
+  ["WordPress", u=>`https://${u}.wordpress.com`, htmlCheck({
+    negatives: ["not found","doesn't exist"],
+    positives: ["og:title","wordpress","blog"]
+  })],
+  ["Dev.to", u=>`https://dev.to/${u}`, htmlCheck({
+    negatives: ["not found","404"],
+    positives: ["og:title","dev.to","profile"]
+  })],
+  ["Hashnode", u=>`https://hashnode.com/@${u}`, htmlCheck({
+    negatives: ["not found","404"],
+    positives: ["og:title","hashnode","profile"]
+  })],
+  ["CodePen", u=>`https://codepen.io/${u}`, htmlCheck({
+    negatives: ["page not found","404"],
+    positives: ["og:title","codepen","profile"]
+  })],
+  ["HackerNews", u=>`https://news.ycombinator.com/user?id=${u}`, htmlCheck({
+    negatives: ["no such user","sorry"],
+    positives: ["karma","created","about"]
+  })],
+  ["9GAG", u=>`https://9gag.com/u/${u}`, htmlCheck({
+    negatives: ["not found","404"],
+    positives: ["og:title","9gag","profile"]
+  })],
+  ["ArtStation", u=>`https://www.artstation.com/${u}`, htmlCheck({
+    negatives: ["not found","404"],
+    positives: ["og:title","artstation","profile"]
+  })],
+  ["Product Hunt", u=>`https://www.producthunt.com/@${u}`, htmlCheck({
+    negatives: ["not found","404"],
+    positives: ["og:title","product hunt","profile"]
+  })]
+];
+
+/* ============================================================
+   EMAIL — MD5 pur JS
+   ============================================================ */
+function md5(str) {
+  function rotl(n, s) { return (n << s) | (n >>> (32 - s)); }
+  function add(a, b) { return (a + b) & 0xFFFFFFFF; }
+  const bytes = new TextEncoder().encode(str);
+  const K = [];
+  for (let i = 0; i < 64; i++) K[i] = Math.floor(Math.abs(Math.sin(i + 1)) * 4294967296);
+  const S = [7,12,17,22,7,12,17,22,7,12,17,22,7,12,17,22,
+             5,9,14,20,5,9,14,20,5,9,14,20,5,9,14,20,
+             4,11,16,23,4,11,16,23,4,11,16,23,4,11,16,23,
+             6,10,15,21,6,10,15,21,6,10,15,21,6,10,15,21];
+  const orig = bytes.length;
+  const ml = orig * 8;
+  const padded = new Uint8Array(((orig + 8) >> 6 << 6) + 64);
+  padded.set(bytes);
+  padded[orig] = 0x80;
+  const dv = new DataView(padded.buffer);
+  dv.setUint32(padded.length - 8, ml, true);
+  dv.setUint32(padded.length - 4, Math.floor(ml / 4294967296), true);
+  let a = 0x67452301, b = 0xEFCDAB89, c = 0x98BADCFE, d = 0x10325476;
+  for (let i = 0; i < padded.length; i += 64) {
+    const M = [];
+    for (let j = 0; j < 16; j++) M[j] = dv.getUint32(i + j * 4, true);
+    let [A,B,C,D] = [a,b,c,d];
+    for (let j = 0; j < 64; j++) {
+      let F, g;
+      if (j < 16)      { F = (B & C) | (~B & D);  g = j; }
+      else if (j < 32) { F = (D & B) | (~D & C);  g = (5*j + 1) % 16; }
+      else if (j < 48) { F = B ^ C ^ D;           g = (3*j + 5) % 16; }
+      else             { F = C ^ (B | ~D);        g = (7*j) % 16; }
+      F = add(add(add(F, A), K[j]), M[g]);
+      A = D; D = C; C = B;
+      B = add(B, rotl(F, S[j]));
+    }
+    a = add(a, A); b = add(b, B); c = add(c, C); d = add(d, D);
+  }
+  const toHex = n => n.toString(16).padStart(8, "0").match(/../g).reverse().join("");
+  return toHex(a) + toHex(b) + toHex(c) + toHex(d);
+}
+
+/* ============================================================
+   CHECKERS EMAIL
+   ============================================================ */
+const DISPOSABLE_DOMAINS = [
+  "mailinator.com","guerrillamail.com","10minutemail.com","tempmail.com",
+  "throwaway.email","yopmail.com","maildrop.cc","getnada.com",
+  "sharklasers.com","guerrillamailblock.com","temp-mail.org","fakeinbox.com",
+  "trashmail.com","dispostable.com","mailnesia.com","mailcatch.com",
+  "tempr.email","discard.email","spamgourmet.com","mytemp.email"
+];
+
+async function checkMX(domain) {
+  try {
+    const url = `https://dns.google/resolve?name=${encodeURIComponent(domain)}&type=MX`;
+    const r = await fetch(url);
+    if (!r.ok) return { hasMX: false, records: [], reason: `DNS: HTTP ${r.status}` };
+    const j = await r.json();
+    const records = (j.Answer || []).filter(a => a.type === 15).map(a => a.data);
+    return { hasMX: records.length > 0, records, reason: records.length > 0 ? `${records.length} serveur(s) MX` : "aucun MX" };
+  } catch {
+    return { hasMX: false, records: [], reason: "DNS inaccessible" };
+  }
+}
+
+async function checkHIBP(email) {
+  try {
+    const url = `https://haveibeenpwned.com/api/v3/breachedaccount/${encodeURIComponent(email)}?truncateResponse=true`;
+    const r = await P(url);
+    if (r.status === 404) return { exists: false, breaches: [], reason: "aucune fuite connue" };
+    if (r.status === 200) {
+      const data = await r.json();
+      return { exists: true, breaches: data.map(b => b.Name), reason: `${data.length} fuite(s) connue(s)` };
+    }
+    return { exists: false, breaches: [], reason: `HIBP: HTTP ${r.status}` };
+  } catch {
+    return { exists: false, breaches: [], reason: "HIBP inaccessible" };
+  }
+}
+
+async function checkGravatar(email) {
+  try {
+    const hash = md5(email.trim().toLowerCase());
+    const url = `https://www.gravatar.com/avatar/${hash}?d=404`;
+    const r = await P(url);
+    if (r.status === 200) {
+      const txt = await r.text();
+      return { exists: txt.length > 0, reason: txt.length > 0 ? "avatar Gravatar public trouvé" : "aucun Gravatar" };
+    }
+    return { exists: false, reason: "aucun Gravatar public" };
+  } catch {
+    return { exists: false, reason: "vérification impossible" };
+  }
+}
+
+async function checkEmailRep(email) {
+  try {
+    const url = `https://emailrep.io/${encodeURIComponent(email)}`;
+    const r = await fetch(url);
+    if (!r.ok) return null;
+    const j = await r.json();
+    return {
+      reputation: j.reputation || "inconnue",
+      suspicious: j.suspicious || false,
+      profiles: j.details?.profiles || [],
+      breaches: j.details?.breaches || 0,
+      firstSeen: j.details?.first_seen || null,
+      lastSeen: j.details?.last_seen || null
+    };
+  } catch {
+    return null;
+  }
+}
+
+/* ============================================================
+   RENDU EMAIL
+   ============================================================ */
+async function renderEmail(email) {
+  const out = document.getElementById("out");
+  out.innerHTML = `<div class="status" id="status">analyse…</div>`;
+
+  const valid = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(email);
+  if (!valid) {
+    out.innerHTML = `<div class="none">format d'email invalide</div>`;
     return;
   }
-  log("✓ format valide", "ok");
 
-  const domain = email.split("@")[1];
-  log("domaine: " + domain, "info");
+  const domain = email.toLowerCase().split("@")[1];
+  const local = email.toLowerCase().split("@")[0];
 
-  // Test DNS MX via Google DNS (fonctionne directement, pas de proxy)
-  try {
-    log("→ requête DNS MX…", "info");
-    const r = await fetch("https://dns.google/resolve?name=" + encodeURIComponent(domain) + "&type=MX");
-    log("  status DNS: " + r.status, "info");
-    if (r.ok) {
-      const j = await r.json();
-      const mx = (j.Answer || []).filter(a => a.type === 15);
-      if (mx.length > 0) {
-        log("✓ MX trouvés: " + mx.map(a => a.data).join(", "), "ok");
-      } else {
-        log("✗ aucun MX", "warn");
+  const isDisposable = DISPOSABLE_DOMAINS.includes(domain);
+  const isRole = /^(contact|info|admin|support|sales|hello|noreply|no-reply|postmaster|webmaster|help|billing|team|office)$/i.test(local);
+
+  document.getElementById("status").textContent = "DNS…";
+  const mx = await checkMX(domain);
+
+  document.getElementById("status").textContent = "Gravatar…";
+  const gravatar = await checkGravatar(email);
+
+  document.getElementById("status").textContent = "Fuites…";
+  const hibp = await checkHIBP(email);
+
+  document.getElementById("status").textContent = "Réputation…";
+  const emailrep = await checkEmailRep(email);
+
+  out.innerHTML = "";
+
+  // Section 1 : Validité
+  addSection(out, "Validité technique");
+  addInfoCard(out, {
+    dotClass: "blue",
+    title: "Format email",
+    meta: "RFC 5322",
+    badge: { text: "valide", cls: "ok" }
+  });
+
+  addInfoCard(out, {
+    dotClass: mx.hasMX ? "blue" : "red",
+    title: "Serveurs MX",
+    meta: mx.hasMX ? mx.records.slice(0,2).join(" · ") : mx.reason,
+    badge: mx.hasMX ? { text: `${mx.records.length} MX`, cls: "ok" } : { text: "aucun", cls: "neg" }
+  });
+
+  // Section 2 : Classification
+  addSection(out, "Classification");
+
+  addInfoCard(out, {
+    dotClass: isDisposable ? "red" : "gray",
+    title: "Email jetable",
+    meta: isDisposable ? "Domaine jetable détecté" : "Domaine permanent",
+    badge: isDisposable ? { text: "jetable", cls: "neg" } : { text: "permanent", cls: "ok" }
+  });
+
+  addInfoCard(out, {
+    dotClass: isRole ? "orange" : "gray",
+    title: "Compte de rôle",
+    meta: isRole ? "Adresse de type contact@, info@, admin@…" : "Adresse personnelle",
+    badge: isRole ? { text: "rôle", cls: "warn" } : { text: "personnel", cls: "ok" }
+  });
+
+  // Section 3 : Présence publique
+  addSection(out, "Présence publique");
+
+  addInfoCard(out, {
+    dotClass: gravatar.exists ? "blue" : "gray",
+    title: "Gravatar",
+    meta: gravatar.exists ? "Un avatar public est associé" : "Aucun avatar public",
+    badge: gravatar.exists ? { text: "existe", cls: "ok" } : { text: "aucun", cls: "neg" }
+  });
+
+  if (emailrep) {
+    const profilesStr = emailrep.profiles.length > 0
+      ? `Profils liés : ${emailrep.profiles.join(", ")}`
+      : "Aucun profil public lié";
+
+    addInfoCard(out, {
+      dotClass: emailrep.suspicious ? "red" : "blue",
+      title: "Réputation EmailRep",
+      meta: profilesStr,
+      badge: {
+        text: emailrep.reputation,
+        cls: emailrep.reputation === "high" ? "ok" : emailrep.reputation === "low" ? "neg" : "warn"
       }
+    });
+
+    if (emailrep.firstSeen || emailrep.lastSeen) {
+      addInfoCard(out, {
+        dotClass: "gray",
+        title: "Historique de présence",
+        meta: `Première vue : ${emailrep.firstSeen || "?"} · Dernière vue : ${emailrep.lastSeen || "?"}`
+      });
     }
-  } catch (e) {
-    log("❌ DNS échec: " + e.message, "err");
   }
 
-  // Test Gravatar
-  try {
-    log("→ test Gravatar…", "info");
-    // MD5 via service externe
-    const hashResp = await fetch("https://api.hashify.net/hash/md5/hex?value=" + encodeURIComponent(email.trim().toLowerCase()));
-    if (hashResp.ok) {
-      const hashJson = await hashResp.json();
-      const hash = hashJson.Digest;
-      log("  hash: " + hash, "info");
-      const r = await fetch("https://www.gravatar.com/avatar/" + hash + "?d=404");
-      log("  status Gravatar: " + r.status, "info");
-      if (r.status === 200) {
-        log("✓ Gravatar existe", "ok");
-      } else {
-        log("✗ pas de Gravatar", "warn");
-      }
-    }
-  } catch (e) {
-    log("❌ Gravatar échec: " + e.message, "err");
-  }
+  // Section 4 : Fuites
+  addSection(out, "Fuites de données");
 
-  log("=== FIN EMAIL ===", "ok");
+  if (hibp.exists && hibp.breaches.length) {
+    addInfoCard(out, {
+      dotClass: "red",
+      title: `Have I Been Pwned — ${hibp.breaches.length} fuite(s)`,
+      meta: hibp.breaches.slice(0,5).join(", "),
+      badge: { text: "compromis", cls: "neg" }
+    });
+  } else {
+    addInfoCard(out, {
+      dotClass: "gray",
+      title: "Have I Been Pwned",
+      meta: hibp.reason || "aucune fuite trouvée",
+      badge: { text: "aucune", cls: "ok" }
+    });
+  }
 }
 
-/* ---------- Recherche pseudo ---------- */
-async function searchUsername(u) {
-  log("=== PSEUDO: " + u + " ===", "info");
+/* ============================================================
+   RENDU PSEUDO
+   ============================================================ */
+async function renderIdentity(target) {
+  const out = document.getElementById("out");
+  const norm = target.trim().replace(/\s+/g,"").toLowerCase();
 
-  // GitHub (API directe, pas de proxy, CORS autorisé)
-  try {
-    log("→ GitHub API…", "info");
-    const r = await fetch("https://api.github.com/users/" + encodeURIComponent(u));
-    log("  status: " + r.status, "info");
-    if (r.status === 200) {
-      const j = await r.json();
-      log("✓ GitHub trouvé: " + j.login + " (" + j.public_repos + " repos)", "ok");
-    } else if (r.status === 404) {
-      log("✗ pas de compte GitHub", "warn");
-    }
-  } catch (e) {
-    log("❌ GitHub échec: " + e.message, "err");
-  }
+  out.innerHTML = `<div class="status" id="status">analyse de ${PLATFORMS.length} plateformes…</div>`;
 
-  // Reddit (API directe)
-  try {
-    log("→ Reddit API…", "info");
-    const r = await fetch("https://www.reddit.com/user/" + encodeURIComponent(u) + "/about.json");
-    log("  status: " + r.status, "info");
-    if (r.status === 200) {
-      const j = await r.json();
-      if (j?.data?.name) {
-        log("✓ Reddit trouvé: " + j.data.name + " (karma: " + j.data.link_karma + ")", "ok");
+  let done = 0, found = 0;
+  const foundEls = [];
+
+  PLATFORMS.forEach(([name, urlFn, checker]) => {
+    const url = urlFn(norm);
+    Promise.resolve(checker(norm, name)).then(res => {
+      done++;
+      if (res && res.exists && res.confidence >= 0.5) {
+        found++;
+        const div = document.createElement("div");
+        div.className = "card";
+        const conf = Math.round((res.confidence || 0) * 100);
+        const badgeCls = res.confidence >= 0.85 ? "ok" : "warn";
+        div.innerHTML = `
+          <div class="dot"></div>
+          <div class="info">
+            <a href="${url}" target="_blank" rel="noopener">${name}
+              <span class="badge ${badgeCls}">${conf}%</span>
+            </a>
+            <div class="meta">${url}</div>
+            <div class="meta">${escapeHtml(res.reason || "")}</div>
+          </div>
+        `;
+        foundEls.push(div);
       }
-    } else if (r.status === 404) {
-      log("✗ pas de compte Reddit", "warn");
-    }
-  } catch (e) {
-    log("❌ Reddit échec: " + e.message, "err");
-  }
-
-  // GitLab (API directe)
-  try {
-    log("→ GitLab API…", "info");
-    const r = await fetch("https://gitlab.com/api/v4/users?username=" + encodeURIComponent(u));
-    log("  status: " + r.status, "info");
-    if (r.ok) {
-      const j = await r.json();
-      if (Array.isArray(j) && j.length > 0) {
-        log("✓ GitLab trouvé: " + j[0].username, "ok");
-      } else {
-        log("✗ pas de compte GitLab", "warn");
+      const st = document.getElementById("status");
+      if (st) st.textContent = `${done}/${PLATFORMS.length} · ${found} trouvé(s)`;
+      if (done === PLATFORMS.length) {
+        out.innerHTML = "";
+        if (found === 0) {
+          out.innerHTML = `<div class="none">aucun compte trouvé</div>`;
+        } else {
+          const head = document.createElement("div");
+          head.className = "status";
+          head.textContent = `${found} compte(s) trouvé(s)`;
+          out.appendChild(head);
+          foundEls.forEach(el => out.appendChild(el));
+        }
       }
-    }
-  } catch (e) {
-    log("❌ GitLab échec: " + e.message, "err");
-  }
-
-  // Test via proxy sur 1 plateforme (pour voir si le proxy marche)
-  try {
-    log("→ test proxy sur Instagram…", "info");
-    const r = await fetchViaProxy("https://www.instagram.com/" + encodeURIComponent(u) + "/");
-    const html = await r.text();
-    log("  HTML reçu: " + html.length + " caractères", "info");
-    if (html.toLowerCase().includes("sorry, this page isn't available")) {
-      log("✗ compte Instagram inexistant", "warn");
-    } else if (html.toLowerCase().includes("og:title")) {
-      log("✓ Instagram semble exister (og:title trouvé)", "ok");
-    } else {
-      log("? Instagram: résultat ambigu", "warn");
-    }
-  } catch (e) {
-    log("❌ proxy Instagram échec: " + e.message, "err");
-  }
-
-  log("=== FIN PSEUDO ===", "ok");
+    }).catch(() => {
+      done++;
+      const st = document.getElementById("status");
+      if (st) st.textContent = `${done}/${PLATFORMS.length} · ${found} trouvé(s)`;
+      if (done === PLATFORMS.length && found === 0) {
+        out.innerHTML = `<div class="none">aucun compte trouvé</div>`;
+      }
+    });
+  });
 }
 
-/* ---------- Recherche prénom nom ---------- */
-async function searchFullname(name) {
-  const u = name.trim().replace(/\s+/g, "").toLowerCase();
-  log("=== PRÉNOM NOM: " + name + " (transformé en: " + u + ") ===", "info");
-  await searchUsername(u);
+/* ============================================================
+   UTILITAIRES
+   ============================================================ */
+function addSection(parent, title) {
+  const s = document.createElement("div");
+  s.className = "section-title";
+  s.textContent = title;
+  parent.appendChild(s);
 }
 
-/* ---------- Clic ---------- */
-document.getElementById("go").addEventListener("click", async () => {
-  clearLog();
+function addInfoCard(parent, {dotClass, title, meta, badge}) {
+  const c = document.createElement("div");
+  c.className = "card info-card";
+  c.innerHTML = `
+    <div class="dot ${dotClass}"></div>
+    <div class="info">
+      <div class="title">${escapeHtml(title)}${badge ? ` <span class="badge ${badge.cls}">${escapeHtml(badge.text)}</span>` : ""}</div>
+      <div class="meta">${escapeHtml(meta || "")}</div>
+    </div>
+  `;
+  parent.appendChild(c);
+}
+
+function escapeHtml(s) {
+  return String(s ?? "").replace(/[&<>"']/g, m => ({
+    "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"
+  }[m]));
+}
+
+function validate(t) {
+  t = (t || "").trim();
+  if (!t) return false;
+  return /^[a-zA-Z0-9_.@\- ]{2,}$/.test(t);
+}
+
+/* ============================================================
+   EVENT
+   ============================================================ */
+document.getElementById("go").addEventListener("click", () => {
   const type = document.getElementById("type").value;
-  const target = document.getElementById("target").value.trim();
+  const target = document.getElementById("target").value;
+  const out = document.getElementById("out");
 
-  log("🚀 Démarrage recherche", "ok");
-  log("type: " + type, "info");
-  log("cible: " + target, "info");
-  log("");
-
-  if (!target) {
-    log("❌ cible vide", "err");
+  if (!validate(target)) {
+    out.innerHTML = `<div class="none">cible invalide</div>`;
     return;
   }
 
-  try {
-    if (type === "email") {
-      await searchEmail(target);
-    } else if (type === "username") {
-      await searchUsername(target);
-    } else {
-      await searchFullname(target);
-    }
-  } catch (e) {
-    log("❌ ERREUR GLOBALE: " + e.message, "err");
+  if (type === "email") {
+    renderEmail(target.trim());
+  } else {
+    renderIdentity(target);
   }
+});
+
+document.getElementById("target").addEventListener("keydown", e => {
+  if (e.key === "Enter") document.getElementById("go").click();
 });
 </script>
 </body>
