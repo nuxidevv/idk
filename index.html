@@ -114,6 +114,94 @@
     to { background-position:50px 50px; }
   }
 
+  /* ============================================================
+     AJOUT D — LOADER D'OUVERTURE
+     ============================================================ */
+  .page-loader {
+    position:fixed;
+    inset:0;
+    background:var(--bg);
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    justify-content:center;
+    gap:20px;
+    z-index:9999;
+    transition:opacity 0.6s ease-out, visibility 0.6s;
+  }
+
+  .page-loader.hidden {
+    opacity:0;
+    visibility:hidden;
+    pointer-events:none;
+  }
+
+  .loader-logo {
+    width:64px; height:64px;
+    border-radius:16px;
+    background:linear-gradient(135deg, #fff 0%, #888 100%);
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    position:relative;
+    overflow:hidden;
+    animation:loaderPulse 1.5s ease-in-out infinite;
+    box-shadow:0 0 60px rgba(0,224,122,0.3);
+  }
+
+  .loader-logo svg {
+    width:32px; height:32px;
+    color:#000;
+  }
+
+  @keyframes loaderPulse {
+    0%,100% { transform:scale(1); box-shadow:0 0 60px rgba(0,224,122,0.3); }
+    50% { transform:scale(1.05); box-shadow:0 0 80px rgba(0,224,122,0.5); }
+  }
+
+  .loader-text {
+    font-size:1.5rem;
+    font-weight:700;
+    letter-spacing:-0.02em;
+    color:var(--text);
+    opacity:0;
+    animation:loaderFadeIn 0.6s 0.2s forwards;
+  }
+
+  .loader-sub {
+    font-size:0.75rem;
+    color:var(--text-dim);
+    letter-spacing:0.05em;
+    opacity:0;
+    animation:loaderFadeIn 0.6s 0.4s forwards;
+  }
+
+  @keyframes loaderFadeIn {
+    to { opacity:1; }
+  }
+
+  .loader-bar {
+    width:200px;
+    height:2px;
+    background:var(--border);
+    border-radius:2px;
+    overflow:hidden;
+    margin-top:12px;
+  }
+
+  .loader-bar-fill {
+    height:100%;
+    background:linear-gradient(90deg, var(--green), var(--blue));
+    width:0%;
+    animation:loaderBar 1.5s ease-out forwards;
+    box-shadow:0 0 12px var(--green);
+  }
+
+  @keyframes loaderBar {
+    0% { width:0%; }
+    100% { width:100%; }
+  }
+
   /* Barre de progression */
   .progress-bar {
     position:fixed;
@@ -201,6 +289,12 @@
     text-shadow:0 0 20px var(--card-glow);
   }
 
+  .header-actions {
+    display:flex;
+    gap:8px;
+    flex-shrink:0;
+  }
+
   .theme-toggle {
     width:34px; height:34px;
     border-radius:8px;
@@ -225,6 +319,35 @@
   }
 
   .theme-toggle:hover svg { color:var(--text); }
+
+  /* ============================================================
+     AJOUT W — BOUTON SON
+     ============================================================ */
+  .sound-toggle {
+    width:34px; height:34px;
+    border-radius:8px;
+    background:var(--card);
+    border:1px solid var(--border);
+    display:flex; align-items:center; justify-content:center;
+    cursor:pointer;
+    transition:border-color 0.2s, transform 0.3s, background 0.2s;
+    flex-shrink:0;
+  }
+
+  .sound-toggle:hover {
+    border-color:var(--border-hover);
+    transform:scale(1.08);
+  }
+
+  .sound-toggle svg {
+    width:16px; height:16px;
+    color:var(--text-dim);
+    transition:color 0.2s;
+  }
+
+  .sound-toggle:hover svg { color:var(--text); }
+
+  .sound-toggle.off svg { color:var(--text-dimmer); }
 
   .counter-row {
     display:flex;
@@ -337,7 +460,7 @@
   .input-clear.visible { display:flex; }
   .input-clear svg { width:10px; height:10px; color:var(--text-dim); }
 
-  /* Bouton principal avec profondeur 3D */
+  /* Bouton principal */
   button.primary {
     width:100%;
     background:var(--accent);
@@ -409,6 +532,88 @@
     animation:fadeUp 0.4s ease-out;
   }
 
+  /* ============================================================
+     AJOUT J — BARRE DE TRI + EFFACER TOUT (BB)
+     ============================================================ */
+  .toolbar {
+    display:none;
+    align-items:center;
+    justify-content:space-between;
+    gap:8px;
+    margin-bottom:14px;
+    animation:fadeUp 0.4s ease-out;
+  }
+
+  .toolbar.visible { display:flex; }
+
+  .sort-wrap {
+    position:relative;
+    flex:1;
+    max-width:220px;
+  }
+
+  .sort-select {
+    width:100%;
+    background:var(--card);
+    border:1px solid var(--border);
+    color:var(--text);
+    padding:8px 30px 8px 12px;
+    border-radius:8px;
+    font-size:0.72rem;
+    font-family:inherit;
+    font-weight:500;
+    cursor:pointer;
+    outline:none;
+    appearance:none;
+    -webkit-appearance:none;
+    transition:border-color 0.15s, background 0.15s;
+  }
+
+  .sort-select:hover { border-color:var(--border-hover); }
+  .sort-select:focus { border-color:var(--green); }
+
+  .sort-wrap::after {
+    content:'';
+    position:absolute;
+    right:12px;
+    top:50%;
+    transform:translateY(-50%) rotate(45deg);
+    width:6px; height:6px;
+    border-right:1.5px solid var(--text-dim);
+    border-bottom:1.5px solid var(--text-dim);
+    pointer-events:none;
+    margin-top:-3px;
+  }
+
+  .clear-all-btn {
+    background:var(--card);
+    border:1px solid var(--border);
+    color:var(--text-dim);
+    padding:8px 14px;
+    border-radius:8px;
+    font-size:0.72rem;
+    font-family:inherit;
+    font-weight:500;
+    cursor:pointer;
+    display:flex;
+    align-items:center;
+    gap:6px;
+    transition:border-color 0.15s, color 0.15s, background 0.15s, transform 0.15s;
+    white-space:nowrap;
+  }
+
+  .clear-all-btn:hover {
+    border-color:rgba(255,107,107,0.4);
+    color:var(--red);
+    background:rgba(255,107,107,0.05);
+  }
+
+  .clear-all-btn:active { transform:scale(0.97); }
+
+  .clear-all-btn svg {
+    width:12px; height:12px;
+  }
+
   /* Squelettes */
   .skeleton {
     background:var(--card);
@@ -438,7 +643,7 @@
   }
 
   /* ============================================================
-     CARTES 3D
+     CARTES 3D — AJOUT EE (animation blur)
      ============================================================ */
   .card {
     background:var(--card);
@@ -447,7 +652,7 @@
     padding:16px 18px;
     margin-bottom:12px;
     transition:border-color 0.2s, box-shadow 0.4s, background 0.2s;
-    animation:cardIn 0.5s cubic-bezier(0.22, 1, 0.36, 1) backwards;
+    animation:cardIn 0.7s cubic-bezier(0.22, 1, 0.36, 1) backwards;
     position:relative;
     overflow:hidden;
     transform-style:preserve-3d;
@@ -455,7 +660,6 @@
     transform:perspective(1000px) rotateX(0) rotateY(0) translateZ(0);
   }
 
-  /* Effet de brillance qui suit la souris/doigt */
   .card::after {
     content:'';
     position:absolute;
@@ -497,7 +701,6 @@
 
   .card:hover::before { opacity:1; }
 
-  /* Effet de profondeur interne (contenu qui "flotte") */
   .card > * {
     position:relative;
     z-index:3;
@@ -505,8 +708,8 @@
   }
 
   @keyframes cardIn {
-    from { opacity:0; transform:translateY(12px) rotateX(-8deg); }
-    to { opacity:1; transform:translateY(0) rotateX(0); }
+    from { opacity:0; transform:translateY(20px) rotateX(-10deg); filter:blur(8px); }
+    to { opacity:1; transform:translateY(0) rotateX(0); filter:blur(0); }
   }
 
   .card-header {
@@ -765,7 +968,6 @@
     to { opacity:1; transform:translateY(0); }
   }
 
-  /* Bouton remonter */
   .scroll-top {
     position:fixed;
     bottom:24px;
@@ -807,7 +1009,6 @@
     transition:transform 0.4s;
   }
 
-  /* Toasts */
   .toast-container {
     position:fixed;
     bottom:24px;
@@ -867,13 +1068,130 @@
     to { opacity:0; transform:translateY(20px) rotateX(30deg) scale(0.9); }
   }
 
+  /* ============================================================
+     AJOUT X + Y — MODALES
+     ============================================================ */
+  .modal-overlay {
+    position:fixed;
+    inset:0;
+    background:rgba(0,0,0,0.7);
+    backdrop-filter:blur(8px);
+    -webkit-backdrop-filter:blur(8px);
+    z-index:500;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    padding:20px;
+    opacity:0;
+    pointer-events:none;
+    transition:opacity 0.3s;
+  }
+
+  .modal-overlay.open {
+    opacity:1;
+    pointer-events:auto;
+  }
+
+  .modal {
+    background:var(--card);
+    border:1px solid var(--border-hover);
+    border-radius:14px;
+    max-width:520px;
+    width:100%;
+    max-height:80vh;
+    overflow:auto;
+    padding:24px;
+    position:relative;
+    transform:scale(0.9) translateY(20px);
+    transition:transform 0.4s cubic-bezier(0.22, 1, 0.36, 1);
+    box-shadow:0 24px 80px rgba(0,0,0,0.6), 0 0 0 1px rgba(0,224,122,0.1);
+  }
+
+  .modal-overlay.open .modal {
+    transform:scale(1) translateY(0);
+  }
+
+  .modal-close {
+    position:absolute;
+    top:16px; right:16px;
+    width:28px; height:28px;
+    border-radius:8px;
+    background:transparent;
+    border:1px solid var(--border);
+    display:flex; align-items:center; justify-content:center;
+    cursor:pointer;
+    transition:border-color 0.15s, background 0.15s, transform 0.15s;
+  }
+
+  .modal-close:hover {
+    border-color:var(--border-hover);
+    background:var(--card-hover);
+    transform:rotate(90deg);
+  }
+
+  .modal-close svg { width:12px; height:12px; color:var(--text-dim); }
+
+  .modal-title {
+    font-size:1.1rem;
+    font-weight:700;
+    color:var(--text);
+    margin-bottom:16px;
+    letter-spacing:-0.02em;
+  }
+
+  .modal-body {
+    font-size:0.82rem;
+    color:var(--text-dim);
+    line-height:1.7;
+  }
+
+  .modal-body p { margin-bottom:12px; }
+  .modal-body strong { color:var(--text); font-weight:600; }
+  .modal-body a { color:var(--blue); text-decoration:none; }
+  .modal-body a:hover { text-decoration:underline; }
+
+  .modal-body h3 {
+    color:var(--text);
+    font-size:0.85rem;
+    font-weight:600;
+    margin:16px 0 8px;
+    letter-spacing:-0.01em;
+  }
+
+  .modal-body ul {
+    padding-left:18px;
+    margin-bottom:12px;
+  }
+
+  .modal-body li { margin-bottom:4px; }
+
+  .footer-links {
+    text-align:center;
+    font-size:0.7rem;
+    color:var(--text-dimmer);
+    margin-top:24px;
+    padding-top:20px;
+    border-top:1px solid var(--border);
+    display:flex;
+    justify-content:center;
+    gap:16px;
+    flex-wrap:wrap;
+  }
+
+  .footer-links a {
+    color:var(--text-dim);
+    text-decoration:none;
+    cursor:pointer;
+    transition:color 0.15s;
+  }
+
+  .footer-links a:hover { color:var(--text); }
+
   .watermark {
     text-align:center;
     font-size:0.65rem;
     color:var(--text-dimmer);
-    margin-top:48px;
-    padding-top:24px;
-    border-top:1px solid var(--border);
+    margin-top:24px;
     letter-spacing:0.05em;
   }
 
@@ -901,6 +1219,19 @@
 </head>
 <body>
 
+<!-- AJOUT D — Loader -->
+<div class="page-loader" id="pageLoader">
+  <div class="loader-logo">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+      <circle cx="11" cy="11" r="8"></circle>
+      <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+    </svg>
+  </div>
+  <div class="loader-text">SeekIt</div>
+  <div class="loader-sub">Initialisation des bases de données…</div>
+  <div class="loader-bar"><div class="loader-bar-fill"></div></div>
+</div>
+
 <div class="progress-bar" id="progressBar"></div>
 
 <div class="wrap">
@@ -915,11 +1246,19 @@
         </div>
         <h1>SeekIt</h1>
       </div>
-      <button class="theme-toggle" id="themeToggle" aria-label="Mode">
-        <svg id="themeIcon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
-        </svg>
-      </button>
+      <div class="header-actions">
+        <button class="sound-toggle" id="soundToggle" aria-label="Son">
+          <svg id="soundIcon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon>
+            <path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"></path>
+          </svg>
+        </button>
+        <button class="theme-toggle" id="themeToggle" aria-label="Mode">
+          <svg id="themeIcon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+          </svg>
+        </button>
+      </div>
     </div>
     <div class="counter-row">
       Recherche sur <span class="counter" id="counter">0</span> de Base de Données
@@ -945,7 +1284,32 @@
     <span class="btn-text">Rechercher</span>
   </button>
 
+  <!-- AJOUT J + BB — Toolbar (tri + effacer tout) -->
+  <div class="toolbar" id="toolbar">
+    <div class="sort-wrap">
+      <select class="sort-select" id="sortSelect">
+        <option value="default">Tri par défaut</option>
+        <option value="confidence">Fiabilité (élevée → basse)</option>
+        <option value="age">Âge (jeune → vieux)</option>
+        <option value="ville">Ville (A → Z)</option>
+        <option value="alpha">Alphabétique (A → Z)</option>
+      </select>
+    </div>
+    <button class="clear-all-btn" id="clearAll">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <polyline points="3 6 5 6 21 6"></polyline>
+        <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+      </svg>
+      Effacer tout
+    </button>
+  </div>
+
   <div id="out"></div>
+
+  <div class="footer-links">
+    <a id="aboutLink">À propos</a>
+    <a id="legalLink">Mentions légales</a>
+  </div>
 
   <div class="watermark">SeekIt © 2026 — Tous droits réservés</div>
 </div>
@@ -958,8 +1322,74 @@
 
 <div class="toast-container" id="toastContainer"></div>
 
+<!-- AJOUT X — Modale À propos -->
+<div class="modal-overlay" id="aboutModal">
+  <div class="modal">
+    <button class="modal-close" data-close="aboutModal">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+        <line x1="18" y1="6" x2="6" y2="18"></line>
+        <line x1="6" y1="6" x2="18" y2="18"></line>
+      </svg>
+    </button>
+    <div class="modal-title">À propos de SeekIt</div>
+    <div class="modal-body">
+      <p><strong>SeekIt</strong> est un moteur de recherche de personnes qui interroge plus de 22 milliards d'enregistrements issus de bases de données publiques et de fuites documentées.</p>
+      <h3>Ce que tu peux trouver</h3>
+      <ul>
+        <li>Nom complet et variantes</li>
+        <li>Date et lieu de naissance</li>
+        <li>Adresses (actuelles et passées)</li>
+        <li>Emails et téléphones</li>
+        <li>Pseudo et comptes associés</li>
+      </ul>
+      <h3>Comment ça marche</h3>
+      <p>Tu saisis un prénom et un nom. SeekIt interroge sa base et retourne les enregistrements correspondants, triés par fiabilité.</p>
+      <h3>Confidentialité</h3>
+      <p>Aucune donnée n'est stockée sur nos serveurs. Les recherches sont anonymes et ne sont pas tracées. Les résultats sont affichés localement dans ton navigateur.</p>
+      <p style="margin-top:16px;font-size:0.75rem;color:var(--text-dimmer)">Version 1.0 — 2026</p>
+    </div>
+  </div>
+</div>
+
+<!-- AJOUT Y — Modale Mentions légales -->
+<div class="modal-overlay" id="legalModal">
+  <div class="modal">
+    <button class="modal-close" data-close="legalModal">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+        <line x1="18" y1="6" x2="6" y2="18"></line>
+        <line x1="6" y1="6" x2="18" y2="18"></line>
+      </svg>
+    </button>
+    <div class="modal-title">Mentions légales</div>
+    <div class="modal-body">
+      <h3>1. Objet</h3>
+      <p>SeekIt est un outil de recherche d'informations publiques. L'utilisateur est seul responsable de l'usage qu'il fait des données consultées.</p>
+      <h3>2. Sources de données</h3>
+      <p>Les données proviennent de bases publiques, de registres officiels et de fuites rendues publiques. SeekIt n'effectue aucun piratage ni intrusion.</p>
+      <h3>3. Utilisation</h3>
+      <p>Toute utilisation à des fins de harcèlement, de doxxing, de chantage ou d'atteinte à la vie privée est strictement interdite et peut faire l'objet de poursuites pénales.</p>
+      <h3>4. Responsabilité</h3>
+      <p>SeekIt ne peut être tenu responsable de l'exactitude des données affichées. L'utilisateur doit vérifier toute information avant usage.</p>
+      <h3>5. RGPD / Vie privée</h3>
+      <p>Aucune recherche n'est stockée. Aucun cookie de tracking n'est utilisé. Aucune donnée personnelle n'est collectée.</p>
+      <h3>6. Contact</h3>
+      <p>Pour toute demande de retrait de données ou question : <a href="mailto:contact@seekit.app">contact@seekit.app</a></p>
+      <p style="margin-top:16px;font-size:0.75rem;color:var(--text-dimmer)">Dernière mise à jour : 2026</p>
+    </div>
+  </div>
+</div>
+
 <script>
 const PROXY_URL = "/api/search";
+
+/* ============================================================
+   AJOUT D — LOADER D'OUVERTURE
+   ============================================================ */
+window.addEventListener("load", () => {
+  setTimeout(() => {
+    document.getElementById("pageLoader").classList.add("hidden");
+  }, 1600);
+});
 
 /* ============================================================
    COMPTEUR ANIMÉ
@@ -1024,6 +1454,61 @@ function toast(message, type = "success", duration = 3000) {
 }
 
 /* ============================================================
+   AJOUT W — SON
+   ============================================================ */
+let soundEnabled = true;
+const soundIconOn = `<polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon><path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"></path>`;
+const soundIconOff = `<polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon><line x1="23" y1="9" x2="17" y2="15"></line><line x1="17" y1="9" x2="23" y2="15"></line>`;
+
+try { soundEnabled = localStorage.getItem("seekit-sound") !== "off"; } catch {}
+
+const soundToggle = document.getElementById("soundToggle");
+const soundIcon = document.getElementById("soundIcon");
+
+function updateSoundIcon() {
+  soundIcon.innerHTML = soundEnabled ? soundIconOn : soundIconOff;
+  soundToggle.classList.toggle("off", !soundEnabled);
+}
+updateSoundIcon();
+
+soundToggle.addEventListener("click", () => {
+  soundEnabled = !soundEnabled;
+  updateSoundIcon();
+  try { localStorage.setItem("seekit-sound", soundEnabled ? "on" : "off"); } catch {}
+  toast(soundEnabled ? "Son activé" : "Son désactivé", "success", 1500);
+  if (soundEnabled) playSound("ding");
+});
+
+// Web Audio API — pas de fichier externe
+let audioCtx = null;
+function playSound(type) {
+  if (!soundEnabled) return;
+  try {
+    if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    const osc = audioCtx.createOscillator();
+    const gain = audioCtx.createGain();
+    osc.connect(gain);
+    gain.connect(audioCtx.destination);
+
+    if (type === "ding") {
+      osc.frequency.setValueAtTime(880, audioCtx.currentTime);
+      osc.frequency.exponentialRampToValueAtTime(1320, audioCtx.currentTime + 0.1);
+      gain.gain.setValueAtTime(0.08, audioCtx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.25);
+      osc.start();
+      osc.stop(audioCtx.currentTime + 0.25);
+    } else if (type === "error") {
+      osc.frequency.setValueAtTime(220, audioCtx.currentTime);
+      osc.frequency.exponentialRampToValueAtTime(150, audioCtx.currentTime + 0.2);
+      gain.gain.setValueAtTime(0.06, audioCtx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.25);
+      osc.start();
+      osc.stop(audioCtx.currentTime + 0.25);
+    }
+  } catch {}
+}
+
+/* ============================================================
    THEME
    ============================================================ */
 const themeToggle = document.getElementById("themeToggle");
@@ -1068,6 +1553,31 @@ window.addEventListener("scroll", () => {
 });
 scrollTopBtn.addEventListener("click", () => {
   window.scrollTo({ top: 0, behavior: "smooth" });
+});
+
+/* ============================================================
+   AJOUT X + Y — MODALES
+   ============================================================ */
+document.getElementById("aboutLink").addEventListener("click", () => {
+  document.getElementById("aboutModal").classList.add("open");
+});
+document.getElementById("legalLink").addEventListener("click", () => {
+  document.getElementById("legalModal").classList.add("open");
+});
+document.querySelectorAll(".modal-close").forEach(btn => {
+  btn.addEventListener("click", () => {
+    document.getElementById(btn.getAttribute("data-close")).classList.remove("open");
+  });
+});
+document.querySelectorAll(".modal-overlay").forEach(overlay => {
+  overlay.addEventListener("click", (e) => {
+    if (e.target === overlay) overlay.classList.remove("open");
+  });
+});
+document.addEventListener("keydown", (e) => {
+  if (e.key === "Escape") {
+    document.querySelectorAll(".modal-overlay.open").forEach(m => m.classList.remove("open"));
+  }
 });
 
 /* ============================================================
@@ -1230,8 +1740,6 @@ function attach3DTilt(card) {
   card.addEventListener("mouseenter", () => card.classList.add("tilting"));
   card.addEventListener("mousemove", handleMove);
   card.addEventListener("mouseleave", handleLeave);
-
-  // Touch (mobile)
   card.addEventListener("touchstart", (e) => {
     card.classList.add("tilting");
     handleMove(e);
@@ -1342,22 +1850,64 @@ function renderSkeletons(n = 3) {
 }
 
 /* ============================================================
+   AJOUT J — TRI
+   ============================================================ */
+let currentItems = [];
+let currentRawData = null;
+let currentSort = "default";
+
+function sortItems(items, mode) {
+  const arr = [...items];
+  switch (mode) {
+    case "confidence":
+      return arr.sort((a, b) => {
+        const ca = Number(a._confidence ?? a.confidence ?? -1);
+        const cb = Number(b._confidence ?? b.confidence ?? -1);
+        return (isNaN(cb) ? -1 : cb) - (isNaN(ca) ? -1 : ca);
+      });
+    case "age":
+      return arr.sort((a, b) => {
+        const da = new Date(a.date_naissance || a.annee_naissance || "9999").getTime();
+        const db = new Date(b.date_naissance || b.annee_naissance || "9999").getTime();
+        return (isNaN(db) ? Infinity : db) - (isNaN(da) ? Infinity : da);
+      });
+    case "ville":
+      return arr.sort((a, b) => String(a.ville || "").localeCompare(String(b.ville || ""), "fr"));
+    case "alpha":
+      return arr.sort((a, b) => {
+        const na = `${a.prenom || ""} ${a.nom_famille || ""}`.trim();
+        const nb = `${b.prenom || ""} ${b.nom_famille || ""}`.trim();
+        return na.localeCompare(nb, "fr");
+      });
+    default:
+      return arr;
+  }
+}
+
+/* ============================================================
    RENDER
    ============================================================ */
 function render(result) {
   const out = document.getElementById("out");
+  const toolbar = document.getElementById("toolbar");
   out.innerHTML = "";
 
   if (!result.ok || !result.data) {
+    toolbar.classList.remove("visible");
     const err = document.createElement("div");
     err.className = "err";
     err.textContent = `Échec (HTTP ${result.status})${result.error ? " — " + result.error : ""}\n\n${JSON.stringify(result.data, null, 2)}`;
     out.appendChild(err);
     toast("Erreur : " + (result.error || "HTTP " + result.status), "error");
+    playSound("error");
     return;
   }
 
   const arr = findArray(result.data) || [];
+  currentItems = arr.map(it => typeof it === "string" ? { valeur: it } : it);
+  currentRawData = result.data;
+  currentSort = "default";
+  document.getElementById("sortSelect").value = "default";
 
   const status = document.createElement("div");
   status.className = "status";
@@ -1365,47 +1915,27 @@ function render(result) {
   out.appendChild(status);
 
   if (arr.length === 0) {
+    toolbar.classList.remove("visible");
     const none = document.createElement("div");
     none.className = "none";
     none.textContent = "aucun résultat";
     out.appendChild(none);
     toast("Aucun résultat", "error");
+    playSound("error");
   } else {
+    toolbar.classList.add("visible");
     const list = document.createElement("div");
-    const items = arr.map(it => typeof it === "string" ? { valeur: it } : it);
-    items.forEach((item, i) => {
+    list.id = "resultsList";
+    currentItems.forEach((item, i) => {
       list.insertAdjacentHTML("beforeend", renderCard(item, i));
     });
     out.appendChild(list);
 
-    // 3D tilt
+    bindCardActions(list);
     list.querySelectorAll(".card").forEach(attach3DTilt);
 
-    // Copy
-    list.querySelectorAll(".copy-btn").forEach(btn => {
-      btn.addEventListener("click", async (e) => {
-        e.stopPropagation();
-        const val = btn.getAttribute("data-copy");
-        const ok = await copyToClipboard(val);
-        if (ok) {
-          btn.classList.add("copied");
-          setTimeout(() => btn.classList.remove("copied"), 1200);
-        } else {
-          toast("Échec de la copie", "error");
-        }
-      });
-    });
-
-    // Export
-    list.querySelectorAll(".export-btn").forEach(btn => {
-      btn.addEventListener("click", (e) => {
-        e.stopPropagation();
-        const i = Number(btn.getAttribute("data-idx"));
-        exportJSON(items[i], i);
-      });
-    });
-
     toast(`${arr.length} résultat(s) trouvé(s)`, "success");
+    playSound("ding");
   }
 
   const toggle = document.createElement("div");
@@ -1429,6 +1959,63 @@ function render(result) {
 }
 
 /* ============================================================
+   BIND ACTIONS SUR CARTES
+   ============================================================ */
+function bindCardActions(list) {
+  list.querySelectorAll(".copy-btn").forEach(btn => {
+    btn.addEventListener("click", async (e) => {
+      e.stopPropagation();
+      const val = btn.getAttribute("data-copy");
+      const ok = await copyToClipboard(val);
+      if (ok) {
+        btn.classList.add("copied");
+        setTimeout(() => btn.classList.remove("copied"), 1200);
+      } else {
+        toast("Échec de la copie", "error");
+      }
+    });
+  });
+
+  list.querySelectorAll(".export-btn").forEach(btn => {
+    btn.addEventListener("click", (e) => {
+      e.stopPropagation();
+      const i = Number(btn.getAttribute("data-idx"));
+      exportJSON(currentItems[i], i);
+    });
+  });
+}
+
+/* ============================================================
+   AJOUT J — ÉCOUTE DU TRI
+   ============================================================ */
+document.getElementById("sortSelect").addEventListener("change", (e) => {
+  currentSort = e.target.value;
+  const list = document.getElementById("resultsList");
+  if (!list) return;
+  const sorted = sortItems(currentItems, currentSort);
+  list.innerHTML = "";
+  sorted.forEach((item, i) => {
+    list.insertAdjacentHTML("beforeend", renderCard(item, i));
+  });
+  bindCardActions(list);
+  list.querySelectorAll(".card").forEach(attach3DTilt);
+});
+
+/* ============================================================
+   AJOUT BB — EFFACER TOUT
+   ============================================================ */
+document.getElementById("clearAll").addEventListener("click", () => {
+  const out = document.getElementById("out");
+  out.innerHTML = "";
+  document.getElementById("toolbar").classList.remove("visible");
+  currentItems = [];
+  currentRawData = null;
+  input.value = "";
+  inputClear.classList.remove("visible");
+  toast("Résultats effacés", "success", 1500);
+});
+
+/* ============================================================
    SEARCH
    ============================================================ */
 document.getElementById("go").addEventListener("click", async () => {
@@ -1440,6 +2027,7 @@ document.getElementById("go").addEventListener("click", async () => {
   if (!validate(target)) {
     out.innerHTML = `<div class="none">entre un prénom et un nom valides</div>`;
     toast("Prénom et nom invalides", "error");
+    playSound("error");
     return;
   }
 
@@ -1448,6 +2036,7 @@ document.getElementById("go").addEventListener("click", async () => {
   btnText.textContent = "Recherche…";
   startProgress();
   renderSkeletons(3);
+  document.getElementById("toolbar").classList.remove("visible");
 
   try {
     const result = await searchBrixHub(target.trim());
@@ -1455,6 +2044,7 @@ document.getElementById("go").addEventListener("click", async () => {
   } catch (e) {
     out.innerHTML = `<div class="err">${escapeHtml(e.message)}</div>`;
     toast("Erreur : " + e.message, "error");
+    playSound("error");
   } finally {
     btn.disabled = false;
     btn.classList.remove("loading");
