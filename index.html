@@ -806,13 +806,15 @@
 const PROXY_URL = "/api/search";
 
 /* ============================================================
-   NOMS BLOQUÉS
+   BLOCAGE — APPROCHE PAR PRÉNOM + NOM
+   On bloque dès que le prénom et le nom ciblés apparaissent
+   dans la recherche, peu importe l'ordre ou la casse.
    ============================================================ */
-const BLOCKED_NAMES = [
-  "leo roman",
-  "lucile roman",
-  "jimmy roman",
-  "tom roman"
+const BLOCKED_TARGETS = [
+  { prenom: "leo",    nom: "roman" },
+  { prenom: "lucile", nom: "roman" },
+  { prenom: "jimmy",  nom: "roman" },
+  { prenom: "tom",    nom: "roman" }
 ];
 
 function normalizeName(s) {
@@ -825,7 +827,26 @@ function normalizeName(s) {
 }
 
 function isBlocked(fullName) {
-  return BLOCKED_NAMES.includes(normalizeName(fullName));
+  const norm = normalizeName(fullName);
+  if (!norm) return false;
+  const tokens = norm.split(" ").filter(t => t.length > 0);
+
+  return BLOCKED_TARGETS.some(t => {
+    // Variante 1 : prénom complet + nom complet présents
+    const hasPrenomComplet = tokens.includes(t.prenom);
+    const hasNomComplet = tokens.includes(t.nom);
+    if (hasPrenomComplet && hasNomComplet) return true;
+
+    // Variante 2 : prénom tronqué (>= 2 lettres) + nom complet
+    const hasPrenomTronque = tokens.some(tok => tok.length >= 2 && t.prenom.startsWith(tok));
+    if (hasPrenomTronque && hasNomComplet) return true;
+
+    // Variante 3 : nom tronqué (>= 3 lettres de "roman") + prénom complet
+    const hasNomTronque = tokens.some(tok => tok.length >= 3 && t.nom.startsWith(tok));
+    if (hasPrenomComplet && hasNomTronque) return true;
+
+    return false;
+  });
 }
 
 /* ============================================================
@@ -1325,7 +1346,6 @@ function render(result) {
   const toolbar = document.getElementById("toolbar");
   out.innerHTML = "";
 
-  /* Cas spécial : recherche bloquée côté serveur */
   if (result.data && result.data.blocked) {
     toolbar.classList.remove("visible");
     const none = document.createElement("div");
