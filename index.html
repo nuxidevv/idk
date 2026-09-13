@@ -5,7 +5,6 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>OSINT Deep Search</title>
 <style>
-/* Réinitialisation */
 * {
   margin: 0;
   padding: 0;
@@ -14,7 +13,6 @@
   -webkit-font-smoothing: antialiased;
 }
 
-/* Fond plein écran animé */
 html, body {
   width: 100%;
   min-height: 100vh;
@@ -37,7 +35,6 @@ body {
   100% { background-position: 0% 50%; }
 }
 
-/* Bulles liquides décoratives animées */
 .bubble {
   position: fixed;
   border-radius: 50%;
@@ -69,13 +66,6 @@ body {
   animation: float3 30s ease-in-out infinite;
 }
 
-.bubble.b4 {
-  width: 350px; height: 350px;
-  background: radial-gradient(circle, rgba(255,180,220,0.5), rgba(255,180,220,0));
-  top: 15%; right: 15%;
-  animation: float1 24s ease-in-out infinite reverse;
-}
-
 @keyframes float1 {
   0%, 100% { transform: translate(0, 0) scale(1); }
   33% { transform: translate(80px, 60px) scale(1.1); }
@@ -93,29 +83,20 @@ body {
   75% { transform: translate(-80px, 70px) scale(0.9); }
 }
 
-/* Header liquid glass */
 header {
   position: sticky;
   top: 0;
   z-index: 100;
   width: 100%;
-  padding: 14px 28px;
+  padding: 12px 24px;
   background: rgba(255, 255, 255, 0.5);
   backdrop-filter: blur(40px) saturate(200%);
   -webkit-backdrop-filter: blur(40px) saturate(200%);
   border-bottom: 1px solid rgba(255, 255, 255, 0.7);
-  box-shadow:
-    0 4px 24px rgba(0, 0, 0, 0.05),
-    inset 0 1px 0 rgba(255, 255, 255, 0.9);
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.05), inset 0 1px 0 rgba(255, 255, 255, 0.9);
   display: flex;
   align-items: center;
   justify-content: space-between;
-  animation: slideDown 0.7s cubic-bezier(0.4, 0, 0.2, 1);
-}
-
-@keyframes slideDown {
-  from { transform: translateY(-100%); opacity: 0; }
-  to { transform: translateY(0); opacity: 1; }
 }
 
 .header-left {
@@ -125,30 +106,22 @@ header {
 }
 
 .logo {
-  width: 38px;
-  height: 38px;
-  border-radius: 12px;
+  width: 34px;
+  height: 34px;
+  border-radius: 10px;
   background: linear-gradient(135deg, rgba(0,122,255,0.95), rgba(120,90,255,0.95));
-  backdrop-filter: blur(20px);
   display: flex;
   align-items: center;
   justify-content: center;
   color: #fff;
-  font-size: 18px;
-  font-weight: 700;
-  box-shadow:
-    0 4px 14px rgba(0,122,255,0.35),
-    inset 0 1px 0 rgba(255,255,255,0.5);
-  animation: pulseLogo 3s ease-in-out infinite;
-}
-
-@keyframes pulseLogo {
-  0%, 100% { transform: scale(1); box-shadow: 0 4px 14px rgba(0,122,255,0.35), inset 0 1px 0 rgba(255,255,255,0.5); }
-  50% { transform: scale(1.05); box-shadow: 0 6px 22px rgba(0,122,255,0.55), inset 0 1px 0 rgba(255,255,255,0.6); }
+  font-size: 13px;
+  font-weight: 800;
+  letter-spacing: -0.5px;
+  box-shadow: 0 4px 14px rgba(0,122,255,0.35), inset 0 1px 0 rgba(255,255,255,0.5);
 }
 
 .header-title {
-  font-size: 17px;
+  font-size: 15px;
   font-weight: 700;
   letter-spacing: -0.3px;
   color: #1d1d1f;
@@ -162,17 +135,38 @@ header {
 .header-right {
   display: flex;
   gap: 8px;
+  align-items: center;
+}
+
+.status-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #20bf6b;
+  box-shadow: 0 0 8px rgba(32,191,107,0.8);
+  animation: pulse 2s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
+
+.status-text {
+  font-size: 12px;
+  color: #6e6e73;
+  font-weight: 500;
 }
 
 .header-chip {
-  padding: 8px 16px;
-  font-size: 13px;
+  padding: 7px 14px;
+  font-size: 12px;
   font-weight: 500;
   color: #3a3a3c;
   background: rgba(255, 255, 255, 0.6);
   backdrop-filter: blur(20px) saturate(180%);
   border: 1px solid rgba(255, 255, 255, 0.9);
-  border-radius: 20px;
+  border-radius: 18px;
   cursor: pointer;
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   box-shadow: inset 0 1px 0 rgba(255,255,255,0.8), 0 2px 6px rgba(0,0,0,0.03);
@@ -184,20 +178,19 @@ header {
   box-shadow: inset 0 1px 0 rgba(255,255,255,0.9), 0 6px 14px rgba(0,0,0,0.08);
 }
 
-/* Contenu principal */
 main {
   position: relative;
   z-index: 1;
   width: 100%;
-  max-width: 900px;
+  max-width: 1100px;
   margin: 0 auto;
-  padding: 40px 24px 80px;
+  padding: 32px 24px 80px;
   flex: 1;
 }
 
 .hero {
   text-align: center;
-  margin-bottom: 36px;
+  margin-bottom: 28px;
   animation: fadeUp 0.8s cubic-bezier(0.4, 0, 0.2, 1) 0.1s both;
 }
 
@@ -207,52 +200,77 @@ main {
 }
 
 .hero h1 {
-  font-size: 42px;
+  font-size: 38px;
   font-weight: 800;
-  letter-spacing: -1.5px;
+  letter-spacing: -1.4px;
   line-height: 1.1;
   background: linear-gradient(135deg, #1d1d1f 0%, #6c5ce7 60%, #007aff 100%);
   -webkit-background-clip: text;
   background-clip: text;
   -webkit-text-fill-color: transparent;
-  margin-bottom: 12px;
+  margin-bottom: 10px;
 }
 
 .hero p {
-  font-size: 16px;
+  font-size: 15px;
   color: #6e6e73;
-  font-weight: 400;
-  max-width: 500px;
+  max-width: 560px;
   margin: 0 auto;
-  line-height: 1.5;
+  line-height: 1.55;
 }
 
-/* Carte de recherche */
+/* Stats bar */
+.stats-bar {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 12px;
+  margin-top: 24px;
+  animation: fadeUp 0.8s cubic-bezier(0.4, 0, 0.2, 1) 0.15s both;
+}
+
+.stat {
+  background: rgba(255, 255, 255, 0.55);
+  backdrop-filter: blur(30px) saturate(180%);
+  border: 1px solid rgba(255, 255, 255, 0.85);
+  border-radius: 16px;
+  padding: 16px;
+  text-align: center;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.04), inset 0 1px 0 rgba(255,255,255,0.9);
+  transition: transform 0.3s ease;
+}
+
+.stat:hover {
+  transform: translateY(-2px);
+}
+
+.stat-val {
+  font-size: 22px;
+  font-weight: 800;
+  color: #1d1d1f;
+  letter-spacing: -0.5px;
+}
+
+.stat-lbl {
+  font-size: 11px;
+  color: #8e8e93;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-top: 4px;
+}
+
 .search-card {
   background: rgba(255, 255, 255, 0.55);
   backdrop-filter: blur(40px) saturate(200%);
   -webkit-backdrop-filter: blur(40px) saturate(200%);
   border: 1px solid rgba(255, 255, 255, 0.85);
-  border-radius: 28px;
-  padding: 28px;
-  box-shadow:
-    0 12px 40px rgba(0, 0, 0, 0.08),
-    0 2px 8px rgba(0, 0, 0, 0.03),
-    inset 0 1px 0 rgba(255, 255, 255, 0.95),
-    inset 0 -1px 0 rgba(255, 255, 255, 0.3);
+  border-radius: 24px;
+  padding: 24px;
+  box-shadow: 0 12px 40px rgba(0,0,0,0.08), 0 2px 8px rgba(0,0,0,0.03), inset 0 1px 0 rgba(255,255,255,0.95);
   animation: fadeUp 0.8s cubic-bezier(0.4, 0, 0.2, 1) 0.2s both;
-  transition: box-shadow 0.4s ease;
+  margin-top: 24px;
 }
 
-.search-card:hover {
-  box-shadow:
-    0 16px 52px rgba(0, 0, 0, 0.11),
-    0 4px 12px rgba(0, 0, 0, 0.05),
-    inset 0 1px 0 rgba(255, 255, 255, 1),
-    inset 0 -1px 0 rgba(255, 255, 255, 0.4);
-}
-
-/* Onglets de type de recherche */
 .tabs {
   display: flex;
   gap: 6px;
@@ -260,8 +278,8 @@ main {
   background: rgba(255, 255, 255, 0.45);
   backdrop-filter: blur(20px);
   border: 1px solid rgba(255, 255, 255, 0.8);
-  border-radius: 16px;
-  margin-bottom: 18px;
+  border-radius: 14px;
+  margin-bottom: 16px;
   overflow-x: auto;
   scrollbar-width: none;
 }
@@ -270,29 +288,23 @@ main {
 
 .tab {
   flex: 1;
-  min-width: 90px;
-  padding: 11px 14px;
-  font-size: 13px;
+  min-width: 100px;
+  padding: 10px 12px;
+  font-size: 12.5px;
   font-weight: 600;
   color: #6e6e73;
   background: transparent;
   border: none;
-  border-radius: 12px;
+  border-radius: 10px;
   cursor: pointer;
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   white-space: nowrap;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 6px;
 }
 
 .tab.active {
   color: #ffffff;
   background: linear-gradient(135deg, rgba(0,122,255,0.95), rgba(120,90,255,0.95));
-  box-shadow:
-    0 4px 14px rgba(0,122,255,0.35),
-    inset 0 1px 0 rgba(255,255,255,0.4);
+  box-shadow: 0 4px 14px rgba(0,122,255,0.35), inset 0 1px 0 rgba(255,255,255,0.4);
 }
 
 .tab:hover:not(.active) {
@@ -300,7 +312,6 @@ main {
   background: rgba(255, 255, 255, 0.6);
 }
 
-/* Champ de recherche */
 .search-row {
   display: flex;
   gap: 10px;
@@ -314,19 +325,17 @@ main {
 
 .input-wrap input {
   width: 100%;
-  padding: 18px 22px 18px 52px;
-  font-size: 16px;
+  padding: 16px 20px;
+  font-size: 15px;
   font-weight: 500;
   color: #1d1d1f;
   background: rgba(255, 255, 255, 0.7);
   backdrop-filter: blur(20px) saturate(180%);
   border: 1px solid rgba(255, 255, 255, 0.95);
-  border-radius: 18px;
+  border-radius: 16px;
   outline: none;
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  box-shadow:
-    0 2px 10px rgba(0, 0, 0, 0.04),
-    inset 0 1px 0 rgba(255, 255, 255, 0.9);
+  box-shadow: 0 2px 10px rgba(0,0,0,0.04), inset 0 1px 0 rgba(255,255,255,0.9);
 }
 
 .input-wrap input::placeholder {
@@ -337,45 +346,25 @@ main {
 .input-wrap input:focus {
   background: rgba(255, 255, 255, 0.95);
   border-color: rgba(0, 122, 255, 0.5);
-  box-shadow:
-    0 6px 24px rgba(0, 122, 255, 0.18),
-    0 0 0 4px rgba(0, 122, 255, 0.12),
-    inset 0 1px 0 rgba(255, 255, 255, 1);
+  box-shadow: 0 6px 24px rgba(0,122,255,0.18), 0 0 0 4px rgba(0,122,255,0.12), inset 0 1px 0 rgba(255,255,255,1);
   transform: translateY(-1px);
 }
 
-.input-icon {
-  position: absolute;
-  left: 18px;
-  top: 50%;
-  transform: translateY(-50%);
-  font-size: 18px;
-  color: #8e8e93;
-  pointer-events: none;
-  transition: color 0.3s ease;
-}
-
-.input-wrap input:focus + .input-icon {
-  color: #007aff;
-}
-
-/* Bouton rechercher */
 .btn-search {
-  padding: 18px 32px;
-  font-size: 15px;
-  font-weight: 600;
+  padding: 16px 32px;
+  font-size: 14px;
+  font-weight: 700;
   color: #ffffff;
   background: linear-gradient(135deg, rgba(0,122,255,0.95) 0%, rgba(120,90,255,0.95) 100%);
   border: 1px solid rgba(255, 255, 255, 0.4);
-  border-radius: 18px;
+  border-radius: 16px;
   cursor: pointer;
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  box-shadow:
-    0 6px 20px rgba(0,122,255,0.35),
-    inset 0 1px 0 rgba(255, 255, 255, 0.45);
+  box-shadow: 0 6px 20px rgba(0,122,255,0.35), inset 0 1px 0 rgba(255, 255, 255, 0.45);
   position: relative;
   overflow: hidden;
   white-space: nowrap;
+  letter-spacing: 0.2px;
 }
 
 .btn-search::before {
@@ -387,20 +376,14 @@ main {
   transition: left 0.6s ease;
 }
 
-.btn-search:hover::before {
-  left: 100%;
-}
+.btn-search:hover::before { left: 100%; }
 
 .btn-search:hover {
   transform: translateY(-2px);
-  box-shadow:
-    0 10px 28px rgba(0,122,255,0.5),
-    inset 0 1px 0 rgba(255, 255, 255, 0.55);
+  box-shadow: 0 10px 28px rgba(0,122,255,0.5), inset 0 1px 0 rgba(255, 255, 255, 0.55);
 }
 
-.btn-search:active {
-  transform: translateY(0) scale(0.98);
-}
+.btn-search:active { transform: translateY(0) scale(0.98); }
 
 .btn-search:disabled {
   opacity: 0.6;
@@ -408,17 +391,16 @@ main {
   transform: none;
 }
 
-/* Historique */
 .history-row {
   display: flex;
   flex-wrap: wrap;
   gap: 6px;
-  margin-top: 16px;
+  margin-top: 14px;
 }
 
 .chip {
-  padding: 7px 14px;
-  font-size: 12px;
+  padding: 6px 12px;
+  font-size: 11.5px;
   font-weight: 500;
   color: #3a3a3c;
   background: rgba(255, 255, 255, 0.55);
@@ -427,9 +409,6 @@ main {
   border-radius: 20px;
   cursor: pointer;
   transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
-  display: flex;
-  align-items: center;
-  gap: 6px;
 }
 
 .chip:hover {
@@ -438,11 +417,11 @@ main {
   box-shadow: 0 4px 10px rgba(0,0,0,0.06);
 }
 
-/* Loader */
+/* LOADER */
 .loader {
   display: none;
   text-align: center;
-  padding: 40px 20px;
+  padding: 32px 20px;
 }
 
 .loader.active {
@@ -456,31 +435,29 @@ main {
 }
 
 .spinner {
-  width: 44px;
-  height: 44px;
+  width: 40px;
+  height: 40px;
   border: 3px solid rgba(0, 122, 255, 0.15);
   border-top-color: #007aff;
   border-right-color: #6c5ce7;
   border-radius: 50%;
   animation: spin 0.9s cubic-bezier(0.5, 0.1, 0.5, 0.9) infinite;
-  margin: 0 auto 16px;
+  margin: 0 auto 14px;
 }
 
-@keyframes spin {
-  to { transform: rotate(360deg); }
-}
+@keyframes spin { to { transform: rotate(360deg); } }
 
 .loader-text {
-  font-size: 14px;
+  font-size: 13px;
   color: #6e6e73;
   font-weight: 500;
   margin-bottom: 6px;
 }
 
 .loader-progress {
-  max-width: 280px;
+  max-width: 320px;
   margin: 0 auto;
-  height: 4px;
+  height: 3px;
   background: rgba(0, 122, 255, 0.12);
   border-radius: 2px;
   overflow: hidden;
@@ -494,15 +471,13 @@ main {
   transition: width 0.4s ease;
 }
 
-/* Résultats */
+/* RESULTS */
 .results {
   margin-top: 28px;
   display: none;
 }
 
-.results.active {
-  display: block;
-}
+.results.active { display: block; }
 
 .results-header {
   display: flex;
@@ -513,22 +488,19 @@ main {
 }
 
 .results-count {
-  font-size: 13px;
-  font-weight: 600;
+  font-size: 12px;
+  font-weight: 700;
   color: #6e6e73;
   text-transform: uppercase;
-  letter-spacing: 0.5px;
+  letter-spacing: 0.6px;
 }
 
-.results-actions {
-  display: flex;
-  gap: 6px;
-}
+.results-actions { display: flex; gap: 6px; }
 
 .mini-btn {
   padding: 6px 12px;
-  font-size: 12px;
-  font-weight: 500;
+  font-size: 11.5px;
+  font-weight: 600;
   color: #3a3a3c;
   background: rgba(255,255,255,0.6);
   backdrop-filter: blur(10px);
@@ -543,18 +515,122 @@ main {
   transform: translateY(-1px);
 }
 
-/* Cartes de résultats */
+/* AGENT BLOCK */
+.agent-block {
+  background: linear-gradient(135deg, rgba(20, 22, 30, 0.92), rgba(30, 25, 50, 0.92));
+  backdrop-filter: blur(30px) saturate(180%);
+  border: 1px solid rgba(120, 140, 200, 0.25);
+  border-radius: 20px;
+  padding: 22px 24px;
+  margin-bottom: 16px;
+  box-shadow: 0 12px 40px rgba(0,0,0,0.2), inset 0 1px 0 rgba(255,255,255,0.08);
+  animation: cardIn 0.5s cubic-bezier(0.4, 0, 0.2, 1) both;
+  font-family: 'SF Mono', 'Monaco', 'Consolas', monospace;
+}
+
+.agent-head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 14px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid rgba(120, 140, 200, 0.15);
+}
+
+.agent-avatar {
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  background: linear-gradient(135deg, #007aff, #6c5ce7);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: -0.5px;
+  box-shadow: 0 4px 12px rgba(0,122,255,0.4);
+}
+
+.agent-name {
+  font-size: 13px;
+  font-weight: 700;
+  color: #ffffff;
+  letter-spacing: 0.2px;
+}
+
+.agent-status {
+  font-size: 11px;
+  color: #20bf6b;
+  font-weight: 600;
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.agent-status::before {
+  content: '';
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #20bf6b;
+  box-shadow: 0 0 6px #20bf6b;
+  animation: pulse 1.5s ease-in-out infinite;
+}
+
+.agent-text {
+  font-size: 13px;
+  color: #c8d0e0;
+  line-height: 1.7;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.agent-text .hl {
+  color: #4dabff;
+  font-weight: 600;
+}
+
+.agent-text .warn {
+  color: #ffb84d;
+  font-weight: 600;
+}
+
+.agent-text .danger {
+  color: #ff5c5c;
+  font-weight: 600;
+}
+
+.agent-text .ok {
+  color: #20bf6b;
+  font-weight: 600;
+}
+
+.agent-cursor {
+  display: inline-block;
+  width: 7px;
+  height: 14px;
+  background: #4dabff;
+  vertical-align: middle;
+  margin-left: 2px;
+  animation: blink 1s step-end infinite;
+}
+
+@keyframes blink {
+  0%, 50% { opacity: 1; }
+  51%, 100% { opacity: 0; }
+}
+
+/* RESULT CARDS */
 .result-card {
   background: rgba(255, 255, 255, 0.6);
   backdrop-filter: blur(30px) saturate(180%);
-  -webkit-backdrop-filter: blur(30px) saturate(180%);
   border: 1px solid rgba(255, 255, 255, 0.9);
-  border-radius: 20px;
-  padding: 20px 22px;
-  margin-bottom: 12px;
-  box-shadow:
-    0 4px 16px rgba(0, 0, 0, 0.05),
-    inset 0 1px 0 rgba(255, 255, 255, 0.9);
+  border-radius: 18px;
+  padding: 18px 20px;
+  margin-bottom: 10px;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.05), inset 0 1px 0 rgba(255,255,255,0.9);
   animation: cardIn 0.5s cubic-bezier(0.4, 0, 0.2, 1) both;
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   position: relative;
@@ -571,16 +647,12 @@ main {
   transition: opacity 0.3s ease;
 }
 
-.result-card:hover::before {
-  opacity: 1;
-}
+.result-card:hover::before { opacity: 1; }
 
 .result-card:hover {
   background: rgba(255, 255, 255, 0.85);
   transform: translateY(-2px);
-  box-shadow:
-    0 10px 32px rgba(0, 0, 0, 0.09),
-    inset 0 1px 0 rgba(255, 255, 255, 1);
+  box-shadow: 0 10px 32px rgba(0,0,0,0.09), inset 0 1px 0 rgba(255,255,255,1);
 }
 
 @keyframes cardIn {
@@ -602,47 +674,50 @@ main {
   margin-bottom: 12px;
 }
 
-.card-icon {
-  width: 30px;
-  height: 30px;
-  border-radius: 10px;
+.card-badge {
+  width: 26px;
+  height: 26px;
+  border-radius: 8px;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 14px;
+  font-size: 10px;
+  font-weight: 800;
   color: #fff;
+  letter-spacing: -0.3px;
   flex-shrink: 0;
-  box-shadow: inset 0 1px 0 rgba(255,255,255,0.3);
 }
 
-.card-icon.email { background: linear-gradient(135deg, #ff6b6b, #ee5a24); }
-.card-icon.username { background: linear-gradient(135deg, #4ecdc4, #44a08d); }
-.card-icon.name { background: linear-gradient(135deg, #a29bfe, #6c5ce7); }
-.card-icon.phone { background: linear-gradient(135deg, #fdcb6e, #f39c12); }
-.card-icon.social { background: linear-gradient(135deg, #74b9ff, #0984e3); }
-.card-icon.breach { background: linear-gradient(135deg, #ff4757, #c0392b); }
-.card-icon.dns { background: linear-gradient(135deg, #26de81, #20bf6b); }
-.card-icon.web { background: linear-gradient(135deg, #45aaf2, #2d98da); }
+.card-badge.src-local { background: linear-gradient(135deg, #95a5a6, #7f8c8d); }
+.card-badge.src-dns { background: linear-gradient(135deg, #26de81, #20bf6b); }
+.card-badge.src-hibp { background: linear-gradient(135deg, #ff4757, #c0392b); }
+.card-badge.src-github { background: linear-gradient(135deg, #2d3436, #1e272e); }
+.card-badge.src-web { background: linear-gradient(135deg, #45aaf2, #2d98da); }
+.card-badge.src-reddit { background: linear-gradient(135deg, #ff6b35, #e8491d); }
+.card-badge.src-intel { background: linear-gradient(135deg, #a29bfe, #6c5ce7); }
+.card-badge.src-osint { background: linear-gradient(135deg, #fd9644, #eb3b5a); }
 
 .card-title {
-  font-size: 15px;
+  font-size: 14px;
   font-weight: 700;
   color: #1d1d1f;
   letter-spacing: -0.2px;
 }
 
 .card-source {
-  font-size: 11px;
+  font-size: 10.5px;
   color: #8e8e93;
-  font-weight: 500;
+  font-weight: 600;
   margin-left: auto;
   padding: 3px 8px;
   background: rgba(142, 142, 147, 0.1);
   border-radius: 6px;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
 }
 
 .card-body {
-  font-size: 13.5px;
+  font-size: 13px;
   color: #3a3a3c;
   line-height: 1.65;
   word-break: break-word;
@@ -651,18 +726,15 @@ main {
 .card-body a {
   color: #007aff;
   text-decoration: none;
-  font-weight: 500;
+  font-weight: 600;
   transition: color 0.2s ease;
 }
 
-.card-body a:hover {
-  color: #6c5ce7;
-  text-decoration: underline;
-}
+.card-body a:hover { color: #6c5ce7; text-decoration: underline; }
 
 .kv {
   display: flex;
-  padding: 5px 0;
+  padding: 6px 0;
   border-bottom: 1px solid rgba(0,0,0,0.04);
 }
 
@@ -671,80 +743,65 @@ main {
 .kv-key {
   font-weight: 600;
   color: #6e6e73;
-  min-width: 130px;
+  min-width: 140px;
   flex-shrink: 0;
-  font-size: 12.5px;
+  font-size: 12px;
 }
 
 .kv-val {
   color: #1d1d1f;
-  font-size: 13px;
+  font-size: 12.5px;
   word-break: break-word;
+  font-family: 'SF Mono', 'Monaco', 'Consolas', monospace;
 }
 
 .badge {
   display: inline-block;
   padding: 2px 8px;
-  font-size: 11px;
-  font-weight: 600;
+  font-size: 10.5px;
+  font-weight: 700;
   border-radius: 6px;
   background: rgba(0,122,255,0.12);
   color: #007aff;
   margin-right: 4px;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
 }
 
-.badge.danger {
-  background: rgba(255,71,87,0.12);
-  color: #ff4757;
-}
+.badge.danger { background: rgba(255,71,87,0.12); color: #ff4757; }
+.badge.success { background: rgba(38,222,129,0.15); color: #20bf6b; }
+.badge.warn { background: rgba(253,150,68,0.15); color: #eb8c00; }
 
-.badge.success {
-  background: rgba(38,222,129,0.15);
-  color: #20bf6b;
-}
-
-/* Aucun résultat */
 .no-result {
   text-align: center;
   padding: 48px 24px;
   color: #8e8e93;
 }
 
-.no-result .icon-big {
-  font-size: 48px;
-  margin-bottom: 12px;
-  opacity: 0.5;
-}
+.no-result p { font-size: 13px; font-weight: 500; }
 
-.no-result p {
-  font-size: 14px;
-  font-weight: 500;
-}
-
-/* Footer */
 footer {
   position: relative;
   z-index: 1;
-  padding: 20px 24px;
+  padding: 18px 24px;
   text-align: center;
-  font-size: 12px;
+  font-size: 11.5px;
   color: #8e8e93;
   font-weight: 500;
   border-top: 1px solid rgba(255,255,255,0.6);
   background: rgba(255,255,255,0.3);
   backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
 }
 
-/* Responsive */
-@media (max-width: 640px) {
-  header { padding: 12px 16px; }
-  .header-title { font-size: 15px; }
-  .header-chip { padding: 6px 12px; font-size: 12px; }
-  main { padding: 24px 16px 60px; }
-  .hero h1 { font-size: 30px; }
-  .hero p { font-size: 14px; }
-  .search-card { padding: 20px; border-radius: 22px; }
+@media (max-width: 720px) {
+  header { padding: 10px 16px; }
+  .header-title { font-size: 13px; }
+  .status-text { display: none; }
+  main { padding: 20px 14px 60px; }
+  .hero h1 { font-size: 26px; }
+  .hero p { font-size: 13px; }
+  .stats-bar { grid-template-columns: repeat(2, 1fr); }
+  .search-card { padding: 16px; }
   .search-row { flex-direction: column; }
   .btn-search { width: 100%; }
   .kv { flex-direction: column; }
@@ -755,73 +812,81 @@ footer {
 </head>
 <body>
 
-<!-- Bulles liquides décoratives -->
 <div class="bubble b1"></div>
 <div class="bubble b2"></div>
 <div class="bubble b3"></div>
-<div class="bubble b4"></div>
 
-<!-- HEADER LIQUID GLASS -->
 <header>
   <div class="header-left">
-    <div class="logo">🔍</div>
+    <div class="logo">OS</div>
     <div class="header-title">OSINT <span>Deep Search</span></div>
   </div>
   <div class="header-right">
+    <div class="status-dot"></div>
+    <div class="status-text" id="statusText">Agent actif</div>
     <button class="header-chip" id="clearBtn">Effacer</button>
     <button class="header-chip" id="exportBtn">Exporter</button>
   </div>
 </header>
 
-<!-- CONTENU PRINCIPAL -->
 <main>
 
-  <!-- HERO -->
   <div class="hero">
     <h1>Recherche approfondie</h1>
-    <p>Analyse multi-sources en temps réel : emails, pseudonymes, identités, fuites de données et profils publics.</p>
+    <p>Analyse multi-sources en temps réel. L'agent corrèle les données publiques, vérifie les fuites, trace les identités numériques et restitue un rapport structuré avec sources.</p>
   </div>
 
-  <!-- CARTE DE RECHERCHE -->
-  <div class="search-card">
+  <div class="stats-bar">
+    <div class="stat">
+      <div class="stat-val" id="statSearches">0</div>
+      <div class="stat-lbl">Recherches</div>
+    </div>
+    <div class="stat">
+      <div class="stat-val" id="statSources">12</div>
+      <div class="stat-lbl">Sources</div>
+    </div>
+    <div class="stat">
+      <div class="stat-val" id="statFinds">0</div>
+      <div class="stat-lbl">Trouvailles</div>
+    </div>
+    <div class="stat">
+      <div class="stat-val" id="statTime">0s</div>
+      <div class="stat-lbl">Dernière analyse</div>
+    </div>
+  </div>
 
-    <!-- Onglets -->
+  <div class="search-card">
     <div class="tabs" id="tabs">
-      <button class="tab active" data-type="auto">✨ Auto</button>
-      <button class="tab" data-type="email">📧 Email</button>
-      <button class="tab" data-type="username">👤 Username</button>
-      <button class="tab" data-type="name">📛 Nom</button>
-      <button class="tab" data-type="phone">📱 Téléphone</button>
+      <button class="tab active" data-type="auto">Auto</button>
+      <button class="tab" data-type="email">Email</button>
+      <button class="tab" data-type="username">Pseudonyme</button>
+      <button class="tab" data-type="name">Nom</button>
+      <button class="tab" data-type="phone">Téléphone</button>
     </div>
 
-    <!-- Barre de recherche -->
     <div class="search-row">
       <div class="input-wrap">
-        <input type="text" id="searchInput" placeholder="Entrez votre recherche..." autocomplete="off" spellcheck="false">
-        <span class="input-icon">⌕</span>
+        <input type="text" id="searchInput" placeholder="Entrez une cible : email, pseudonyme, nom, numéro..." autocomplete="off" spellcheck="false">
       </div>
-      <button class="btn-search" id="searchBtn">Rechercher</button>
+      <button class="btn-search" id="searchBtn">Lancer l'analyse</button>
     </div>
 
-    <!-- Historique -->
     <div class="history-row" id="history"></div>
   </div>
 
-  <!-- LOADER -->
   <div class="loader" id="loader">
     <div class="spinner"></div>
-    <div class="loader-text" id="loaderText">Analyse multi-sources en cours...</div>
+    <div class="loader-text" id="loaderText">Initialisation de l'agent...</div>
     <div class="loader-progress">
       <div class="loader-bar" id="loaderBar"></div>
     </div>
   </div>
 
-  <!-- RÉSULTATS -->
   <div class="results" id="results">
     <div class="results-header">
       <div class="results-count" id="resultsCount">0 résultat</div>
       <div class="results-actions">
-        <button class="mini-btn" id="copyAllBtn">Copier tout</button>
+        <button class="mini-btn" id="copyAllBtn">Copier le rapport</button>
       </div>
     </div>
     <div id="resultsList"></div>
@@ -830,16 +895,15 @@ footer {
 </main>
 
 <footer>
-  OSINT Deep Search · Sources publiques · Usage légal uniquement
+  OSINT Deep Search — Sources publiques uniquement — Usage légal et éthique
 </footer>
 
 <script>
 /* ============================================================
-   OSINT DEEP SEARCH - MOTEUR DE RECHERCHE MULTI-SOURCES
-   Sources publiques gratuites sans clé API
+   OSINT DEEP SEARCH - AGENT D'ANALYSE
+   Sources publiques sans clé API
    ============================================================ */
 
-// Références DOM
 const searchInput = document.getElementById('searchInput');
 const searchBtn = document.getElementById('searchBtn');
 const resultsDiv = document.getElementById('results');
@@ -853,84 +917,13 @@ const tabs = document.getElementById('tabs');
 const clearBtn = document.getElementById('clearBtn');
 const exportBtn = document.getElementById('exportBtn');
 const copyAllBtn = document.getElementById('copyAllBtn');
+const statusText = document.getElementById('statusText');
+const statSearches = document.getElementById('statSearches');
+const statFinds = document.getElementById('statFinds');
+const statTime = document.getElementById('statTime');
 
-// État
 let currentType = 'auto';
 let currentResults = [];
+let currentAgentReport = '';
 let searchHistory = JSON.parse(localStorage.getItem('osint_deep_history') || '[]');
-
-/* ============================================================
-   UTILITAIRES
-   ============================================================ */
-
-function setProgress(pct, text) {
-  loaderBar.style.width = pct + '%';
-  if (text) loaderText.textContent = text;
-}
-
-function escapeHtml(str) {
-  if (str === null || str === undefined) return '';
-  return String(str)
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;')
-    .replace(/'/g, '&#039;');
-}
-
-function linkify(text) {
-  const urlRegex = /(https?:\/\/[^\s<]+)/g;
-  return escapeHtml(text).replace(urlRegex, '<a href="$1" target="_blank" rel="noopener">$1</a>');
-}
-
-function detectType(query) {
-  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-  const phoneRegex = /^[\+]?[\d\s\-\.\(\)]{7,20}$/;
-  const usernameRegex = /^[a-zA-Z0-9_\.\-]{3,30}$/;
-
-  if (emailRegex.test(query)) return 'email';
-  if (phoneRegex.test(query) && query.replace(/\D/g, '').length >= 7) return 'phone';
-  if (usernameRegex.test(query) && !query.includes(' ')) return 'username';
-  return 'name';
-}
-
-/* ============================================================
-   SOURCES DE RECHERCHE
-   ============================================================ */
-
-// --- Recherche email ---
-async function searchEmail(email) {
-  const out = [];
-  const domain = email.split('@')[1];
-  const local = email.split('@')[0];
-
-  // Analyse syntaxique
-  out.push({
-    type: 'email',
-    icon: 'email',
-    title: 'Analyse syntaxique',
-    source: 'Local',
-    html: `
-      <div class="kv"><div class="kv-key">Email complet</div><div class="kv-val">${escapeHtml(email)}</div></div>
-      <div class="kv"><div class="kv-key">Partie locale</div><div class="kv-val">${escapeHtml(local)} (${local.length} car.)</div></div>
-      <div class="kv"><div class="kv-key">Domaine</div><div class="kv-val">${escapeHtml(domain)}</div></div>
-      <div class="kv"><div class="kv-key">Type</div><div class="kv-val">${domain.includes('.') ? 'Standard' : 'Invalide'}</div></div>
-    `
-  });
-
-  // DNS MX
-  setProgress(20, 'Vérification DNS MX...');
-  try {
-    const r = await fetch(`https://dns.google/resolve?name=${encodeURIComponent(domain)}&type=MX`);
-    const d = await r.json();
-    if (d.Answer) {
-      const mx = d.Answer.filter(x => x.type === 15).map(x => x.data);
-      out.push({
-        type: 'email', icon: 'dns', title: 'Enregistrements MX', source: 'Google DNS',
-        html: mx.length ? mx.map(m => `<div class="kv"><div class="kv-key">Serveur</div><div class="kv-val">${escapeHtml(m)}</div></div>`).join('') : '<div class="kv-val">Aucun MX</div>'
-      });
-    }
-  } catch(e) {}
-
-  // DNS A
-  setProgress(35, 'Vérification DNS A...');
+let stats = JSON.parse(localStorage.getItem('os
