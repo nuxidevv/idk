@@ -1,16 +1,13 @@
 import https from "https";
 
-const _h = "api." + String.fromCharCode(98,114,105,120,104,117,98) + ".to";
-const _p = "/api/v1/" + String.fromCharCode(115,101,97,114,99,104);
-
-const _t = [
-  ["leo",    String.fromCharCode(114,111,109,97,110)],
-  ["lucile", String.fromCharCode(114,111,109,97,110)],
-  ["jimmy",  String.fromCharCode(114,111,109,97,110)],
-  ["tom",    String.fromCharCode(114,111,109,97,110)]
+const BLOCKED_TARGETS = [
+  { prenom: "leo",    nom: "roman" },
+  { prenom: "lucile", nom: "roman" },
+  { prenom: "jimmy",  nom: "roman" },
+  { prenom: "tom",    nom: "roman" }
 ];
 
-function _n(s) {
+function normalizeName(s) {
   return String(s || "")
     .toLowerCase()
     .normalize("NFD").replace(/[\u0300-\u036f]/g, "")
@@ -19,23 +16,23 @@ function _n(s) {
     .trim();
 }
 
-function _blk(full) {
-  const n = _n(full);
-  if (!n) return false;
-  const t = n.split(" ").filter(x => x.length > 0);
-  return _t.some(([a, b]) => {
-    const fa = t.includes(a);
-    const fb = t.includes(b);
-    if (fa && fb) return true;
-    const ftA = t.some(x => x.length >= 2 && a.startsWith(x));
-    if (ftA && fb) return true;
-    const ftB = t.some(x => x.length >= 3 && b.startsWith(x));
-    if (fa && ftB) return true;
+function isBlocked(fullName) {
+  const norm = normalizeName(fullName);
+  if (!norm) return false;
+  const tokens = norm.split(" ").filter(t => t.length > 0);
+  return BLOCKED_TARGETS.some(t => {
+    const hasPrenomComplet = tokens.includes(t.prenom);
+    const hasNomComplet = tokens.includes(t.nom);
+    if (hasPrenomComplet && hasNomComplet) return true;
+    const hasPrenomTronque = tokens.some(tok => tok.length >= 2 && t.prenom.startsWith(tok));
+    if (hasPrenomTronque && hasNomComplet) return true;
+    const hasNomTronque = tokens.some(tok => tok.length >= 3 && t.nom.startsWith(tok));
+    if (hasPrenomComplet && hasNomTronque) return true;
     return false;
   });
 }
 
-function _post(url, headers, bodyObj) {
+function httpsPost(url, headers, bodyObj) {
   return new Promise((resolve) => {
     const body = JSON.stringify(bodyObj);
     const u = new URL(url);
@@ -61,7 +58,7 @@ function _post(url, headers, bodyObj) {
   });
 }
 
-function _empty(a, b) {
+function emptyResponse(a, b) {
   return {
     data: [],
     message: "ok",
@@ -80,11 +77,10 @@ export default async function handler(req, res) {
   res.setHeader("Access-Control-Allow-Headers", "Content-Type");
   if (req.method === "OPTIONS") return res.status(200).end();
 
-  const a = req.query.a || "";
-  const b = req.query.b || "";
+  const { first_name = "", last_name = "" } = req.query;
 
-  if (_blk(`${a} ${b}`)) {
-    return res.status(200).json(_empty(a, b));
+  if (isBlocked(`${first_name} ${last_name}`)) {
+    return res.status(200).json(emptyResponse(first_name, last_name));
   }
 
   const KEY = process.env.BRIXHUB_KEY || "";
@@ -94,17 +90,18 @@ export default async function handler(req, res) {
     "X-API-Key": KEY
   };
 
-  const r = await _post(`https://${_h}${_p}`, headers, {
-    prenom: a,
-    nom_famille: b
+  const r = await httpsPost("https://api.brixhub.to/api/v1/search", headers, {
+    prenom: first_name,
+    nom_famille: last_name
   });
-
-  if (r.status < 200 || r.status >= 300) {
-    return res.status(200).json(_empty(a, b));
-  }
 
   let parsed = null;
   try { parsed = JSON.parse(r.body); } catch { parsed = r.body; }
 
-  return res.status(200).json(parsed);
+  return res.status(200).json({
+    ok: r.status >= 200 && r.status < 300,
+    status: r.status,
+    error: r.error || null,
+    data: parsed
+  });
 }
