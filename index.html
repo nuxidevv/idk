@@ -94,13 +94,15 @@
   .card:hover { border-color:#2f5d3f; }
   .card.dork-card { border-color:#1f3d5a; }
   .card.dork-card:hover { border-color:#2f5d8f; }
+  .card.tool-card { border-color:#3d2f1f; }
+  .card.tool-card:hover { border-color:#5d4a2f; }
   .dot {
     width:8px; height:8px; border-radius:50%; flex-shrink:0;
     background:#00e07a; box-shadow:0 0 8px #00e07a88;
     margin-top:6px;
   }
   .dot.blue { background:#4da3ff; box-shadow:0 0 8px #4da3ff88; }
-  .dot.gray { background:#666; box-shadow:none; }
+  .dot.orange { background:#ffaa4d; box-shadow:0 0 8px #ffaa4d88; }
   .info { flex:1; min-width:0; }
   .info a, .info .title {
     color:#eaeaea; text-decoration:none; font-size:0.85rem;
@@ -177,7 +179,7 @@ window.addEventListener("error", e => {
 });
 
 /* ============================================================
-   PROXY CORS avec timeout court (2s par proxy)
+   PROXY CORS
    ============================================================ */
 const PROXIES = [
   u => `https://api.allorigins.win/raw?url=${encodeURIComponent(u)}`,
@@ -199,200 +201,115 @@ async function fetchWithTimeout(url, ms) {
 }
 
 async function P(url) {
-  // Lance les 3 proxies en parallèle, prend le premier qui répond
   const promises = PROXIES.map(p =>
-    fetchWithTimeout(p(url), 6000).then(r => r.ok ? r : Promise.reject())
+    fetchWithTimeout(p(url), 8000).then(r => r.ok ? r : Promise.reject())
   );
   return Promise.any(promises);
 }
 
 /* ============================================================
-   APIs OFFICIELLES PSEUDO (rapides, CORS direct)
+   NORMALISATION — pour comparer noms
    ============================================================ */
-async function vGitHub(u) {
-  try {
-    const r = await fetchWithTimeout(`https://api.github.com/users/${u}`, 5000);
-    if (r.status === 200) {
-      const j = await r.json();
-      return { exists:true, confidence:1, reason:`${j.public_repos} repos · ${j.followers} followers` };
-    }
-    return { exists:false, confidence:1, reason:"404" };
-  } catch { return { exists:false, confidence:0, reason:"timeout" }; }
+function normalize(s) {
+  return String(s || "")
+    .toLowerCase()
+    .normalize("NFD").replace(/[\u0300-\u036f]/g, "") // enlève accents
+    .replace(/[^a-z0-9 ]/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
 }
 
-async function vReddit(u) {
-  try {
-    const r = await fetchWithTimeout(`https://www.reddit.com/user/${u}/about.json`, 5000);
-    if (r.status !== 200) return { exists:false, confidence:1, reason:"404" };
-    const j = await r.json();
-    if (j?.data?.name) {
-      return { exists:true, confidence:1, reason:`karma: ${j.data.link_karma + j.data.comment_karma}` };
-    }
-    return { exists:false, confidence:1, reason:"pas de donnée" };
-  } catch { return { exists:false, confidence:0, reason:"timeout" }; }
-}
+// Vérifie si le nom complet OU prénom + nom apparaît dans le texte
+function containsName(text, fullName) {
+  if (!text) return false;
+  const normText = normalize(text);
+  const normName = normalize(fullName);
+  if (!normName) return false;
 
-async function vGitLab(u) {
-  try {
-    const r = await fetchWithTimeout(`https://gitlab.com/api/v4/users?username=${u}`, 5000);
-    if (r.status !== 200) return { exists:false, confidence:1, reason:"404" };
-    const j = await r.json();
-    if (Array.isArray(j) && j.length > 0) {
-      return { exists:true, confidence:1, reason:j[0].name || j[0].username };
-    }
-    return { exists:false, confidence:1, reason:"liste vide" };
-  } catch { return { exists:false, confidence:0, reason:"timeout" }; }
+  // 1) Nom complet d'un coup
+  if (normText.includes(normName)) return true;
+
+  // 2) Prénom ET nom présents (dans n'importe quel ordre)
+  const parts = normName.split(" ").filter(p => p.length >= 2);
+  if (parts.length < 2) return false;
+  const allPresent = parts.every(p => normText.includes(p));
+  return allPresent;
 }
 
 /* ============================================================
-   CHECKER HTML
+   VÉRIFICATION PROFIL — nom réellement présent dans la page
    ============================================================ */
-function htmlCheck(options) {
-  const { negatives = [], positives = [], minScore = 0.4 } = options;
-  return async (u, url) => {
-    try {
-      const r = await P(url);
-      if (r.status !== 200) return { exists:false, confidence:1, reason:`HTTP ${r.status}` };
-      const html = await r.text();
-      const low = html.toLowerCase();
+async function verifyProfile(url, fullName, positives) {
+  try {
+    const r = await P(url);
+    if (r.status !== 200) return { confirmed:false };
 
-      for (const n of negatives) {
-        if (low.includes(n.toLowerCase())) {
-          return { exists:false, confidence:0.9, reason:`négatif` };
-        }
-      }
+    const html = await r.text();
 
-      let found = 0;
-      const hits = [];
-      for (const p of positives) {
-        if (low.includes(p.toLowerCase())) { found++; hits.push(p); }
-      }
+    // 1) Cherche d'abord le nom complet dans la page
+    const nameFound = containsName(html, fullName);
 
-      const ratio = positives.length > 0 ? found / positives.length : 0.5;
-      return {
-        exists: ratio >= minScore,
-        confidence: Math.min(0.5 + ratio * 0.4, 0.9),
-        reason: hits.length ? hits.slice(0,2).join(", ") : `${found}/${positives.length} signaux`
-      };
-    } catch {
-      return { exists:false, confidence:0, reason:"timeout" };
+    // 2) Cherche les signatures de profil
+    const low = html.toLowerCase();
+    let posFound = 0;
+    for (const p of positives) {
+      if (low.includes(p.toLowerCase())) posFound++;
     }
-  };
+    const ratio = positives.length > 0 ? posFound / positives.length : 0;
+
+    // 3) Décision
+    if (nameFound && ratio >= 0.3) {
+      return { confirmed:true, level:"ok", reason:`nom complet détecté` };
+    }
+    if (nameFound) {
+      return { confirmed:true, level:"ok", reason:`nom détecté dans la page` };
+    }
+    if (ratio >= 0.6) {
+      return { confirmed:true, level:"warn", reason:`profil probable (nom non trouvé)` };
+    }
+    return { confirmed:false };
+  } catch {
+    return { confirmed:false };
+  }
 }
 
 /* ============================================================
-   PLATEFORMES — réduites aux plus fiables pour rapidité
-   ============================================================ */
-const PLATFORMS = [
-  ["GitHub", u=>`https://github.com/${u}`, vGitHub],
-  ["GitLab", u=>`https://gitlab.com/${u}`, vGitLab],
-  ["Reddit", u=>`https://www.reddit.com/user/${u}`, vReddit],
-  ["Instagram", u=>`https://www.instagram.com/${u}/`, htmlCheck({
-    negatives: ["sorry, this page isn't available","page not found"],
-    positives: ["og:title","profile_pic_url","biography","followers"]
-  })],
-  ["TikTok", u=>`https://www.tiktok.com/@${u}`, htmlCheck({
-    negatives: ["couldn't find this account","not found"],
-    positives: ["uniqueid","nickname","followercount","avatarLarger"]
-  })],
-  ["Twitter / X", u=>`https://x.com/${u}`, htmlCheck({
-    negatives: ["this account doesn","doesn't exist"],
-    positives: ["og:title","screen_name","followers_count"]
-  })],
-  ["Facebook", u=>`https://www.facebook.com/${u}`, htmlCheck({
-    negatives: ["content isn't available","page not found"],
-    positives: ["og:title","profile_id","cover_photo"]
-  })],
-  ["YouTube", u=>`https://www.youtube.com/@${u}`, htmlCheck({
-    negatives: ["this page isn't available","404"],
-    positives: ["channelid","subscriber_count","og:title"]
-  })],
-  ["Twitch", u=>`https://www.twitch.tv/${u}`, htmlCheck({
-    negatives: ["page not found","does not exist"],
-    positives: ["og:title","channel","follower"]
-  })],
-  ["Pinterest", u=>`https://www.pinterest.com/${u}/`, htmlCheck({
-    negatives: ["page not found"],
-    positives: ["og:title","profile","pins"]
-  })],
-  ["Medium", u=>`https://medium.com/@${u}`, htmlCheck({
-    negatives: ["out of nothing","404"],
-    positives: ["og:title","profile","followers"]
-  })],
-  ["Steam", u=>`https://steamcommunity.com/id/${u}`, htmlCheck({
-    negatives: ["the specified profile could not be found"],
-    positives: ["profile_header","persona_name"]
-  })],
-  ["SoundCloud", u=>`https://soundcloud.com/${u}`, htmlCheck({
-    negatives: ["we can't find that user","404"],
-    positives: ["og:title","followers_count","tracks"]
-  })],
-  ["Behance", u=>`https://www.behance.net/${u}`, htmlCheck({
-    negatives: ["page not found","404"],
-    positives: ["og:title","profile","projects"]
-  })],
-  ["Dribbble", u=>`https://dribbble.com/${u}`, htmlCheck({
-    negatives: ["page not found","404"],
-    positives: ["og:title","profile","shots"]
-  })],
-  ["Mastodon", u=>`https://mastodon.social/@${u}`, htmlCheck({
-    negatives: ["the page you are looking for isn't here"],
-    positives: ["og:title","profile","statuses_count"]
-  })],
-  ["Bluesky", u=>`https://bsky.app/profile/${u}`, htmlCheck({
-    negatives: ["not found","profile not found"],
-    positives: ["og:title","did:plc","followersCount"]
-  })],
-  ["Threads", u=>`https://www.threads.net/@${u}`, htmlCheck({
-    negatives: ["sorry, this page isn't available"],
-    positives: ["og:title","threads","followers"]
-  })],
-  ["VK", u=>`https://vk.com/${u}`, htmlCheck({
-    negatives: ["page not found"],
-    positives: ["og:title","profile","friends"]
-  })],
-  ["Flickr", u=>`https://www.flickr.com/people/${u}`, htmlCheck({
-    negatives: ["page not found","404"],
-    positives: ["og:title","flickr","photostream"]
-  })],
-  ["Quora", u=>`https://www.quora.com/profile/${u}`, htmlCheck({
-    negatives: ["page not found","404","we couldn't find"],
-    positives: ["og:title","quora","profile"]
-  })],
-  ["Vimeo", u=>`https://vimeo.com/${u}`, htmlCheck({
-    negatives: ["page not found","404"],
-    positives: ["og:title","vimeo","profile"]
-  })],
-  ["Dev.to", u=>`https://dev.to/${u}`, htmlCheck({
-    negatives: ["not found","404"],
-    positives: ["og:title","dev.to","profile"]
-  })],
-  ["HackerNews", u=>`https://news.ycombinator.com/user?id=${u}`, htmlCheck({
-    negatives: ["no such user","sorry"],
-    positives: ["karma","created","about"]
-  })],
-  ["ArtStation", u=>`https://www.artstation.com/${u}`, htmlCheck({
-    negatives: ["not found","404"],
-    positives: ["og:title","artstation","profile"]
-  })]
-];
-
-/* ============================================================
-   GOOGLE DORKS
+   GOOGLE DORKS ÉTENDUS
    ============================================================ */
 function buildDorks(fullName, criteria) {
   const dorks = [
-    { label: "Nom complet exact",     q: `"${fullName}"` },
-    { label: "Nom + LinkedIn",        q: `"${fullName}" site:linkedin.com` },
-    { label: "Nom + Facebook",        q: `"${fullName}" site:facebook.com` },
-    { label: "Nom + Instagram",       q: `"${fullName}" site:instagram.com` },
-    { label: "Nom + GitHub",          q: `"${fullName}" site:github.com` },
-    { label: "Nom + PDF",             q: `"${fullName}" filetype:pdf` },
-    { label: "Nom + CV",              q: `"${fullName}" (CV OR resume)` },
-    { label: "Nom + Email",           q: `"${fullName}" (email OR contact)` },
+    { label: "Nom complet exact",           q: `"${fullName}"` },
+    { label: "Nom + LinkedIn",              q: `"${fullName}" site:linkedin.com` },
+    { label: "Nom + Facebook",              q: `"${fullName}" site:facebook.com` },
+    { label: "Nom + Instagram",             q: `"${fullName}" site:instagram.com` },
+    { label: "Nom + Twitter/X",             q: `"${fullName}" (site:twitter.com OR site:x.com)` },
+    { label: "Nom + GitHub",                q: `"${fullName}" site:github.com` },
+    { label: "Nom + PDF",                   q: `"${fullName}" filetype:pdf` },
+    { label: "Nom + CV",                    q: `"${fullName}" (CV OR resume OR curriculum)` },
+    { label: "Nom + Email",                 q: `"${fullName}" (email OR mail OR contact)` },
+    { label: "Nom + Téléphone",             q: `"${fullName}" (téléphone OR phone OR tel)` },
+    { label: "Nom + Documents",             q: `"${fullName}" (filetype:docx OR filetype:xlsx OR filetype:pptx)` },
+    { label: "Nom + Pastebin",              q: `"${fullName}" site:pastebin.com` },
+    { label: "Nom + Wayback Machine",       q: `"${fullName}" site:web.archive.org` },
+    { label: "Nom + Reddit",                q: `"${fullName}" site:reddit.com` },
+    { label: "Nom + YouTube",               q: `"${fullName}" site:youtube.com` },
+    { label: "Nom + TikTok",                q: `"${fullName}" site:tiktok.com` },
+    { label: "Nom + Pinterest",             q: `"${fullName}" site:pinterest.com` },
+    { label: "Nom + Medium",                q: `"${fullName}" site:medium.com` },
+    { label: "Nom + Tumblr",                q: `"${fullName}" site:tumblr.com` },
+    { label: "Nom + Flickr",                q: `"${fullName}" site:flickr.com` },
+    { label: "Nom + StackOverflow",         q: `"${fullName}" site:stackoverflow.com` },
+    { label: "Nom + ORCID",                 q: `"${fullName}" site:orcid.org` },
+    { label: "Nom + ResearchGate",          q: `"${fullName}" site:researchgate.net` },
+    { label: "Nom + Google Scholar",        q: `"${fullName}" (site:scholar.google.com OR scholar)` },
+    { label: "Nom + Doctolib",              q: `"${fullName}" site:doctolib.fr` },
+    { label: "Nom + Société.com",           q: `"${fullName}" (site:societe.com OR site:infogreffe.fr)` },
+    { label: "Nom + Pages Jaunes",          q: `"${fullName}" site:pagesjaunes.fr` },
+    { label: "Nom + Copains d'avant",       q: `"${fullName}" site:copainsdavant.linternaute.com` },
+    { label: "Nom + index de fichiers",     q: `"${fullName}" intitle:"index of"` },
+    { label: "Nom + Documents compromis",   q: `"${fullName}" (password OR login OR credentials)` },
   ];
 
-  // Ajoute un dork par critère actif
   for (const { crit, value } of criteria) {
     const critMap = {
       email:    `"${fullName}" "${value}"`,
@@ -400,7 +317,7 @@ function buildDorks(fullName, criteria) {
       phone:    `"${fullName}" "${value}"`,
       city:     `"${fullName}" "${value}"`,
       country:  `"${fullName}" "${value}"`,
-      company:  `"${fullName}" "${value}" (LinkedIn OR site:linkedin.com)`,
+      company:  `"${fullName}" "${value}" site:linkedin.com`,
       school:   `"${fullName}" "${value}"`,
       job:      `"${fullName}" "${value}"`,
       birth:    `"${fullName}" "${value}"`,
@@ -419,7 +336,6 @@ function buildDorks(fullName, criteria) {
   return dorks;
 }
 
-// DuckDuckGo HTML — récupère les résultats
 async function searchDork(query) {
   try {
     const ddgUrl = `https://html.duckduckgo.com/html/?q=${encodeURIComponent(query)}`;
@@ -428,12 +344,10 @@ async function searchDork(query) {
     const html = await r.text();
 
     const results = [];
-    // Regex sur les liens de résultats DDG
     const regex = /<a[^>]*class="result__a"[^>]*href="([^"]+)"[^>]*>([\s\S]*?)<\/a>/g;
     let m;
-    while ((m = regex.exec(html)) !== null && results.length < 4) {
+    while ((m = regex.exec(html)) !== null && results.length < 5) {
       let url = m[1];
-      // DDG encode l'URL réelle dans uddg=
       const uddg = url.match(/uddg=([^&]+)/);
       if (uddg) url = decodeURIComponent(uddg[1]);
       const title = m[2].replace(/<[^>]+>/g, "").replace(/&amp;/g,"&").trim();
@@ -443,13 +357,147 @@ async function searchDork(query) {
     }
 
     return { found: results.length > 0, count: results.length, hits: results };
-  } catch (e) {
+  } catch {
     return { found:false, count:0, hits:[] };
   }
 }
 
 /* ============================================================
-   RECHERCHE PROFONDE — AFFICHAGE AU FUR ET À MESURE
+   OUTILS ALTERNATIFS (moteurs supplémentaires)
+   ============================================================ */
+async function searchBrave(query) {
+  try {
+    // Brave Search HTML
+    const url = `https://search.brave.com/search?q=${encodeURIComponent(query)}`;
+    const r = await P(url);
+    if (r.status !== 200) return { found:false, hits:[] };
+    const html = await r.text();
+    const results = [];
+    const regex = /<a[^>]*href="(https?:\/\/[^"]+)"[^>]*class="[^"]*heading-serpresult[^"]*"[^>]*>([\s\S]*?)<\/a>/g;
+    let m;
+    while ((m = regex.exec(html)) !== null && results.length < 4) {
+      const url = m[1];
+      const title = m[2].replace(/<[^>]+>/g, "").trim();
+      if (title && url && !url.includes("brave.com")) {
+        results.push({ title: title.slice(0,80), url });
+      }
+    }
+    return { found: results.length > 0, hits: results };
+  } catch {
+    return { found:false, hits:[] };
+  }
+}
+
+async function searchBing(query) {
+  try {
+    const url = `https://www.bing.com/search?q=${encodeURIComponent(query)}`;
+    const r = await P(url);
+    if (r.status !== 200) return { found:false, hits:[] };
+    const html = await r.text();
+    const results = [];
+    const regex = /<h2><a href="(https?:\/\/[^"]+)"[^>]*>([\s\S]*?)<\/a><\/h2>/g;
+    let m;
+    while ((m = regex.exec(html)) !== null && results.length < 4) {
+      const url = m[1];
+      const title = m[2].replace(/<[^>]+>/g, "").trim();
+      if (title && url && !url.includes("bing.com")) {
+        results.push({ title: title.slice(0,80), url });
+      }
+    }
+    return { found: results.length > 0, hits: results };
+  } catch {
+    return { found:false, hits:[] };
+  }
+}
+
+/* ============================================================
+   WAYBACK MACHINE (archives)
+   ============================================================ */
+async function checkWayback(query) {
+  try {
+    const url = `https://archive.org/advancedsearch.php?q=${encodeURIComponent('"' + query + '"')}&fl[]=identifier&fl[]=title&rows=5&output=json`;
+    const r = await fetchWithTimeout(url, 6000);
+    if (!r.ok) return { found:false, hits:[] };
+    const j = await r.json();
+    const docs = j?.response?.docs || [];
+    const hits = docs.map(d => ({
+      title: d.title || d.identifier,
+      url: `https://archive.org/details/${d.identifier}`
+    }));
+    return { found: hits.length > 0, hits };
+  } catch {
+    return { found:false, hits:[] };
+  }
+}
+
+/* ============================================================
+   GOOGLE SCHOLAR (publications)
+   ============================================================ */
+async function checkScholar(fullName) {
+  try {
+    const url = `https://scholar.google.com/scholar?q=${encodeURIComponent('"' + fullName + '"')}`;
+    const r = await P(url);
+    if (r.status !== 200) return { found:false, hits:[] };
+    const html = await r.text();
+    const results = [];
+    const regex = /<h3[^>]*class="gs_rt"[^>]*><a[^>]*href="([^"]+)"[^>]*>([\s\S]*?)<\/a>/g;
+    let m;
+    while ((m = regex.exec(html)) !== null && results.length < 4) {
+      const url = m[1];
+      const title = m[2].replace(/<[^>]+>/g, "").trim();
+      if (title && url) results.push({ title: title.slice(0,80), url });
+    }
+    return { found: results.length > 0, hits: results };
+  } catch {
+    return { found:false, hits:[] };
+  }
+}
+
+/* ============================================================
+   DOCTOLIB / SANTÉ (France)
+   ============================================================ */
+async function checkDoctolib(fullName) {
+  try {
+    const url = `https://www.doctolib.fr/search?query=${encodeURIComponent(fullName)}`;
+    const r = await P(url);
+    if (r.status !== 200) return { found:false, hits:[] };
+    const html = await r.text();
+    const results = [];
+    const regex = /<a[^>]*href="(\/[\w-]+\/[\w-]+)"[^>]*>([\s\S]*?)<\/a>/g;
+    let m;
+    while ((m = regex.exec(html)) !== null && results.length < 3) {
+      const title = m[2].replace(/<[^>]+>/g, "").trim();
+      if (title && title.length > 5 && title.length < 100 && containsName(title, fullName)) {
+        results.push({ title: title.slice(0,80), url: `https://www.doctolib.fr${m[1]}` });
+      }
+    }
+    return { found: results.length > 0, hits: results };
+  } catch {
+    return { found:false, hits:[] };
+  }
+}
+
+/* ============================================================
+   SOCIETE.COM (entreprises FR)
+   ============================================================ */
+async function checkSociete(fullName) {
+  try {
+    const url = `https://www.societe.com/cgi-bin/search?champs=${encodeURIComponent(fullName)}`;
+    const r = await P(url);
+    if (r.status !== 200) return { found:false, hits:[] };
+    const html = await r.text();
+    const found = containsName(html, fullName);
+    if (found) {
+      return { found:true, hits:[{ title:"Résultats sur Societe.com", url:`https://www.societe.com/cgi-bin/search?champs=${encodeURIComponent(fullName)}` }] };
+    }
+    return { found:false, hits:[] };
+  } catch {
+    return { found:false, hits:[] };
+  }
+}
+
+/* ============================================================
+   RECHERCHE PRINCIPALE — affichage au fur et à mesure
    ============================================================ */
 async function renderDeepSearch(fullName, criteria) {
   const out = document.getElementById("out");
@@ -457,78 +505,60 @@ async function renderDeepSearch(fullName, criteria) {
 
   const dorks = buildDorks(fullName, criteria);
 
-  // Variantes de pseudo
-  const parts = fullName.trim().toLowerCase().split(/\s+/);
-  const first = parts[0];
-  const last = parts.slice(1).join("");
-  const variants = [...new Set([
-    first + last,
-    first + "." + last,
-    first + "_" + last,
-    first[0] + last,
-    first + last[0],
-    first + "-" + last
-  ])].filter(u => u && u.length >= 3);
-
-  // Compteur global
-  const total = dorks.length + (variants.length * PLATFORMS.length);
+  const total = dorks.length + 5; // +5 pour les outils alternatifs
   let done = 0;
   let foundCount = 0;
 
+  // Barre de statut
   const statusEl = document.createElement("div");
   statusEl.className = "status";
   statusEl.textContent = `0/${total} analysé…`;
   out.appendChild(statusEl);
 
-  // Sections créées à l'avance
+  function updateStatus() {
+    statusEl.textContent = `${done}/${total} analysé · ${foundCount} résultat(s)`;
+  }
+
+  // --- Section dorks ---
   const sectionDorks = document.createElement("div");
+  sectionDorks.innerHTML = `<div class="section-title">Google Dorks — résultats filtrés par nom</div>`;
   const dorksList = document.createElement("div");
-  sectionDorks.innerHTML = `<div class="section-title">Google Dorks</div>`;
   sectionDorks.appendChild(dorksList);
   out.appendChild(sectionDorks);
-
-  const sectionPlatforms = document.createElement("div");
-  const platformsList = document.createElement("div");
-  sectionPlatforms.innerHTML = `<div class="section-title">Profils plateformes</div>`;
-  sectionPlatforms.appendChild(platformsList);
-  out.appendChild(sectionPlatforms);
 
   const noDorkEl = document.createElement("div");
   noDorkEl.className = "none";
   noDorkEl.textContent = "aucun dork positif";
   dorksList.appendChild(noDorkEl);
 
-  const noPlatEl = document.createElement("div");
-  noPlatEl.className = "none";
-  noPlatEl.textContent = "aucun profil trouvé";
-  platformsList.appendChild(noPlatEl);
-
   let dorkFound = 0;
-  let platFound = 0;
 
-  function updateStatus() {
-    statusEl.textContent = `${done}/${total} analysé · ${foundCount} résultat(s)`;
-  }
-
-  // 1) Lance tous les dorks en parallèle
+  // Lance tous les dorks en parallèle
   dorks.forEach(async (dork) => {
     const result = await searchDork(dork.q);
     done++;
-    if (result.found) {
+
+    // FILTRE ANTI-FAUX-POSITIF :
+    // Ne garde que les hits dont le titre OU l'URL semble lié au nom
+    const relevantHits = result.hits.filter(h =>
+      containsName(h.title, fullName) ||
+      containsName(decodeURIComponent(h.url), fullName)
+    );
+
+    if (relevantHits.length > 0) {
       foundCount++;
       dorkFound++;
       if (dorkFound === 1) noDorkEl.remove();
+
       const card = document.createElement("div");
       card.className = "card dork-card";
-      const hitsHtml = result.hits.slice(0,3).map(h =>
+      const hitsHtml = relevantHits.slice(0,4).map(h =>
         `<a href="${h.url}" target="_blank" rel="noopener">${escapeHtml(h.title)}</a>`
       ).join("");
       card.innerHTML = `
         <div class="dot blue"></div>
         <div class="info">
-          <div class="title">${escapeHtml(dork.label)}
-            <span class="badge ok">${result.count}</span>
-          </div>
+          <div class="title">${escapeHtml(dork.label)}</div>
           <div class="meta">${escapeHtml(dork.q)}</div>
           <div class="meta">${hitsHtml}</div>
         </div>
@@ -538,40 +568,65 @@ async function renderDeepSearch(fullName, criteria) {
     updateStatus();
   });
 
-  // 2) Lance toutes les plateformes × variantes
-  variants.forEach(variant => {
-    PLATFORMS.forEach(async ([name, urlFn, checker]) => {
-      const url = urlFn(variant);
-      let res;
-      try {
-        res = await checker(variant, url);
-      } catch {
-        res = { exists:false, confidence:0, reason:"erreur" };
-      }
-      done++;
-      if (res && res.exists && res.confidence >= 0.5) {
+  // --- Section outils alternatifs ---
+  const sectionTools = document.createElement("div");
+  sectionTools.innerHTML = `<div class="section-title">Outils alternatifs</div>`;
+  const toolsList = document.createElement("div");
+  sectionTools.appendChild(toolsList);
+  out.appendChild(sectionTools);
+
+  // Brave Search
+  runTool(toolsList, "Brave Search", async () => {
+    const r = await searchBrave(`"${fullName}"`);
+    return r.hits.filter(h => containsName(h.title, fullName) || containsName(decodeURIComponent(h.url), fullName));
+  }).then(() => { done++; updateStatus(); });
+
+  // Bing
+  runTool(toolsList, "Bing", async () => {
+    const r = await searchBing(`"${fullName}"`);
+    return r.hits.filter(h => containsName(h.title, fullName) || containsName(decodeURIComponent(h.url), fullName));
+  }).then(() => { done++; updateStatus(); });
+
+  // Wayback Machine
+  runTool(toolsList, "Wayback Machine (archives)", async () => {
+    const r = await checkWayback(fullName);
+    return r.hits;
+  }).then(() => { done++; updateStatus(); });
+
+  // Google Scholar
+  runTool(toolsList, "Google Scholar (publications)", async () => {
+    const r = await checkScholar(fullName);
+    return r.hits;
+  }).then(() => { done++; updateStatus(); });
+
+  // Doctolib (santé FR)
+  runTool(toolsList, "Doctolib", async () => {
+    const r = await checkDoctolib(fullName);
+    return r.hits;
+  }).then(() => { done++; updateStatus(); });
+
+  // Fonction utilitaire pour lancer un outil et afficher son résultat
+  async function runTool(container, label, fn) {
+    try {
+      const hits = await fn();
+      if (hits && hits.length > 0) {
         foundCount++;
-        platFound++;
-        if (platFound === 1) noPlatEl.remove();
-        const conf = Math.round((res.confidence || 0) * 100);
-        const badgeCls = res.confidence >= 0.85 ? "ok" : "warn";
         const card = document.createElement("div");
-        card.className = "card";
+        card.className = "card tool-card";
+        const hitsHtml = hits.slice(0,4).map(h =>
+          `<a href="${h.url}" target="_blank" rel="noopener">${escapeHtml(h.title)}</a>`
+        ).join("");
         card.innerHTML = `
-          <div class="dot"></div>
+          <div class="dot orange"></div>
           <div class="info">
-            <a href="${url}" target="_blank" rel="noopener">${name}
-              <span class="badge ${badgeCls}">${conf}%</span>
-            </a>
-            <div class="meta">${escapeHtml(url)}</div>
-            <div class="meta">variante: ${escapeHtml(variant)} · ${escapeHtml(res.reason || "")}</div>
+            <div class="title">${escapeHtml(label)}</div>
+            <div class="meta">${hitsHtml}</div>
           </div>
         `;
-        platformsList.appendChild(card);
+        container.appendChild(card);
       }
-      updateStatus();
-    });
-  });
+    } catch {}
+  }
 }
 
 /* ============================================================
@@ -583,7 +638,6 @@ let selectedCrit = null;
 document.querySelectorAll(".chip").forEach(chip => {
   chip.addEventListener("click", () => {
     const crit = chip.dataset.crit;
-    // Toggle : un seul chip actif à la fois pour saisir sa valeur
     document.querySelectorAll(".chip").forEach(c => c.classList.remove("active"));
     if (selectedCrit === crit) {
       selectedCrit = null;
@@ -599,16 +653,13 @@ document.getElementById("addCrit").addEventListener("click", () => {
   const val = document.getElementById("extraValue").value.trim();
   if (!selectedCrit || !val) return;
 
-  // Évite les doublons
   if (!activeCriteria.some(c => c.crit === selectedCrit && c.value === val)) {
     activeCriteria.push({ crit: selectedCrit, value: val });
   }
 
-  // Reset
   document.getElementById("extraValue").value = "";
   document.querySelectorAll(".chip").forEach(c => c.classList.remove("active"));
   selectedCrit = null;
-
   renderActiveCriteria();
 });
 
