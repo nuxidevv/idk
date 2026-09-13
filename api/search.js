@@ -1,14 +1,30 @@
 import https from "https";
 
-function httpsGet(url, headers) {
+function httpsPost(url, headers, bodyObj) {
   return new Promise((resolve) => {
-    const req = https.get(url, { headers }, (res) => {
+    const body = JSON.stringify(bodyObj);
+    const u = new URL(url);
+    const options = {
+      hostname: u.hostname,
+      path: u.pathname + u.search,
+      method: "POST",
+      headers: {
+        ...headers,
+        "Content-Type": "application/json",
+        "Content-Length": Buffer.byteLength(body)
+      }
+    };
+
+    const req = https.request(options, (res) => {
       let data = "";
       res.on("data", chunk => data += chunk);
       res.on("end", () => resolve({ status: res.statusCode, body: data }));
     });
+
     req.on("error", (e) => resolve({ status: 0, body: "", error: e.message }));
-    req.setTimeout(10000, () => { req.destroy(); resolve({ status: 0, body: "", error: "timeout" }); });
+    req.setTimeout(12000, () => { req.destroy(); resolve({ status: 0, body: "", error: "timeout" }); });
+    req.write(body);
+    req.end();
   });
 }
 
@@ -19,48 +35,28 @@ export default async function handler(req, res) {
   if (req.method === "OPTIONS") return res.status(200).end();
 
   const { first_name = "", last_name = "" } = req.query;
-  const BASE = "https://api.brixhub.to/api/v1";
   const KEY = process.env.BRIXHUB_KEY || "";
 
-  // Header X-API-Key (confirmé par la doc)
   const headers = {
     "Accept": "application/json",
     "X-API-Key": KEY
   };
 
-  // Paramètres en français : prenom + nom_famille (confirmé par ta capture)
-  const p = `prenom=${encodeURIComponent(first_name)}&nom_famille=${encodeURIComponent(last_name)}`;
+  // Body JSON avec les noms de paramètres FR
+  const body = {
+    prenom: first_name,
+    nom_famille: last_name
+  };
 
-  // Chemin correct : /lookups/ (avec un S)
-  const candidates = [
-    `${BASE}/lookups/search?${p}`,
-    `${BASE}/lookups/name?${p}`,
-    `${BASE}/lookups/full?${p}`,
-    `${BASE}/lookups?${p}`,
-    `${BASE}/lookups/full_name?${p}`,
-    `${BASE}/lookups/identity?${p}`,
-  ];
+  const r = await httpsPost("https://api.brixhub.to/api/v1/search", headers, body);
 
-  const logs = [];
-  for (const url of candidates) {
-    const r = await httpsGet(url, headers);
-    let parsed = null;
-    try { parsed = JSON.parse(r.body); } catch {}
-
-    logs.push({
-      url,
-      status: r.status,
-      preview: (r.body || "").slice(0, 300)
-    });
-
-    if (r.status === 200 && parsed) {
-      return res.status(200).json({ ok: true, usedUrl: url, data: parsed, allAttempts: logs });
-    }
-  }
+  let parsed = null;
+  try { parsed = JSON.parse(r.body); } catch { parsed = r.body; }
 
   return res.status(200).json({
-    ok: false,
-    message: "Aucun endpoint /lookups/ n'a répondu 200",
-    allAttempts: logs
+    ok: r.status >= 200 && r.status < 300,
+    status: r.status,
+    error: r.error || null,
+    data: parsed
   });
 }
