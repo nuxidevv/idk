@@ -3,728 +3,252 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>OSINT</title>
+<title>OSINT DEBUG</title>
 <style>
-  * { margin:0; padding:0; box-sizing:border-box; }
   body {
     background:#000; color:#eaeaea;
-    font-family:-apple-system, 'Segoe UI', Roboto, sans-serif;
-    min-height:100vh; display:flex; justify-content:center;
-    padding:60px 20px;
+    font-family:-apple-system, sans-serif;
+    padding:20px; font-size:14px;
   }
-  .wrap { width:100%; max-width:680px; }
-  h1 { font-size:1.1rem; font-weight:600; margin-bottom:4px; color:#fff; }
-  .sub { font-size:0.75rem; color:#555; margin-bottom:24px; }
-  .row { display:flex; gap:10px; margin-bottom:12px; }
-  select, input {
-    background:#0d0d0d; border:1px solid #1e1e1e; color:#eaeaea;
-    padding:12px 14px; border-radius:8px; font-size:0.85rem;
-    font-family:inherit; outline:none;
+  h1 { font-size:16px; margin-bottom:16px; }
+  input, select, button {
+    width:100%; padding:12px; margin-bottom:10px;
+    background:#111; color:#eee; border:1px solid #333;
+    border-radius:6px; font-size:14px;
   }
-  select { width:150px; }
-  input { flex:1; }
-  select:focus, input:focus { border-color:#333; }
-  button {
-    width:100%; background:#fff; color:#000; border:none;
-    padding:13px; border-radius:8px; font-size:0.85rem;
-    font-weight:600; cursor:pointer;
+  button { background:#fff; color:#000; font-weight:bold; }
+  #log {
+    background:#0a0a0a; border:1px solid #222; border-radius:6px;
+    padding:12px; margin-top:16px;
+    font-family:monospace; font-size:11px;
+    white-space:pre-wrap; word-break:break-all;
+    max-height:70vh; overflow-y:auto;
   }
-  button:hover { opacity:0.85; }
-  button:disabled { background:#1a1a1a; color:#555; cursor:default; }
-  #out { margin-top:24px; }
-  .status {
-    font-size:0.72rem; color:#666; text-align:center;
-    margin-bottom:14px; letter-spacing:0.5px;
-  }
-  .empty { color:#444; font-size:0.8rem; text-align:center; padding:20px; }
-  .none {
-    color:#666; font-size:0.82rem; text-align:center;
-    padding:30px 20px;
-  }
-  .card {
-    background:#0b0b0b; border:1px solid #1f3d2a; border-radius:10px;
-    padding:14px 16px; margin-bottom:8px;
-    display:flex; align-items:center; gap:12px;
-  }
-  .card:hover { border-color:#2f5d3f; }
-  .card.info-card { border-color:#1f3d5a; }
-  .card.info-card:hover { border-color:#2f5d8f; }
-  .dot {
-    width:8px; height:8px; border-radius:50%; flex-shrink:0;
-    background:#00e07a; box-shadow:0 0 8px #00e07a88;
-  }
-  .dot.blue { background:#4da3ff; box-shadow:0 0 8px #4da3ff88; }
-  .dot.red  { background:#ff4d4d; box-shadow:0 0 8px #ff4d4d88; }
-  .dot.gray { background:#666; box-shadow:none; }
-  .info { flex:1; min-width:0; }
-  .info a, .info .title {
-    color:#eaeaea; text-decoration:none; font-size:0.85rem;
-    display:block; overflow:hidden; text-overflow:ellipsis;
-    white-space:nowrap;
-  }
-  .info a:hover { color:#4da3ff; }
-  .info .title { font-weight:500; white-space:normal; }
-  .meta { font-size:0.65rem; color:#555; margin-top:3px; word-break:break-all; }
-  .badge {
-    display:inline-block; font-size:0.6rem; padding:2px 6px;
-    border-radius:4px; margin-left:6px; font-weight:600;
-    vertical-align:middle;
-  }
-  .badge.ok { background:#1f3d2a; color:#00e07a; }
-  .badge.warn { background:#3d2a1f; color:#ffaa4d; }
-  .badge.neg { background:#3d1f1f; color:#ff6b6b; }
-  .section-title {
-    font-size:0.7rem; color:#888; text-transform:uppercase;
-    letter-spacing:1px; margin:18px 0 10px;
-  }
-  .err {
-    background:#1a0a0a; color:#ff6b6b; padding:12px;
-    border-radius:8px; font-size:0.72rem; margin-top:14px;
-    white-space:pre-wrap; word-break:break-word;
-  }
+  .ok { color:#0f0; }
+  .err { color:#f55; }
+  .info { color:#4da3ff; }
+  .warn { color:#fa4; }
 </style>
 </head>
 <body>
-<div class="wrap">
-  <h1>OSINT</h1>
-  <div class="sub">email · pseudo · prénom nom</div>
+  <h1>OSINT DEBUG</h1>
 
-  <div class="row">
-    <select id="type">
-      <option value="email">Email</option>
-      <option value="username">Pseudo</option>
-      <option value="fullname">Prénom Nom</option>
-    </select>
-    <input id="target" placeholder="cible..." autocomplete="off">
-  </div>
+  <select id="type">
+    <option value="email">Email</option>
+    <option value="username">Pseudo</option>
+    <option value="fullname">Prénom Nom</option>
+  </select>
+  <input id="target" placeholder="cible..." autocomplete="off">
   <button id="go">Rechercher</button>
 
-  <div id="out"></div>
-</div>
+  <div id="log">En attente…</div>
 
 <script>
-/* ============================================================
-   CAPTURE D'ERREURS VISIBLE
-   ============================================================ */
+/* ---------- Affichage ---------- */
+const logEl = document.getElementById("log");
+function log(msg, cls = "") {
+  const line = document.createElement("div");
+  if (cls) line.className = cls;
+  line.textContent = msg;
+  logEl.appendChild(line);
+  logEl.scrollTop = logEl.scrollHeight;
+}
+function clearLog() { logEl.innerHTML = ""; }
+
+/* ---------- Debug global ---------- */
 window.addEventListener("error", e => {
-  const out = document.getElementById("out");
-  if (out) {
-    out.innerHTML = `<div class="err"><b>Erreur JS :</b> ${e.message}\n<b>Ligne :</b> ${e.lineno}</div>`;
-  }
+  log("❌ ERREUR: " + e.message + " (ligne " + e.lineno + ")", "err");
+});
+window.addEventListener("unhandledrejection", e => {
+  log("❌ PROMESSE REJETÉE: " + (e.reason?.message || e.reason), "err");
 });
 
-/* ============================================================
-   PROXY CORS — plusieurs en fallback
-   ============================================================ */
-const PROXIES = [
-  u => `https://api.allorigins.win/raw?url=${encodeURIComponent(u)}`,
-  u => `https://corsproxy.io/?${encodeURIComponent(u)}`,
-  u => `https://api.codetabs.com/v1/proxy?quest=${encodeURIComponent(u)}`
-];
-
-async function P(url) {
-  for (const proxy of PROXIES) {
-    try {
-      const r = await fetch(proxy(url), { redirect: "follow" });
-      if (r.ok) return r;
-    } catch {}
+/* ---------- Proxy CORS simple ---------- */
+async function fetchViaProxy(url) {
+  // Essai 1 : allorigins
+  try {
+    log("→ proxy 1 (allorigins)…", "info");
+    const r = await fetch("https://api.allorigins.win/raw?url=" + encodeURIComponent(url));
+    log("  status: " + r.status, "info");
+    if (r.ok) return r;
+  } catch (e) {
+    log("  proxy 1 échec: " + e.message, "warn");
   }
-  throw new Error("proxy failed");
-}
-
-/* ============================================================
-   CHECKERS APIs OFFICIELLES (fiables à 100%)
-   ============================================================ */
-async function vGitHub(u){
+  // Essai 2 : codetabs
   try {
-    const r = await fetch(`https://api.github.com/users/${u}`);
-    return r.status === 200
-      ? {exists:true, confidence:1, reason:"API GitHub 200"}
-      : {exists:false, confidence:1, reason:"API GitHub 404"};
-  } catch { return {exists:false, confidence:0, reason:"erreur réseau"}; }
-}
-
-async function vReddit(u){
-  try {
-    const r = await fetch(`https://www.reddit.com/user/${u}/about.json`);
-    if (r.status !== 200) return {exists:false, confidence:1, reason:"404"};
-    const j = await r.json();
-    const ok = !!(j && j.data && j.data.name);
-    return {exists:ok, confidence:1, reason: ok ? "compte Reddit valide" : "pas de donnée"};
-  } catch { return {exists:false, confidence:0, reason:"erreur réseau"}; }
-}
-
-async function vGitLab(u){
-  try {
-    const r = await fetch(`https://gitlab.com/api/v4/users?username=${u}`);
-    if (r.status !== 200) return {exists:false, confidence:1, reason:"404"};
-    const j = await r.json();
-    const ok = Array.isArray(j) && j.length > 0;
-    return {exists:ok, confidence:1, reason: ok ? "utilisateur GitLab trouvé" : "liste vide"};
-  } catch { return {exists:false, confidence:0, reason:"erreur réseau"}; }
-}
-
-/* ============================================================
-   CHECKER HTML AMÉLIORÉ — score multi-signatures
-   Analyse le HTML : cherche des marqueurs POSITIFS (profile,
-   username, followers...) et des marqueurs NÉGATIFS (404,
-   page not found...). Score 0-1.
-   ============================================================ */
-function htmlCheck(options) {
-  const {
-    negatives = [],
-    positives = [],
-    minScore = 0.5
-  } = options;
-
-  return async (u) => {
-    try {
-      const r = await P(u);
-      if (r.status !== 200) {
-        return { exists:false, confidence:1, reason:`HTTP ${r.status}` };
-      }
-      const html = await r.text();
-      const low = html.toLowerCase();
-
-      // Vérifie les négatifs en priorité
-      for (const n of negatives) {
-        if (low.includes(n.toLowerCase())) {
-          return { exists:false, confidence:0.9, reason:`marqueur négatif: "${n}"` };
-        }
-      }
-
-      // Compte les positifs trouvés
-      let found = 0;
-      const hits = [];
-      for (const p of positives) {
-        if (low.includes(p.toLowerCase())) {
-          found++;
-          hits.push(p);
-        }
-      }
-
-      // Score basé sur le ratio
-      const ratio = positives.length > 0 ? found / positives.length : 0.5;
-      const exists = ratio >= minScore;
-
-      return {
-        exists,
-        confidence: Math.min(0.5 + ratio * 0.4, 0.85),
-        reason: hits.length
-          ? `${found}/${positives.length} marqueur(s): ${hits.slice(0,3).join(", ")}`
-          : `${found}/${positives.length} marqueur(s) positif(s)`
-      };
-    } catch (e) {
-      return { exists:false, confidence:0, reason:"proxy inaccessible" };
-    }
-  };
-}
-
-/* ============================================================
-   PLATEFORMES — chaque entrée a ses propres signatures
-   ============================================================ */
-const PLATFORMS = [
-  // --- APIs officielles (fiable à 100%) ---
-  ["GitHub",        u=>`https://github.com/${u}`,                vGitHub],
-  ["GitLab",        u=>`https://gitlab.com/${u}`,                vGitLab],
-  ["Reddit",        u=>`https://www.reddit.com/user/${u}`,       vReddit],
-
-  // --- Analyse HTML avec signatures positives ET négatives ---
-  ["Instagram",     u=>`https://www.instagram.com/${u}/`,        htmlCheck({
-    negatives: ["sorry, this page isn't available", "page not found", "content isn't available"],
-    positives: ["og:title", "profile_pic_url", "biography", "followers", "posts"],
-    minScore: 0.4
-  })],
-
-  ["TikTok",        u=>`https://www.tiktok.com/@${u}`,           htmlCheck({
-    negatives: ["couldn't find this account", "video currently unavailable", "page not found"],
-    positives: ["uniqueid", "nickname", "followercount", "avatarLarger", "user profile"],
-    minScore: 0.4
-  })],
-
-  ["Twitter / X",   u=>`https://x.com/${u}`,                     htmlCheck({
-    negatives: ["this account doesn", "doesn't exist", "try searching for another"],
-    positives: ["og:title", "profile_banner", "screen_name", "followers_count"],
-    minScore: 0.4
-  })],
-
-  ["Facebook",      u=>`https://www.facebook.com/${u}`,          htmlCheck({
-    negatives: ["content isn't available", "page not found", "the link you followed may be broken"],
-    positives: ["og:title", "profile_id", "cover_photo", "friends"],
-    minScore: 0.4
-  })],
-
-  ["Telegram",      u=>`https://t.me/${u}`,                      htmlCheck({
-    negatives: ["if you have telegram, you can contact", "page not found"],
-    positives: ["tgme_page_title", "tgme_page_photo", "tgme_page_extra"],
-    minScore: 0.5
-  })],
-
-  ["YouTube",       u=>`https://www.youtube.com/@${u}`,          htmlCheck({
-    negatives: ["this page isn't available", "404 not found"],
-    positives: ["channelid", "subscriber_count", "og:title", "avatar"],
-    minScore: 0.4
-  })],
-
-  ["Twitch",        u=>`https://www.twitch.tv/${u}`,             htmlCheck({
-    negatives: ["page not found", "does not exist", "content is currently unavailable"],
-    positives: ["og:title", "channel", "follower", "streamer"],
-    minScore: 0.4
-  })],
-
-  ["Pinterest",     u=>`https://www.pinterest.com/${u}/`,        htmlCheck({
-    negatives: ["page not found", "user not found"],
-    positives: ["og:title", "profile", "pins", "followers"],
-    minScore: 0.4
-  })],
-
-  ["Medium",        u=>`https://medium.com/@${u}`,               htmlCheck({
-    negatives: ["out of nothing", "404", "page not found"],
-    positives: ["og:title", "profile", "followers", "stories"],
-    minScore: 0.4
-  })],
-
-  ["DeviantArt",    u=>`https://www.deviantart.com/${u}`,        htmlCheck({
-    negatives: ["not found", "does not exist", "deviantart error"],
-    positives: ["og:title", "deviation", "watchers", "profile"],
-    minScore: 0.4
-  })],
-
-  ["Steam",         u=>`https://steamcommunity.com/id/${u}`,     htmlCheck({
-    negatives: ["the specified profile could not be found", "no profile"],
-    positives: ["profile_header", "persona_name", "profile_summary"],
-    minScore: 0.4
-  })],
-
-  ["SoundCloud",    u=>`https://soundcloud.com/${u}`,            htmlCheck({
-    negatives: ["we can't find that user", "404"],
-    positives: ["og:title", "soundcloud", "followers_count", "tracks"],
-    minScore: 0.4
-  })],
-
-  ["Behance",       u=>`https://www.behance.net/${u}`,           htmlCheck({
-    negatives: ["page not found", "404"],
-    positives: ["og:title", "profile", "projects", "followers"],
-    minScore: 0.4
-  })],
-
-  ["Dribbble",      u=>`https://dribbble.com/${u}`,              htmlCheck({
-    negatives: ["page not found", "404"],
-    positives: ["og:title", "profile", "shots", "followers"],
-    minScore: 0.4
-  })],
-
-  ["Patreon",       u=>`https://www.patreon.com/${u}`,           htmlCheck({
-    negatives: ["page not found", "404"],
-    positives: ["og:title", "patron", "creator", "posts"],
-    minScore: 0.4
-  })],
-
-  ["Mastodon",      u=>`https://mastodon.social/@${u}`,          htmlCheck({
-    negatives: ["the page you are looking for isn't here", "404"],
-    positives: ["og:title", "profile", "statuses_count", "followers_count"],
-    minScore: 0.4
-  })],
-
-  ["Bluesky",       u=>`https://bsky.app/profile/${u}`,          htmlCheck({
-    negatives: ["not found", "profile not found", "404"],
-    positives: ["og:title", "did:plc", "followersCount", "postsCount"],
-    minScore: 0.4
-  })],
-
-  ["Threads",       u=>`https://www.threads.net/@${u}`,          htmlCheck({
-    negatives: ["sorry, this page isn't available", "not found"],
-    positives: ["og:title", "threads", "followers", "username"],
-    minScore: 0.4
-  })],
-
-  ["VK",            u=>`https://vk.com/${u}`,                    htmlCheck({
-    negatives: ["page not found", "profile not found"],
-    positives: ["og:title", "profile", "friends", "photos"],
-    minScore: 0.4
-  })],
-
-  ["Flickr",        u=>`https://www.flickr.com/people/${u}`,     htmlCheck({
-    negatives: ["page not found", "404", "photo not found"],
-    positives: ["og:title", "flickr", "photostream", "followers"],
-    minScore: 0.4
-  })],
-
-  ["Imgur",         u=>`https://imgur.com/user/${u}`,            htmlCheck({
-    negatives: ["page not found", "404"],
-    positives: ["og:title", "imgur", "profile"],
-    minScore: 0.4
-  })],
-
-  ["Quora",         u=>`https://www.quora.com/profile/${u}`,     htmlCheck({
-    negatives: ["page not found", "404", "we couldn't find"],
-    positives: ["og:title", "quora", "profile", "followers"],
-    minScore: 0.4
-  })],
-
-  ["Vimeo",         u=>`https://vimeo.com/${u}`,                 htmlCheck({
-    negatives: ["page not found", "404", "this page is not available"],
-    positives: ["og:title", "vimeo", "profile"],
-    minScore: 0.4
-  })],
-
-  ["Dailymotion",   u=>`https://www.dailymotion.com/${u}`,       htmlCheck({
-    negatives: ["page not found", "404"],
-    positives: ["og:title", "dailymotion", "channel"],
-    minScore: 0.4
-  })],
-
-  ["Bandcamp",      u=>`https://bandcamp.com/${u}`,              htmlCheck({
-    negatives: ["page not found", "404"],
-    positives: ["og:title", "bandcamp", "artist", "album"],
-    minScore: 0.4
-  })],
-
-  ["Substack",      u=>`https://${u}.substack.com`,              htmlCheck({
-    negatives: ["page not found", "404"],
-    positives: ["og:title", "substack", "subscribe", "posts"],
-    minScore: 0.4
-  })],
-
-  ["WordPress",     u=>`https://${u}.wordpress.com`,             htmlCheck({
-    negatives: ["not found", "doesn't exist"],
-    positives: ["og:title", "wordpress", "blog"],
-    minScore: 0.4
-  })],
-
-  ["Dev.to",        u=>`https://dev.to/${u}`,                    htmlCheck({
-    negatives: ["not found", "404"],
-    positives: ["og:title", "dev.to", "profile", "posts"],
-    minScore: 0.4
-  })],
-
-  ["Hashnode",      u=>`https://hashnode.com/@${u}`,             htmlCheck({
-    negatives: ["not found", "404"],
-    positives: ["og:title", "hashnode", "profile"],
-    minScore: 0.4
-  })],
-
-  ["CodePen",       u=>`https://codepen.io/${u}`,                htmlCheck({
-    negatives: ["page not found", "404"],
-    positives: ["og:title", "codepen", "profile", "pens"],
-    minScore: 0.4
-  })],
-
-  ["HackerNews",    u=>`https://news.ycombinator.com/user?id=${u}`, htmlCheck({
-    negatives: ["no such user", "sorry"],
-    positives: ["karma", "created", "about"],
-    minScore: 0.4
-  })],
-
-  ["9GAG",          u=>`https://9gag.com/u/${u}`,                htmlCheck({
-    negatives: ["not found", "404"],
-    positives: ["og:title", "9gag", "profile"],
-    minScore: 0.4
-  })],
-
-  ["ArtStation",    u=>`https://www.artstation.com/${u}`,        htmlCheck({
-    negatives: ["not found", "404"],
-    positives: ["og:title", "artstation", "profile"],
-    minScore: 0.4
-  })],
-
-  ["Product Hunt",  u=>`https://www.producthunt.com/@${u}`,      htmlCheck({
-    negatives: ["not found", "404"],
-    positives: ["og:title", "product hunt", "profile"],
-    minScore: 0.4
-  })],
-
-  ["Mixcloud",      u=>`https://www.mixcloud.com/${u}/`,         htmlCheck({
-    negatives: ["not found", "404"],
-    positives: ["og:title", "mixcloud", "profile"],
-    minScore: 0.4
-  })]
-];
-
-/* ============================================================
-   EMAIL
-   ============================================================ */
-function isValidEmail(e) {
-  return /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(e);
-}
-
-/* MD5 pur JS (fonctionne partout, y compris iOS file://) */
-function md5(str) {
-  function rotl(n, s) { return (n << s) | (n >>> (32 - s)); }
-  function add(a, b) { return (a + b) & 0xFFFFFFFF; }
-  const bytes = new TextEncoder().encode(str);
-  const K = [];
-  for (let i = 0; i < 64; i++) K[i] = Math.floor(Math.abs(Math.sin(i + 1)) * 4294967296);
-  const S = [7,12,17,22,7,12,17,22,7,12,17,22,7,12,17,22,
-             5,9,14,20,5,9,14,20,5,9,14,20,5,9,14,20,
-             4,11,16,23,4,11,16,23,4,11,16,23,4,11,16,23,
-             6,10,15,21,6,10,15,21,6,10,15,21,6,10,15,21];
-  const orig = bytes.length;
-  const ml = orig * 8;
-  const padded = new Uint8Array(((orig + 8) >> 6 << 6) + 64);
-  padded.set(bytes);
-  padded[orig] = 0x80;
-  const dv = new DataView(padded.buffer);
-  dv.setUint32(padded.length - 8, ml, true);
-  dv.setUint32(padded.length - 4, Math.floor(ml / 4294967296), true);
-  let a = 0 MXx67452301, b = 0xEFCDAB89, c = 0x98BADCFE, d = 0x10325476;
-  for (let i = 0; i < padded.length; i += 64) {
-    const M = [];
-    for (let j = 0; j < 16; j++) M[j] = dv.getUint32(i + j * 4, true);
-    let [A,B,C,D] = [a,b,c,d];
-    for (let j = 0; j < 64; j++) {
-      let F, g;
-      if (j < 16)      { F = (B & C) | (~B & D);  g = j; }
-      else if (j < 32) { F = (D & B) | (~D & C);  g = (5*j + 1) % 16; }
-      else if (j < 48) { F = B ^ C ^ D;           g = (3*j + 5) % 16; }
-      else             { F = C ^ (B | ~D);        g = (7*j) % 16; }
-      F = add(add(add(F, A), K[j]), M[g]);
-      A = D; D = C; C = B;
-      B = add(B, rotl(F, S[j]));
-    }
-    a = add(a, A); b = add(b, B); c = add(c, C); d = add(d, D);
+    log("→ proxy 2 (codetabs)…", "info");
+    const r = await fetch("https://api.codetabs.com/v1/proxy?quest=" + encodeURIComponent(url));
+    log("  status: " + r.status, "info");
+    if (r.ok) return r;
+  } catch (e) {
+    log("  proxy 2 échec: " + e.message, "warn");
   }
-  const toHex = n => n.toString(16).padStart(8, "0").match(/../g).reverse().join("");
-  return toHex(a) + toHex(b) + toHex(c) + toHex(d);
+  throw new Error("tous les proxies ont échoué");
 }
 
-async function checkGravatar(email) {
+/* ---------- Recherche email ---------- */
+async function searchEmail(email) {
+  log("=== EMAIL: " + email + " ===", "info");
+
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(email)) {
+    log("❌ format d'email invalide", "err");
+    return;
+  }
+  log("✓ format valide", "ok");
+
+  const domain = email.split("@")[1];
+  log("domaine: " + domain, "info");
+
+  // Test DNS MX via Google DNS (fonctionne directement, pas de proxy)
   try {
-    const hash = md5(email.trim().toLowerCase());
-    const url = `https://www.gravatar.com/avatar/${hash}?d=404`;
-    const r = await P(url);
+    log("→ requête DNS MX…", "info");
+    const r = await fetch("https://dns.google/resolve?name=" + encodeURIComponent(domain) + "&type=MX");
+    log("  status DNS: " + r.status, "info");
+    if (r.ok) {
+      const j = await r.json();
+      const mx = (j.Answer || []).filter(a => a.type === 15);
+      if (mx.length > 0) {
+        log("✓ MX trouvés: " + mx.map(a => a.data).join(", "), "ok");
+      } else {
+        log("✗ aucun MX", "warn");
+      }
+    }
+  } catch (e) {
+    log("❌ DNS échec: " + e.message, "err");
+  }
+
+  // Test Gravatar
+  try {
+    log("→ test Gravatar…", "info");
+    // MD5 via service externe
+    const hashResp = await fetch("https://api.hashify.net/hash/md5/hex?value=" + encodeURIComponent(email.trim().toLowerCase()));
+    if (hashResp.ok) {
+      const hashJson = await hashResp.json();
+      const hash = hashJson.Digest;
+      log("  hash: " + hash, "info");
+      const r = await fetch("https://www.gravatar.com/avatar/" + hash + "?d=404");
+      log("  status Gravatar: " + r.status, "info");
+      if (r.status === 200) {
+        log("✓ Gravatar existe", "ok");
+      } else {
+        log("✗ pas de Gravatar", "warn");
+      }
+    }
+  } catch (e) {
+    log("❌ Gravatar échec: " + e.message, "err");
+  }
+
+  log("=== FIN EMAIL ===", "ok");
+}
+
+/* ---------- Recherche pseudo ---------- */
+async function searchUsername(u) {
+  log("=== PSEUDO: " + u + " ===", "info");
+
+  // GitHub (API directe, pas de proxy, CORS autorisé)
+  try {
+    log("→ GitHub API…", "info");
+    const r = await fetch("https://api.github.com/users/" + encodeURIComponent(u));
+    log("  status: " + r.status, "info");
     if (r.status === 200) {
-      const txt = await r.text();
-      return { exists: txt.length > 0, reason: txt.length > 0 ? "avatar Gravatar public trouvé" : "aucun Gravatar" };
+      const j = await r.json();
+      log("✓ GitHub trouvé: " + j.login + " (" + j.public_repos + " repos)", "ok");
+    } else if (r.status === 404) {
+      log("✗ pas de compte GitHub", "warn");
     }
-    return { exists: false, reason: "aucun Gravatar public" };
-  } catch {
-    return { exists: false, reason: "vérification impossible" };
+  } catch (e) {
+    log("❌ GitHub échec: " + e.message, "err");
   }
-}
 
-async function checkHIBP(email) {
+  // Reddit (API directe)
   try {
-    const url = `https://haveibeenpwned.com/api/v3/breachedaccount/${encodeURIComponent(email)}?truncateResponse=true`;
-    const r = await P(url);
-    if (r.status === 404) return { exists: false, breaches: [], reason: "aucune fuite connue" };
+    log("→ Reddit API…", "info");
+    const r = await fetch("https://www.reddit.com/user/" + encodeURIComponent(u) + "/about.json");
+    log("  status: " + r.status, "info");
     if (r.status === 200) {
-      const data = await r.json();
-      return { exists: true, breaches: data.map(b => b.Name), reason: `${data.length} fuite(s) connue(s)` };
+      const j = await r.json();
+      if (j?.data?.name) {
+        log("✓ Reddit trouvé: " + j.data.name + " (karma: " + j.data.link_karma + ")", "ok");
+      }
+    } else if (r.status === 404) {
+      log("✗ pas de compte Reddit", "warn");
     }
-    if (r.status === 401) return { exists: false, breaches: [], reason: "API HIBP requiert une clé" };
-    return { exists: false, breaches: [], reason: `HIBP: HTTP ${r.status}` };
-  } catch {
-    return { exists: false, breaches: [], reason: "HIBP inaccessible" };
+  } catch (e) {
+    log("❌ Reddit échec: " + e.message, "err");
   }
-}
 
-async function checkMX(domain) {
+  // GitLab (API directe)
   try {
-    const url = `https://dns.google/resolve?name=${encodeURIComponent(domain)}&type=MX`;
-    const r = await fetch(url);
-    if (!r.ok) return { hasMX: false, records: [], reason: `DNS: HTTP ${r.status}` };
-    const j = await r.json();
-    const records = (j.Answer || []).filter(a => a.type === 15).map(a => a.data);
-    return { hasMX: records.length > 0, records, reason: records.length > 0 ? `${records.length} serveur(s)` : "aucun MX" };
-  } catch {
-    return { hasMX: false, records: [], reason: "DNS inaccessible" };
+    log("→ GitLab API…", "info");
+    const r = await fetch("https://gitlab.com/api/v4/users?username=" + encodeURIComponent(u));
+    log("  status: " + r.status, "info");
+    if (r.ok) {
+      const j = await r.json();
+      if (Array.isArray(j) && j.length > 0) {
+        log("✓ GitLab trouvé: " + j[0].username, "ok");
+      } else {
+        log("✗ pas de compte GitLab", "warn");
+      }
+    }
+  } catch (e) {
+    log("❌ GitLab échec: " + e.message, "err");
   }
-}
 
-async function checkA(domain) {
+  // Test via proxy sur 1 plateforme (pour voir si le proxy marche)
   try {
-    const url = `https://dns.google/resolve?name=${encodeURIComponent(domain)}&type=A`;
-    const r = await fetch(url);
-    if (!r.ok) return { hasA: false, records: [] };
-    const j = await r.json();
-    const records = (j.Answer || []).filter(a => a.type === 1).map(a => a.data);
-    return { hasA: records.length > 0, records };
-  } catch {
-    return { hasA: false, records: [] };
+    log("→ test proxy sur Instagram…", "info");
+    const r = await fetchViaProxy("https://www.instagram.com/" + encodeURIComponent(u) + "/");
+    const html = await r.text();
+    log("  HTML reçu: " + html.length + " caractères", "info");
+    if (html.toLowerCase().includes("sorry, this page isn't available")) {
+      log("✗ compte Instagram inexistant", "warn");
+    } else if (html.toLowerCase().includes("og:title")) {
+      log("✓ Instagram semble exister (og:title trouvé)", "ok");
+    } else {
+      log("? Instagram: résultat ambigu", "warn");
+    }
+  } catch (e) {
+    log("❌ proxy Instagram échec: " + e.message, "err");
   }
+
+  log("=== FIN PSEUDO ===", "ok");
 }
 
-/* ============================================================
-   RENDU — EMAIL
-   ============================================================ */
-async function renderEmail(email) {
-  const out = document.getElementById("out");
-  out.innerHTML = `<div class="status" id="status">analyse de l'email…</div>`;
+/* ---------- Recherche prénom nom ---------- */
+async function searchFullname(name) {
+  const u = name.trim().replace(/\s+/g, "").toLowerCase();
+  log("=== PRÉNOM NOM: " + name + " (transformé en: " + u + ") ===", "info");
+  await searchUsername(u);
+}
 
-  if (!isValidEmail(email)) {
-    out.innerHTML = `<div class="none">format d'email invalide</div>`;
+/* ---------- Clic ---------- */
+document.getElementById("go").addEventListener("click", async () => {
+  clearLog();
+  const type = document.getElementById("type").value;
+  const target = document.getElementById("target").value.trim();
+
+  log("🚀 Démarrage recherche", "ok");
+  log("type: " + type, "info");
+  log("cible: " + target, "info");
+  log("");
+
+  if (!target) {
+    log("❌ cible vide", "err");
     return;
   }
 
-  const domain = email.toLowerCase().split("@")[1];
-
-  const [mx, a] = await Promise.all([checkMX(domain), checkA(domain)]);
-
-  document.getElementById("status").textContent = "vérification Gravatar…";
-  const gravatar = await checkGravatar(email);
-
-  document.getElementById("status").textContent = "vérification fuites (HIBP)…";
-  const hibp = await checkHIBP(email);
-
-  out.innerHTML = "";
-
-  const head = document.createElement("div");
-  head.className = "status";
-  head.textContent = `résultats pour ${email}`;
-  out.appendChild(head);
-
-  // Section 1 : Validité technique
-  const s1 = document.createElement("div");
-  s1.className = "section-title";
-  s1.textContent = "Validité technique";
-  out.appendChild(s1);
-
-  addInfoCard(out, {
-    dotClass: "blue",
-    title: "Format email",
-    meta: "RFC 5322",
-    badge: { text: "valide", cls: "ok" }
-  });
-
-  addInfoCard(out, {
-    dotClass: mx.hasMX ? "blue" : "red",
-    title: "Serveurs MX du domaine",
-    meta: mx.hasMX ? mx.records.slice(0,3).join(" · ") : mx.reason,
-    badge: mx.hasMX ? { text: `${mx.records.length} MX`, cls: "ok" } : { text: "aucun", cls: "neg" }
-  });
-
-  if (a.hasA) {
-    addInfoCard(out, {
-      dotClass: "gray",
-      title: "Enregistrement A",
-      meta: a.records.slice(0,3).join(" · ")
-    });
+  try {
+    if (type === "email") {
+      await searchEmail(target);
+    } else if (type === "username") {
+      await searchUsername(target);
+    } else {
+      await searchFullname(target);
+    }
+  } catch (e) {
+    log("❌ ERREUR GLOBALE: " + e.message, "err");
   }
-
-  // Section 2 : Présence publique
-  const s2 = document.createElement("div");
-  s2.className = "section-title";
-  s2.textContent = "Présence publique";
-  out.appendChild(s2);
-
-  addInfoCard(out, {
-    dotClass: gravatar.exists ? "blue" : "gray",
-    title: "Gravatar",
-    meta: gravatar.exists
-      ? "Un avatar public est associé à cet email."
-      : "Aucun avatar Gravatar public associé.",
-    badge: gravatar.exists
-      ? { text: "existe", cls: "ok" }
-      : { text: "aucun", cls: "neg" }
-  });
-
-  // Section 3 : Fuites
-  const s3 = document.createElement("div");
-  s3.className = "section-title";
-  s3.textContent = "Fuites de données connues";
-  out.appendChild(s3);
-
-  if (hibp.exists && hibp.breaches.length) {
-    addInfoCard(out, {
-      dotClass: "red",
-      title: `Have I Been Pwned — ${hibp.breaches.length} fuite(s)`,
-      meta: hibp.breaches.join(", "),
-      badge: { text: "compromis", cls: "neg" }
-    });
-  } else {
-    addInfoCard(out, {
-      dotClass: "gray",
-      title: "Have I Been Pwned",
-      meta: hibp.reason || "aucune fuite trouvée",
-      badge: { text: hibp.reason?.includes("clé") ? "indispo" : "aucune", cls: hibp.reason?.includes("clé") ? "warn" : "ok" }
-    });
-  }
-}
-
-/* ============================================================
-   RENDU — PSEUDO / NOM
-   ============================================================ */
-async function renderIdentity(target) {
-  const out = document.getElementById("out");
-  const norm = target.trim().replace(/\s+/g,"").toLowerCase();
-
-  out.innerHTML = `<div class="status" id="status">analyse de ${PLATFORMS.length} plateformes…</div>`;
-
-  let done = 0, found = 0;
-  const foundEls = [];
-
-  PLATFORMS.forEach(([name, urlFn, checker]) => {
-    const url = urlFn(norm);
-    Promise.resolve(checker(norm, name)).then(res => {
-      done++;
-      if (res && res.exists && res.confidence >= 0.5) {
-        found++;
-        const div = document.createElement("div");
-        div.className = "card";
-        const conf = Math.round((res.confidence || 0) * 100);
-        const badgeCls = res.confidence >= 0.85 ? "ok" : "warn";
-        div.innerHTML = `
-          <div class="dot"></div>
-          <div class="info">
-            <a href="${url}" target="_blank" rel="noopener">${name}
-              <span class="badge ${badgeCls}">${conf}%</span>
-            </a>
-            <div class="meta">${url}</div>
-            <div class="meta">${escapeHtml(res.reason || "")}</div>
-          </div>
-        `;
-        foundEls.push(div);
-      }
-      const st = document.getElementById("status");
-      if (st) st.textContent = `${done}/${PLATFORMS.length} · ${found} trouvé(s)`;
-      if (done === PLATFORMS.length) {
-        out.innerHTML = "";
-        if (found === 0) {
-          out.innerHTML = `<div class="none">aucun compte trouvé</div>`;
-        } else {
-          const head = document.createElement("div");
-          head.className = "status";
-          head.textContent = `${found} compte(s) trouvé(s)`;
-          out.appendChild(head);
-          foundEls.forEach(el => out.appendChild(el));
-        }
-      }
-    }).catch(() => {
-      done++;
-      const st = document.getElementById("status");
-      if (st) st.textContent = `${done}/${PLATFORMS.length} · ${found} trouvé(s)`;
-      if (done === PLATFORMS.length) {
-        out.innerHTML = "";
-        if (found === 0) {
-          out.innerHTML = `<div class="none">aucun compte trouvé</div>`;
-        } else {
-          const head = document.createElement("div");
-          head.className = "status";
-          head.textContent = `${found} compte(s) trouvé(s)`;
-          out.appendChild(head);
-          foundEls.forEach(el => out.appendChild(el));
-        }
-      }
-    });
-  });
-}
-
-/* ============================================================
-   UTILITAIRES
-   ============================================================ */
-function addInfoCard(parent, {dotClass, title, meta, badge}) {
-  const c = document.createElement("div");
-  c.className = "card info-card";
-  c.innerHTML = `
-    <div class="dot ${dotClass}"></div>
-    <div class="info">
-      <div class="title">${escapeHtml(title)}${badge ? ` <span class="badge ${badge.cls}">${escapeHtml(badge.text)}</span>` : ""}</div>
-      <div class="meta">${escapeHtml(meta || "")}</div>
-    </div>
-  `;
-  parent.appendChild(c);
-}
-
-function escapeHtml(s) {
-  return String(s ?? "").replace(/[&<>"
+});
+</script>
+</body>
+</html>
