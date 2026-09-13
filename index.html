@@ -13,6 +13,7 @@
   :root {
     --bg:#000;
     --card:#0a0a0a;
+    --card-hover:#0d0d0d;
     --border:#1a1a1a;
     --border-hover:#2a2a2a;
     --text:#eaeaea;
@@ -25,54 +26,107 @@
     --orange-dim:#2a1a0a;
     --red:#ff6b6b;
     --blue:#4da3ff;
+    --input-bg:#0a0a0a;
+    --input-focus-bg:#0d0d0d;
+    --row-border:#141414;
+    --overlay:rgba(0,0,0,0.4);
+  }
+
+  body.light {
+    --bg:#f5f5f7;
+    --card:#ffffff;
+    --card-hover:#fafafa;
+    --border:#e0e0e5;
+    --border-hover:#c8c8d0;
+    --text:#1a1a1a;
+    --text-dim:#888;
+    --text-dimmer:#bbb;
+    --accent:#000;
+    --green-dim:#d4f5e0;
+    --orange-dim:#fde8d4;
+    --input-bg:#ffffff;
+    --input-focus-bg:#fafafa;
+    --row-border:#ececef;
+    --overlay:rgba(255,255,255,0.4);
   }
 
   html, body { height:100%; }
 
   body {
-    background:#000;
+    background:var(--bg);
     color:var(--text);
     font-family:'Inter', -apple-system, 'Segoe UI', Roboto, sans-serif;
     min-height:100vh;
     display:flex;
     justify-content:center;
-    padding:60px 20px;
+    padding:60px 20px 80px;
     overflow-x:hidden;
     position:relative;
+    transition:background 0.4s, color 0.4s;
   }
 
+  /* Fond animé renforcé */
   body::before {
     content:'';
     position:fixed;
     top:-50%; left:-50%;
     width:200%; height:200%;
     background:
-      radial-gradient(circle at 20% 30%, rgba(0,224,122,0.04) 0%, transparent 40%),
-      radial-gradient(circle at 80% 70%, rgba(77,163,255,0.04) 0%, transparent 40%),
-      radial-gradient(circle at 50% 50%, rgba(255,170,77,0.02) 0%, transparent 50%);
-    animation:bgFloat 20s ease-in-out infinite;
+      radial-gradient(circle at 20% 30%, rgba(0,224,122,0.06) 0%, transparent 40%),
+      radial-gradient(circle at 80% 70%, rgba(77,163,255,0.06) 0%, transparent 40%),
+      radial-gradient(circle at 50% 50%, rgba(255,170,77,0.03) 0%, transparent 50%);
+    animation:bgFloat 18s ease-in-out infinite;
     pointer-events:none;
     z-index:0;
   }
 
   @keyframes bgFloat {
     0%,100% { transform:translate(0,0) scale(1); }
-    50% { transform:translate(-2%,2%) scale(1.05); }
+    33% { transform:translate(2%,-2%) scale(1.05); }
+    66% { transform:translate(-2%,2%) scale(1.02); }
   }
 
+  /* Grille animée en fond */
   body::after {
     content:'';
     position:fixed;
     inset:0;
     background-image:
-      linear-gradient(rgba(255,255,255,0.015) 1px, transparent 1px),
-      linear-gradient(90deg, rgba(255,255,255,0.015) 1px, transparent 1px);
-    background-size:40px 40px;
+      linear-gradient(rgba(0,224,122,0.04) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(0,224,122,0.04) 1px, transparent 1px);
+    background-size:50px 50px;
     pointer-events:none;
     z-index:0;
-    mask-image:radial-gradient(ellipse at center, black 20%, transparent 80%);
-    -webkit-mask-image:radial-gradient(ellipse at center, black 20%, transparent 80%);
+    mask-image:radial-gradient(ellipse at center, black 30%, transparent 75%);
+    -webkit-mask-image:radial-gradient(ellipse at center, black 30%, transparent 75%);
+    animation:gridMove 30s linear infinite;
   }
+
+  body.light::after {
+    background-image:
+      linear-gradient(rgba(0,150,90,0.05) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(0,150,90,0.05) 1px, transparent 1px);
+  }
+
+  @keyframes gridMove {
+    from { background-position:0 0; }
+    to { background-position:50px 50px; }
+  }
+
+  /* Barre de progression en haut */
+  .progress-bar {
+    position:fixed;
+    top:0; left:0;
+    height:2px;
+    width:0%;
+    background:linear-gradient(90deg, var(--green), var(--blue));
+    z-index:100;
+    transition:width 0.3s ease-out, opacity 0.3s;
+    opacity:0;
+    box-shadow:0 0 12px rgba(0,224,122,0.6);
+  }
+
+  .progress-bar.active { opacity:1; }
 
   .wrap {
     width:100%; max-width:680px;
@@ -83,11 +137,18 @@
   .header {
     margin-bottom:36px;
     animation:fadeUp 0.6s ease-out;
+    position:relative;
+  }
+
+  .logo-row {
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    margin-bottom:8px;
   }
 
   .logo {
     display:flex; align-items:center; gap:10px;
-    margin-bottom:8px;
   }
 
   .logo-mark {
@@ -121,26 +182,63 @@
   h1 {
     font-size:1.35rem;
     font-weight:700;
-    color:#fff;
+    color:var(--text);
     letter-spacing:-0.02em;
   }
 
-  .sub {
+  /* Toggle mode clair/sombre */
+  .theme-toggle {
+    width:34px; height:34px;
+    border-radius:8px;
+    background:var(--card);
+    border:1px solid var(--border);
+    display:flex; align-items:center; justify-content:center;
+    cursor:pointer;
+    transition:border-color 0.2s, transform 0.2s, background 0.2s;
+    flex-shrink:0;
+  }
+
+  .theme-toggle:hover {
+    border-color:var(--border-hover);
+    transform:rotate(15deg);
+  }
+
+  .theme-toggle svg {
+    width:16px; height:16px;
+    color:var(--text-dim);
+    transition:color 0.2s;
+  }
+
+  .theme-toggle:hover svg { color:var(--text); }
+
+  /* Compteur animé */
+  .counter-row {
+    display:flex;
+    align-items:baseline;
+    gap:6px;
     font-size:0.75rem;
     color:var(--text-dim);
     letter-spacing:0.02em;
-    display:flex;
-    align-items:center;
-    gap:6px;
+    margin-top:6px;
   }
 
-  .sub::before {
+  .counter-row::before {
     content:'';
     width:4px; height:4px;
     border-radius:50%;
     background:var(--green);
     box-shadow:0 0 8px var(--green);
     animation:pulse 2s ease-in-out infinite;
+    flex-shrink:0;
+    align-self:center;
+  }
+
+  .counter {
+    font-family:'JetBrains Mono', monospace;
+    font-weight:600;
+    color:var(--green);
+    font-size:0.8rem;
+    letter-spacing:0.02em;
   }
 
   @keyframes pulse {
@@ -169,10 +267,10 @@
   }
 
   input {
-    background:#0a0a0a;
+    background:var(--input-bg);
     border:1px solid var(--border);
     color:var(--text);
-    padding:14px 14px 14px 42px;
+    padding:14px 42px 14px 42px;
     border-radius:10px;
     font-size:0.9rem;
     font-family:inherit;
@@ -186,18 +284,40 @@
   input::placeholder { color:var(--text-dimmer); }
 
   input:focus {
-    border-color:#333;
-    background:#0d0d0d;
-    box-shadow:0 0 0 4px rgba(255,255,255,0.03);
+    border-color:var(--border-hover);
+    background:var(--input-focus-bg);
+    box-shadow:0 0 0 4px rgba(0,224,122,0.05);
   }
 
-  .input-wrap:focus-within .input-icon { color:#888; }
+  .input-wrap:focus-within .input-icon { color:var(--green); }
+
+  /* Bouton clear */
+  .input-clear {
+    position:absolute;
+    right:12px;
+    top:50%;
+    transform:translateY(-50%);
+    width:20px; height:20px;
+    border-radius:50%;
+    background:var(--border);
+    border:none;
+    display:none;
+    align-items:center;
+    justify-content:center;
+    cursor:pointer;
+    z-index:3;
+    transition:background 0.15s;
+  }
+
+  .input-clear:hover { background:var(--border-hover); }
+  .input-clear.visible { display:flex; }
+  .input-clear svg { width:10px; height:10px; color:var(--text-dim); }
 
   /* Button */
-  button {
+  button.primary {
     width:100%;
-    background:#fff;
-    color:#000;
+    background:var(--accent);
+    color:var(--bg);
     border:none;
     padding:14px;
     border-radius:10px;
@@ -212,42 +332,31 @@
     animation:fadeUp 0.6s ease-out 0.2s backwards;
   }
 
-  button:hover:not(:disabled) {
+  button.primary:hover:not(:disabled) {
     opacity:0.9;
-    box-shadow:0 8px 24px rgba(255,255,255,0.1);
+    box-shadow:0 8px 24px rgba(0,224,122,0.15);
   }
 
-  button:active:not(:disabled) { transform:scale(0.99); }
+  button.primary:active:not(:disabled) { transform:scale(0.99); }
 
-  button:disabled {
-    background:#1a1a1a;
-    color:#555;
+  button.primary:disabled {
+    background:var(--border);
+    color:var(--text-dimmer);
     cursor:default;
   }
 
-  button::after {
-    content:'';
-    position:absolute;
-    inset:0;
-    background:linear-gradient(135deg, transparent 30%, rgba(0,0,0,0.1) 50%, transparent 70%);
-    transform:translateX(-100%);
-    transition:transform 0.6s;
-  }
-
-  button:hover:not(:disabled)::after { transform:translateX(100%); }
-
-  button .spinner {
+  button.primary .spinner {
     display:none;
     width:14px; height:14px;
-    border:2px solid rgba(0,0,0,0.2);
-    border-top-color:#000;
+    border:2px solid rgba(0,0,0,0.15);
+    border-top-color:currentColor;
     border-radius:50%;
     animation:spin 0.7s linear infinite;
     margin-right:8px;
     vertical-align:middle;
   }
 
-  button.loading .spinner { display:inline-block; }
+  button.primary.loading .spinner { display:inline-block; }
 
   @keyframes spin { to { transform:rotate(360deg); } }
 
@@ -270,13 +379,42 @@
     animation:fadeUp 0.4s ease-out;
   }
 
+  /* Squelettes de chargement */
+  .skeleton {
+    background:var(--card);
+    border:1px solid var(--border);
+    border-radius:12px;
+    padding:16px 18px;
+    margin-bottom:12px;
+    animation:fadeUp 0.3s ease-out;
+  }
+
+  .skel-line {
+    height:10px;
+    border-radius:4px;
+    background:linear-gradient(90deg, var(--border) 0%, var(--border-hover) 50%, var(--border) 100%);
+    background-size:200% 100%;
+    animation:skelShimmer 1.5s linear infinite;
+    margin-bottom:8px;
+  }
+
+  .skel-line.title { width:60%; height:14px; margin-bottom:12px; }
+  .skel-line.short { width:35%; }
+  .skel-line.medium { width:80%; }
+
+  @keyframes skelShimmer {
+    0% { background-position:200% 0; }
+    100% { background-position:-200% 0; }
+  }
+
+  /* Cards */
   .card {
     background:var(--card);
     border:1px solid var(--border);
     border-radius:12px;
     padding:16px 18px;
     margin-bottom:12px;
-    transition:border-color 0.2s, transform 0.2s, box-shadow 0.2s;
+    transition:border-color 0.2s, transform 0.2s, box-shadow 0.2s, background 0.2s;
     animation:cardIn 0.5s cubic-bezier(0.22, 1, 0.36, 1) backwards;
     position:relative;
     overflow:hidden;
@@ -293,8 +431,9 @@
 
   .card:hover {
     border-color:var(--border-hover);
+    background:var(--card-hover);
     transform:translateY(-1px);
-    box-shadow:0 8px 24px rgba(0,0,0,0.4);
+    box-shadow:0 8px 24px rgba(0,0,0,0.2);
   }
 
   .card:hover::before { opacity:1; }
@@ -311,13 +450,37 @@
     gap:12px;
     margin-bottom:14px;
     padding-bottom:12px;
-    border-bottom:1px solid #141414;
+    border-bottom:1px solid var(--row-border);
   }
+
+  .card-header-left {
+    display:flex;
+    align-items:flex-start;
+    gap:10px;
+    min-width:0;
+    flex:1;
+  }
+
+  .card-avatar {
+    width:36px; height:36px;
+    border-radius:50%;
+    background:linear-gradient(135deg, var(--green) 0%, var(--blue) 100%);
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    color:#000;
+    font-weight:700;
+    font-size:0.85rem;
+    flex-shrink:0;
+    letter-spacing:-0.03em;
+  }
+
+  .card-title-block { min-width:0; flex:1; }
 
   .card-title {
     font-size:0.95rem;
     font-weight:600;
-    color:#fff;
+    color:var(--text);
     word-break:break-word;
     letter-spacing:-0.01em;
   }
@@ -329,6 +492,33 @@
     font-family:'JetBrains Mono', monospace;
   }
 
+  .card-actions {
+    display:flex;
+    gap:6px;
+    flex-shrink:0;
+  }
+
+  .icon-btn {
+    width:28px; height:28px;
+    border-radius:6px;
+    background:transparent;
+    border:1px solid var(--border);
+    display:flex; align-items:center; justify-content:center;
+    cursor:pointer;
+    transition:border-color 0.15s, background 0.15s, transform 0.15s;
+  }
+
+  .icon-btn:hover {
+    border-color:var(--border-hover);
+    background:var(--card-hover);
+    transform:scale(1.05);
+  }
+
+  .icon-btn:active { transform:scale(0.95); }
+
+  .icon-btn svg { width:13px; height:13px; color:var(--text-dim); }
+  .icon-btn:hover svg { color:var(--text); }
+
   .score {
     font-size:0.65rem;
     padding:4px 9px;
@@ -339,6 +529,7 @@
     flex-shrink:0;
     font-family:'JetBrains Mono', monospace;
     border:1px solid rgba(0,224,122,0.2);
+    align-self:flex-start;
   }
 
   .score.mid {
@@ -377,9 +568,15 @@
     word-break:break-word;
     flex:1;
     font-size:0.82rem;
+    display:flex;
+    align-items:center;
+    gap:6px;
+    justify-content:space-between;
   }
 
-  .row-value.mono {
+  .row-value .val-text { flex:1; min-width:0; word-break:break-word; }
+
+  .row-value.mono .val-text {
     font-family:'JetBrains Mono', monospace;
     font-size:0.75rem;
   }
@@ -395,9 +592,35 @@
     text-decoration:underline;
   }
 
+  .copy-btn {
+    width:20px; height:20px;
+    border-radius:5px;
+    background:transparent;
+    border:1px solid var(--border);
+    display:flex; align-items:center; justify-content:center;
+    cursor:pointer;
+    flex-shrink:0;
+    opacity:0;
+    transition:opacity 0.15s, border-color 0.15s, background 0.15s, transform 0.15s;
+  }
+
+  .card:hover .copy-btn { opacity:1; }
+
+  .copy-btn:hover {
+    border-color:var(--border-hover);
+    background:var(--card-hover);
+  }
+
+  .copy-btn:active { transform:scale(0.9); }
+
+  .copy-btn svg { width:11px; height:11px; color:var(--text-dim); }
+  .copy-btn:hover svg { color:var(--green); }
+  .copy-btn.copied svg { color:var(--green); }
+  .copy-btn.copied { border-color:var(--green); }
+
   .section-title {
     font-size:0.7rem;
-    color:#888;
+    color:var(--text-dim);
     text-transform:uppercase;
     letter-spacing:1.5px;
     margin:22px 0 12px;
@@ -433,8 +656,8 @@
   }
 
   .raw-toggle:hover {
-    color:#aaa;
-    background:rgba(255,255,255,0.02);
+    color:var(--text);
+    background:var(--card);
   }
 
   .raw-toggle svg {
@@ -445,13 +668,13 @@
   .raw-toggle.open svg { transform:rotate(90deg); }
 
   .raw {
-    background:#080808;
+    background:var(--card);
     border:1px solid var(--border);
     border-radius:10px;
     padding:14px;
     margin-top:10px;
     font-size:0.65rem;
-    color:#777;
+    color:var(--text-dim);
     max-height:400px;
     overflow:auto;
     white-space:pre-wrap;
@@ -469,33 +692,157 @@
     to { opacity:1; transform:translateY(0); }
   }
 
+  /* Bouton flottant remonter */
+  .scroll-top {
+    position:fixed;
+    bottom:24px;
+    right:24px;
+    width:44px; height:44px;
+    border-radius:50%;
+    background:var(--accent);
+    color:var(--bg);
+    border:none;
+    cursor:pointer;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    box-shadow:0 4px 20px rgba(0,224,122,0.3);
+    opacity:0;
+    pointer-events:none;
+    transform:translateY(20px);
+    transition:opacity 0.3s, transform 0.3s, background 0.3s;
+    z-index:50;
+  }
+
+  .scroll-top.visible {
+    opacity:1;
+    pointer-events:auto;
+    transform:translateY(0);
+  }
+
+  .scroll-top:hover {
+    transform:translateY(-2px);
+    box-shadow:0 6px 24px rgba(0,224,122,0.4);
+  }
+
+  .scroll-top:active { transform:translateY(0) scale(0.95); }
+
+  .scroll-top svg {
+    width:18px; height:18px;
+    color:var(--bg);
+  }
+
+  /* Toasts */
+  .toast-container {
+    position:fixed;
+    bottom:24px;
+    left:50%;
+    transform:translateX(-50%);
+    display:flex;
+    flex-direction:column;
+    gap:8px;
+    z-index:200;
+    pointer-events:none;
+  }
+
+  .toast {
+    background:var(--card);
+    border:1px solid var(--border-hover);
+    color:var(--text);
+    padding:10px 16px;
+    border-radius:10px;
+    font-size:0.78rem;
+    font-weight:500;
+    box-shadow:0 8px 32px rgba(0,0,0,0.4);
+    animation:toastIn 0.3s cubic-bezier(0.22, 1, 0.36, 1);
+    display:flex;
+    align-items:center;
+    gap:8px;
+    max-width:90vw;
+  }
+
+  .toast.success { border-color:rgba(0,224,122,0.4); }
+  .toast.error { border-color:rgba(255,107,107,0.4); }
+
+  .toast::before {
+    content:'';
+    width:6px; height:6px;
+    border-radius:50%;
+    background:var(--green);
+    box-shadow:0 0 8px var(--green);
+    flex-shrink:0;
+  }
+
+  .toast.error::before {
+    background:var(--red);
+    box-shadow:0 0 8px var(--red);
+  }
+
+  .toast.leaving {
+    animation:toastOut 0.3s ease-out forwards;
+  }
+
+  @keyframes toastIn {
+    from { opacity:0; transform:translateY(20px) scale(0.95); }
+    to { opacity:1; transform:translateY(0) scale(1); }
+  }
+
+  @keyframes toastOut {
+    to { opacity:0; transform:translateY(20px) scale(0.95); }
+  }
+
+  /* Watermark */
+  .watermark {
+    text-align:center;
+    font-size:0.65rem;
+    color:var(--text-dimmer);
+    margin-top:48px;
+    padding-top:24px;
+    border-top:1px solid var(--border);
+    letter-spacing:0.05em;
+  }
+
+  /* Scrollbar */
   ::-webkit-scrollbar { width:6px; height:6px; }
   ::-webkit-scrollbar-track { background:transparent; }
-  ::-webkit-scrollbar-thumb { background:#222; border-radius:3px; }
-  ::-webkit-scrollbar-thumb:hover { background:#333; }
+  ::-webkit-scrollbar-thumb { background:var(--border-hover); border-radius:3px; }
+  ::-webkit-scrollbar-thumb:hover { background:var(--text-dimmer); }
 
-  ::selection { background:rgba(0,224,122,0.3); color:#fff; }
+  ::selection { background:rgba(0,224,122,0.3); color:var(--text); }
 
   @media (max-width:480px) {
-    body { padding:40px 16px; }
+    body { padding:40px 16px 80px; }
     .row { flex-direction:column; gap:2px; }
     .row-label { min-width:0; }
+    .copy-btn { opacity:1; }
   }
 </style>
 </head>
 <body>
+
+<div class="progress-bar" id="progressBar"></div>
+
 <div class="wrap">
   <div class="header">
-    <div class="logo">
-      <div class="logo-mark">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-          <circle cx="11" cy="11" r="8"></circle>
-          <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
-        </svg>
+    <div class="logo-row">
+      <div class="logo">
+        <div class="logo-mark">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="11" cy="11" r="8"></circle>
+            <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+          </svg>
+        </div>
+        <h1>SeekIt</h1>
       </div>
-      <h1>SeekIt</h1>
+      <button class="theme-toggle" id="themeToggle" aria-label="Mode">
+        <svg id="themeIcon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+        </svg>
+      </button>
     </div>
-    <div class="sub">Rechercher sur +22Md de Base de Données</div>
+    <div class="counter-row">
+      Recherche sur <span class="counter" id="counter">0</span> de Base de Données
+    </div>
   </div>
 
   <div class="input-wrap">
@@ -504,236 +851,134 @@
       <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
     </svg>
     <input id="target" placeholder="prénom nom..." autocomplete="off" spellcheck="false">
+    <button class="input-clear" id="inputClear" aria-label="Effacer">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+        <line x1="18" y1="6" x2="6" y2="18"></line>
+        <line x1="6" y1="6" x2="18" y2="18"></line>
+      </svg>
+    </button>
   </div>
 
-  <button id="go">
+  <button class="primary" id="go">
     <span class="spinner"></span>
     <span class="btn-text">Rechercher</span>
   </button>
 
   <div id="out"></div>
+
+  <div class="watermark">SeekIt © 2026 — Tous droits réservés</div>
 </div>
+
+<button class="scroll-top" id="scrollTop" aria-label="Remonter">
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+    <polyline points="18 15 12 9 6 15"></polyline>
+  </svg>
+</button>
+
+<div class="toast-container" id="toastContainer"></div>
 
 <script>
 const PROXY_URL = "/api/search";
 
-function escapeHtml(s) {
-  return String(s ?? "").replace(/[&<>"']/g, m => ({
-    "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"
-  }[m]));
-}
-
-function validate(t) {
-  t = (t || "").trim();
-  if (t.length < 3) return false;
-  return /^[a-zA-ZÀ-ÿ'\- ]{2,}$/.test(t);
-}
-
-const LABELS = {
-  _source_db: "Source",
-  _confidence: "Fiabilité",
-  adresse: "Adresse",
-  annee_naissance: "Année naissance",
-  code_postal: "Code postal",
-  date_naissance: "Date de naissance",
-  departement: "Département",
-  email: "Email",
-  lieu_naissance: "Lieu de naissance",
-  nom_famille: "Nom",
-  nom_utilisateur: "Pseudo",
-  pays: "Pays",
-  prenom: "Prénom",
-  ville: "Ville",
-  telephone: "Téléphone",
-  phone: "Téléphone",
-  genre: "Genre",
-  sexe: "Sexe"
-};
-
-const ORDER = [
-  "prenom","nom_famille","date_naissance","annee_naissance","lieu_naissance",
-  "adresse","code_postal","ville","departement","pays",
-  "email","telephone","phone","nom_utilisateur",
-  "_source_db","_confidence","genre","sexe"
-];
-
-function labelOf(k) {
-  return LABELS[k] || k.replace(/_/g, " ");
-}
-
-async function searchBrixHub(fullName) {
-  const parts = fullName.trim().split(/\s+/);
-  const firstName = parts[0] || "";
-  const lastName = parts.slice(1).join(" ") || "";
-
-  const url = `${PROXY_URL}?first_name=${encodeURIComponent(firstName)}&last_name=${encodeURIComponent(lastName)}`;
-
-  try {
-    const res = await fetch(url);
-    const text = await res.text();
-    let data = null;
-    try { data = JSON.parse(text); } catch { data = text; }
-    return { ok: res.ok, status: res.status, data };
-  } catch (err) {
-    return { ok: false, status: 0, error: err.message };
+/* ============================================================
+   COMPTEUR ANIMÉ — 22 Md
+   ============================================================ */
+(function animateCounter() {
+  const el = document.getElementById("counter");
+  const target = 22000000000;
+  const duration = 2200;
+  const start = performance.now();
+  const format = n => {
+    if (n >= 1e9) return (n / 1e9).toFixed(1).replace(".0", "") + " Md";
+    if (n >= 1e6) return (n / 1e6).toFixed(0) + " M";
+    return n.toLocaleString("fr-FR");
+  };
+  function step(now) {
+    const t = Math.min((now - start) / duration, 1);
+    const eased = 1 - Math.pow(1 - t, 3);
+    el.textContent = format(Math.floor(target * eased));
+    if (t < 1) requestAnimationFrame(step);
+    else el.textContent = "22 Md";
   }
+  requestAnimationFrame(step);
+})();
+
+/* ============================================================
+   BARRE DE PROGRESSION
+   ============================================================ */
+const progressBar = document.getElementById("progressBar");
+let progressTimer = null;
+
+function startProgress() {
+  let p = 0;
+  progressBar.classList.add("active");
+  progressBar.style.width = "0%";
+  progressTimer = setInterval(() => {
+    p += Math.random() * 12;
+    if (p > 90) p = 90;
+    progressBar.style.width = p + "%";
+  }, 200);
 }
 
-function findArray(obj, depth = 0) {
-  if (depth > 4 || !obj) return null;
-  if (Array.isArray(obj)) return obj;
-  if (typeof obj === "object") {
-    for (const k of ["results","data","items","records","hits","matches","persons","people"]) {
-      if (Array.isArray(obj[k])) return obj[k];
-    }
-    for (const k of Object.keys(obj)) {
-      const r = findArray(obj[k], depth + 1);
-      if (r) return r;
-    }
-  }
-  return null;
+function finishProgress() {
+  clearInterval(progressTimer);
+  progressBar.style.width = "100%";
+  setTimeout(() => {
+    progressBar.classList.remove("active");
+    setTimeout(() => { progressBar.style.width = "0%"; }, 300);
+  }, 300);
 }
 
-function scoreClass(c) {
-  const n = Number(c);
-  if (!n || isNaN(n)) return "";
-  if (n >= 70) return "";
-  if (n >= 40) return "mid";
-  return "low";
+/* ============================================================
+   TOASTS
+   ============================================================ */
+const toastContainer = document.getElementById("toastContainer");
+
+function toast(message, type = "success", duration = 3000) {
+  const el = document.createElement("div");
+  el.className = `toast ${type}`;
+  el.textContent = message;
+  toastContainer.appendChild(el);
+  setTimeout(() => {
+    el.classList.add("leaving");
+    setTimeout(() => el.remove(), 300);
+  }, duration);
 }
 
-function renderCard(item, idx) {
-  const prenom = item.prenom || item.first_name || "";
-  const nom = item.nom_famille || item.last_name || item.name || "";
-  const title = [prenom, nom].filter(Boolean).join(" ") || item.email || `Résultat ${idx + 1}`;
-  const sub = item.email && (prenom || nom) ? item.email : "";
+/* ============================================================
+   THEME TOGGLE
+   ============================================================ */
+const themeToggle = document.getElementById("themeToggle");
+const themeIcon = document.getElementById("themeIcon");
 
-  const conf = item._confidence ?? item.confidence ?? null;
-  const scoreHtml = conf != null
-    ? `<div class="score ${scoreClass(conf)}">${escapeHtml(conf)}%</div>`
-    : "";
+const sunSVG = `<circle cx="12" cy="12" r="4"></circle><line x1="12" y1="2" x2="12" y2="4"></line><line x1="12" y1="20" x2="12" y2="22"></line><line x1="4.93" y1="4.93" x2="6.34" y2="6.34"></line><line x1="17.66" y1="17.66" x2="19.07" y2="19.07"></line><line x1="2" y1="12" x2="4" y2="12"></line><line x1="20" y1="12" x2="22" y2="12"></line><line x1="4.93" y1="19.07" x2="6.34" y2="17.66"></line><line x1="17.66" y1="6.34" x2="19.07" y2="4.93"></line>`;
+const moonSVG = `<path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>`;
 
-  const keys = Object.keys(item).filter(k =>
-    item[k] != null && item[k] !== "" && typeof item[k] !== "object"
-  );
-  const sorted = [
-    ...ORDER.filter(k => keys.includes(k)),
-    ...keys.filter(k => !ORDER.includes(k))
-  ];
-
-  const monoKeys = ["email","telephone","phone","nom_utilisateur","code_postal","date_naissance"];
-
-  const rows = sorted.map(k => {
-    let v = item[k];
-    let html;
-    if (k === "email") {
-      html = `<a href="mailto:${escapeHtml(v)}">${escapeHtml(v)}</a>`;
-    } else if (k === "telephone" || k === "phone") {
-      html = `<a href="tel:${escapeHtml(v)}">${escapeHtml(v)}</a>`;
-    } else {
-      html = escapeHtml(v);
-    }
-    const monoClass = monoKeys.includes(k) ? " mono" : "";
-    return `<div class="row"><div class="row-label">${escapeHtml(labelOf(k))}</div><div class="row-value${monoClass}">${html}</div></div>`;
-  }).join("");
-
-  return `
-    <div class="card" style="animation-delay:${idx * 0.05}s">
-      <div class="card-header">
-        <div>
-          <div class="card-title">${escapeHtml(title)}</div>
-          ${sub ? `<div class="card-sub">${escapeHtml(sub)}</div>` : ""}
-        </div>
-        ${scoreHtml}
-      </div>
-      ${rows}
-    </div>
-  `;
+function setTheme(light) {
+  document.body.classList.toggle("light", light);
+  themeIcon.innerHTML = light ? sunSVG : moonSVG;
+  try { localStorage.setItem("seekit-theme", light ? "light" : "dark"); } catch {}
 }
 
-function render(result) {
-  const out = document.getElementById("out");
-  out.innerHTML = "";
-
-  if (!result.ok || !result.data) {
-    const err = document.createElement("div");
-    err.className = "err";
-    err.textContent = `Échec (HTTP ${result.status})${result.error ? " — " + result.error : ""}\n\n${JSON.stringify(result.data, null, 2)}`;
-    out.appendChild(err);
-    return;
-  }
-
-  const arr = findArray(result.data) || [];
-
-  const status = document.createElement("div");
-  status.className = "status";
-  status.textContent = `${arr.length} résultat(s) trouvé(s)`;
-  out.appendChild(status);
-
-  if (arr.length === 0) {
-    const none = document.createElement("div");
-    none.className = "none";
-    none.textContent = "aucun résultat";
-    out.appendChild(none);
-  } else {
-    const list = document.createElement("div");
-    arr.forEach((item, i) => {
-      if (typeof item === "string") item = { valeur: item };
-      list.insertAdjacentHTML("beforeend", renderCard(item, i));
-    });
-    out.appendChild(list);
-  }
-
-  const toggle = document.createElement("div");
-  toggle.className = "raw-toggle";
-  toggle.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg> Afficher la réponse brute`;
-  out.appendChild(toggle);
-
-  const raw = document.createElement("div");
-  raw.className = "raw";
-  try { raw.textContent = JSON.stringify(result.data, null, 2); }
-  catch { raw.textContent = String(result.data); }
-  out.appendChild(raw);
-
-  toggle.addEventListener("click", () => {
-    raw.classList.toggle("open");
-    toggle.classList.toggle("open");
-    toggle.innerHTML = toggle.classList.contains("open")
-      ? `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg> Masquer la réponse brute`
-      : `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg> Afficher la réponse brute`;
-  });
-}
-
-document.getElementById("go").addEventListener("click", async () => {
-  const target = document.getElementById("target").value;
-  const out = document.getElementById("out");
-  const btn = document.getElementById("go");
-  const btnText = btn.querySelector(".btn-text");
-
-  if (!validate(target)) {
-    out.innerHTML = `<div class="none">entre un prénom et un nom valides</div>`;
-    return;
-  }
-
-  btn.disabled = true;
-  btn.classList.add("loading");
-  btnText.textContent = "Recherche…";
-
-  try {
-    const result = await searchBrixHub(target.trim());
-    render(result);
-  } catch (e) {
-    out.innerHTML = `<div class="err">${escapeHtml(e.message)}</div>`;
-  } finally {
-    btn.disabled = false;
-    btn.classList.remove("loading");
-    btnText.textContent = "Rechercher";
-  }
+themeToggle.addEventListener("click", () => {
+  const isLight = document.body.classList.contains("light");
+  setTheme(!isLight);
 });
 
-document.getElementById("target").addEventListener("keydown", e => {
-  if (e.key === "Enter") document.getElementById("go").click();
+try {
+  const saved = localStorage.getItem("seekit-theme");
+  if (saved === "light") setTheme(true);
+} catch {}
+
+/* ============================================================
+   INPUT CLEAR
+   ============================================================ */
+const input = document.getElementById("target");
+const inputClear = document.getElementById("inputClear");
+
+input.addEventListener("input", () => {
+  inputClear.classList.toggle("visible", input.value.length > 0);
 });
-</script>
-</body>
-</html>
+
+inputClear.addEventListener("click", () => {
+  input.value =
