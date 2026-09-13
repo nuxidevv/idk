@@ -191,12 +191,6 @@ main {
 .hero {
   text-align: center;
   margin-bottom: 28px;
-  animation: fadeUp 0.8s cubic-bezier(0.4, 0, 0.2, 1) 0.1s both;
-}
-
-@keyframes fadeUp {
-  from { opacity: 0; transform: translateY(24px); }
-  to { opacity: 1; transform: translateY(0); }
 }
 
 .hero h1 {
@@ -214,18 +208,16 @@ main {
 .hero p {
   font-size: 15px;
   color: #6e6e73;
-  max-width: 560px;
+  max-width: 620px;
   margin: 0 auto;
   line-height: 1.55;
 }
 
-/* Stats bar */
 .stats-bar {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
   gap: 12px;
   margin-top: 24px;
-  animation: fadeUp 0.8s cubic-bezier(0.4, 0, 0.2, 1) 0.15s both;
 }
 
 .stat {
@@ -239,9 +231,7 @@ main {
   transition: transform 0.3s ease;
 }
 
-.stat:hover {
-  transform: translateY(-2px);
-}
+.stat:hover { transform: translateY(-2px); }
 
 .stat-val {
   font-size: 22px;
@@ -267,7 +257,6 @@ main {
   border-radius: 24px;
   padding: 24px;
   box-shadow: 0 12px 40px rgba(0,0,0,0.08), 0 2px 8px rgba(0,0,0,0.03), inset 0 1px 0 rgba(255,255,255,0.95);
-  animation: fadeUp 0.8s cubic-bezier(0.4, 0, 0.2, 1) 0.2s both;
   margin-top: 24px;
 }
 
@@ -305,6 +294,7 @@ main {
   color: #ffffff;
   background: linear-gradient(135deg, rgba(0,122,255,0.95), rgba(120,90,255,0.95));
   box-shadow: 0 4px 14px rgba(0,122,255,0.35), inset 0 1px 0 rgba(255,255,255,0.4);
+  transform: scale(1.02);
 }
 
 .tab:hover:not(.active) {
@@ -338,10 +328,7 @@ main {
   box-shadow: 0 2px 10px rgba(0,0,0,0.04), inset 0 1px 0 rgba(255,255,255,0.9);
 }
 
-.input-wrap input::placeholder {
-  color: #a1a1a6;
-  font-weight: 400;
-}
+.input-wrap input::placeholder { color: #a1a1a6; font-weight: 400; }
 
 .input-wrap input:focus {
   background: rgba(255, 255, 255, 0.95);
@@ -420,44 +407,125 @@ main {
 /* LOADER */
 .loader {
   display: none;
-  text-align: center;
-  padding: 32px 20px;
+  margin-top: 28px;
+  background: rgba(255, 255, 255, 0.55);
+  backdrop-filter: blur(40px) saturate(200%);
+  -webkit-backdrop-filter: blur(40px) saturate(200%);
+  border: 1px solid rgba(255, 255, 255, 0.85);
+  border-radius: 24px;
+  padding: 28px;
+  box-shadow: 0 12px 40px rgba(0,0,0,0.08), inset 0 1px 0 rgba(255,255,255,0.95);
 }
 
 .loader.active {
   display: block;
-  animation: fadeIn 0.3s ease;
+  animation: fadeIn 0.4s ease;
 }
 
 @keyframes fadeIn {
-  from { opacity: 0; }
-  to { opacity: 1; }
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.loader-head {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 20px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid rgba(0,0,0,0.06);
 }
 
 .spinner {
-  width: 40px;
-  height: 40px;
+  width: 36px;
+  height: 36px;
   border: 3px solid rgba(0, 122, 255, 0.15);
   border-top-color: #007aff;
   border-right-color: #6c5ce7;
   border-radius: 50%;
   animation: spin 0.9s cubic-bezier(0.5, 0.1, 0.5, 0.9) infinite;
-  margin: 0 auto 14px;
+  flex-shrink: 0;
 }
 
 @keyframes spin { to { transform: rotate(360deg); } }
 
-.loader-text {
-  font-size: 13px;
-  color: #6e6e73;
-  font-weight: 500;
-  margin-bottom: 6px;
+.loader-title {
+  font-size: 15px;
+  font-weight: 700;
+  color: #1d1d1f;
+  letter-spacing: -0.2px;
 }
 
+.loader-sub {
+  font-size: 12px;
+  color: #8e8e93;
+  font-weight: 500;
+  margin-top: 2px;
+}
+
+.loader-steps {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.loader-step {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 13px;
+  color: #8e8e93;
+  font-weight: 500;
+  padding: 8px 12px;
+  border-radius: 10px;
+  background: rgba(255,255,255,0.4);
+  border: 1px solid rgba(255,255,255,0.6);
+  transition: all 0.3s ease;
+}
+
+.loader-step.active {
+  color: #007aff;
+  background: rgba(0,122,255,0.08);
+  border-color: rgba(0,122,255,0.25);
+}
+
+.loader-step.done {
+  color: #20bf6b;
+  background: rgba(32,191,107,0.08);
+  border-color: rgba(32,191,107,0.2);
+}
+
+.loader-step .step-dot {
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  border: 2px solid currentColor;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 9px;
+  font-weight: 800;
+}
+
+.loader-step.active .step-dot {
+  border-color: #007aff;
+  background: rgba(0,122,255,0.15);
+  animation: pulse 1s ease-in-out infinite;
+}
+
+.loader-step.done .step-dot {
+  border-color: #20bf6b;
+  background: #20bf6b;
+  color: #fff;
+}
+
+.loader-step.done .step-dot::after { content: '✓'; }
+.loader-step.active .step-dot::after { content: ''; }
+
 .loader-progress {
-  max-width: 320px;
-  margin: 0 auto;
-  height: 3px;
+  margin-top: 20px;
+  height: 4px;
   background: rgba(0, 122, 255, 0.12);
   border-radius: 2px;
   overflow: hidden;
@@ -468,7 +536,7 @@ main {
   width: 0%;
   background: linear-gradient(90deg, #007aff, #6c5ce7);
   border-radius: 2px;
-  transition: width 0.4s ease;
+  transition: width 0.5s ease;
 }
 
 /* RESULTS */
@@ -515,15 +583,15 @@ main {
   transform: translateY(-1px);
 }
 
-/* AGENT BLOCK */
+/* AGENT REPORT */
 .agent-block {
-  background: linear-gradient(135deg, rgba(20, 22, 30, 0.92), rgba(30, 25, 50, 0.92));
+  background: linear-gradient(135deg, rgba(18, 20, 28, 0.94), rgba(28, 24, 48, 0.94));
   backdrop-filter: blur(30px) saturate(180%);
   border: 1px solid rgba(120, 140, 200, 0.25);
   border-radius: 20px;
   padding: 22px 24px;
   margin-bottom: 16px;
-  box-shadow: 0 12px 40px rgba(0,0,0,0.2), inset 0 1px 0 rgba(255,255,255,0.08);
+  box-shadow: 0 12px 40px rgba(0,0,0,0.25), inset 0 1px 0 rgba(255,255,255,0.08);
   animation: cardIn 0.5s cubic-bezier(0.4, 0, 0.2, 1) both;
   font-family: 'SF Mono', 'Monaco', 'Consolas', monospace;
 }
@@ -559,6 +627,13 @@ main {
   letter-spacing: 0.2px;
 }
 
+.agent-role {
+  font-size: 10.5px;
+  color: #7a86a0;
+  font-weight: 500;
+  margin-top: 1px;
+}
+
 .agent-status {
   font-size: 11px;
   color: #20bf6b;
@@ -582,45 +657,15 @@ main {
 .agent-text {
   font-size: 13px;
   color: #c8d0e0;
-  line-height: 1.7;
+  line-height: 1.75;
   white-space: pre-wrap;
   word-break: break-word;
 }
 
-.agent-text .hl {
-  color: #4dabff;
-  font-weight: 600;
-}
-
-.agent-text .warn {
-  color: #ffb84d;
-  font-weight: 600;
-}
-
-.agent-text .danger {
-  color: #ff5c5c;
-  font-weight: 600;
-}
-
-.agent-text .ok {
-  color: #20bf6b;
-  font-weight: 600;
-}
-
-.agent-cursor {
-  display: inline-block;
-  width: 7px;
-  height: 14px;
-  background: #4dabff;
-  vertical-align: middle;
-  margin-left: 2px;
-  animation: blink 1s step-end infinite;
-}
-
-@keyframes blink {
-  0%, 50% { opacity: 1; }
-  51%, 100% { opacity: 0; }
-}
+.agent-text .hl { color: #4dabff; font-weight: 600; }
+.agent-text .warn { color: #ffb84d; font-weight: 600; }
+.agent-text .danger { color: #ff5c5c; font-weight: 600; }
+.agent-text .ok { color: #20bf6b; font-weight: 600; }
 
 /* RESULT CARDS */
 .result-card {
@@ -659,13 +704,6 @@ main {
   from { opacity: 0; transform: translateY(16px); }
   to { opacity: 1; transform: translateY(0); }
 }
-
-.result-card:nth-child(1) { animation-delay: 0.03s; }
-.result-card:nth-child(2) { animation-delay: 0.06s; }
-.result-card:nth-child(3) { animation-delay: 0.09s; }
-.result-card:nth-child(4) { animation-delay: 0.12s; }
-.result-card:nth-child(5) { animation-delay: 0.15s; }
-.result-card:nth-child(6) { animation-delay: 0.18s; }
 
 .card-head {
   display: flex;
@@ -727,7 +765,6 @@ main {
   color: #007aff;
   text-decoration: none;
   font-weight: 600;
-  transition: color 0.2s ease;
 }
 
 .card-body a:hover { color: #6c5ce7; text-decoration: underline; }
@@ -875,55 +912,17 @@ footer {
   </div>
 
   <div class="loader" id="loader">
-    <div class="spinner"></div>
-    <div class="loader-text" id="loaderText">Initialisation de l'agent...</div>
+    <div class="loader-head">
+      <div class="spinner"></div>
+      <div>
+        <div class="loader-title" id="loaderTitle">Analyse en cours</div>
+        <div class="loader-sub" id="loaderSub">Initialisation de l'agent</div>
+      </div>
+    </div>
+    <div class="loader-steps" id="loaderSteps"></div>
     <div class="loader-progress">
       <div class="loader-bar" id="loaderBar"></div>
     </div>
   </div>
 
   <div class="results" id="results">
-    <div class="results-header">
-      <div class="results-count" id="resultsCount">0 résultat</div>
-      <div class="results-actions">
-        <button class="mini-btn" id="copyAllBtn">Copier le rapport</button>
-      </div>
-    </div>
-    <div id="resultsList"></div>
-  </div>
-
-</main>
-
-<footer>
-  OSINT Deep Search — Sources publiques uniquement — Usage légal et éthique
-</footer>
-
-<script>
-/* ============================================================
-   OSINT DEEP SEARCH - AGENT D'ANALYSE
-   Sources publiques sans clé API
-   ============================================================ */
-
-const searchInput = document.getElementById('searchInput');
-const searchBtn = document.getElementById('searchBtn');
-const resultsDiv = document.getElementById('results');
-const resultsList = document.getElementById('resultsList');
-const resultsCount = document.getElementById('resultsCount');
-const loader = document.getElementById('loader');
-const loaderText = document.getElementById('loaderText');
-const loaderBar = document.getElementById('loaderBar');
-const historyDiv = document.getElementById('history');
-const tabs = document.getElementById('tabs');
-const clearBtn = document.getElementById('clearBtn');
-const exportBtn = document.getElementById('exportBtn');
-const copyAllBtn = document.getElementById('copyAllBtn');
-const statusText = document.getElementById('statusText');
-const statSearches = document.getElementById('statSearches');
-const statFinds = document.getElementById('statFinds');
-const statTime = document.getElementById('statTime');
-
-let currentType = 'auto';
-let currentResults = [];
-let currentAgentReport = '';
-let searchHistory = JSON.parse(localStorage.getItem('osint_deep_history') || '[]');
-let stats = JSON.parse(localStorage.getItem('os
