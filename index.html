@@ -3,741 +3,934 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>OSINT Search - Interface Unique</title>
+<title>OSINT Deep Search</title>
 <style>
-/* Réinitialisation globale */
+/* Réinitialisation */
 * {
   margin: 0;
   padding: 0;
   box-sizing: border-box;
-  font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+  font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Segoe UI', Roboto, sans-serif;
+  -webkit-font-smoothing: antialiased;
 }
 
-/* Fond dégradé clair avec effet liquid glass */
-body {
+/* Fond plein écran animé */
+html, body {
+  width: 100%;
   min-height: 100vh;
-  background: linear-gradient(135deg, #f5f7fa 0%, #e4e9f2 50%, #d9e2ec 100%);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 20px;
-  position: relative;
   overflow-x: hidden;
 }
 
-/* Bulles décoratives en arrière-plan */
-body::before,
-body::after {
-  content: '';
+body {
+  background: linear-gradient(135deg, #eef2f7 0%, #e0e7f1 25%, #d4dced 50%, #e2e8f4 75%, #eef2f7 100%);
+  background-size: 400% 400%;
+  animation: gradientShift 18s ease infinite;
+  color: #1d1d1f;
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+}
+
+@keyframes gradientShift {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
+/* Bulles liquides décoratives animées */
+.bubble {
   position: fixed;
   border-radius: 50%;
-  filter: blur(80px);
-  opacity: 0.5;
+  filter: blur(70px);
+  opacity: 0.55;
   z-index: 0;
   pointer-events: none;
+  will-change: transform;
 }
 
-body::before {
-  width: 400px;
-  height: 400px;
-  background: rgba(120, 180, 255, 0.4);
-  top: -100px;
-  left: -100px;
+.bubble.b1 {
+  width: 500px; height: 500px;
+  background: radial-gradient(circle, rgba(120,180,255,0.7), rgba(120,180,255,0));
+  top: -150px; left: -150px;
+  animation: float1 22s ease-in-out infinite;
 }
 
-body::after {
-  width: 500px;
-  height: 500px;
-  background: rgba(180, 140, 255, 0.35);
-  bottom: -150px;
-  right: -150px;
+.bubble.b2 {
+  width: 600px; height: 600px;
+  background: radial-gradient(circle, rgba(180,140,255,0.6), rgba(180,140,255,0));
+  bottom: -200px; right: -200px;
+  animation: float2 26s ease-in-out infinite;
 }
 
-/* Conteneur principal avec effet liquid glass */
-.container {
+.bubble.b3 {
+  width: 400px; height: 400px;
+  background: radial-gradient(circle, rgba(140,220,255,0.6), rgba(140,220,255,0));
+  top: 40%; left: 55%;
+  animation: float3 30s ease-in-out infinite;
+}
+
+.bubble.b4 {
+  width: 350px; height: 350px;
+  background: radial-gradient(circle, rgba(255,180,220,0.5), rgba(255,180,220,0));
+  top: 15%; right: 15%;
+  animation: float1 24s ease-in-out infinite reverse;
+}
+
+@keyframes float1 {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  33% { transform: translate(80px, 60px) scale(1.1); }
+  66% { transform: translate(-40px, 100px) scale(0.95); }
+}
+
+@keyframes float2 {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  50% { transform: translate(-100px, -80px) scale(1.15); }
+}
+
+@keyframes float3 {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  25% { transform: translate(60px, -50px) scale(1.05); }
+  75% { transform: translate(-80px, 70px) scale(0.9); }
+}
+
+/* Header liquid glass */
+header {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  width: 100%;
+  padding: 14px 28px;
+  background: rgba(255, 255, 255, 0.5);
+  backdrop-filter: blur(40px) saturate(200%);
+  -webkit-backdrop-filter: blur(40px) saturate(200%);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.7);
+  box-shadow:
+    0 4px 24px rgba(0, 0, 0, 0.05),
+    inset 0 1px 0 rgba(255, 255, 255, 0.9);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  animation: slideDown 0.7s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+@keyframes slideDown {
+  from { transform: translateY(-100%); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}
+
+.header-left {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.logo {
+  width: 38px;
+  height: 38px;
+  border-radius: 12px;
+  background: linear-gradient(135deg, rgba(0,122,255,0.95), rgba(120,90,255,0.95));
+  backdrop-filter: blur(20px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  font-size: 18px;
+  font-weight: 700;
+  box-shadow:
+    0 4px 14px rgba(0,122,255,0.35),
+    inset 0 1px 0 rgba(255,255,255,0.5);
+  animation: pulseLogo 3s ease-in-out infinite;
+}
+
+@keyframes pulseLogo {
+  0%, 100% { transform: scale(1); box-shadow: 0 4px 14px rgba(0,122,255,0.35), inset 0 1px 0 rgba(255,255,255,0.5); }
+  50% { transform: scale(1.05); box-shadow: 0 6px 22px rgba(0,122,255,0.55), inset 0 1px 0 rgba(255,255,255,0.6); }
+}
+
+.header-title {
+  font-size: 17px;
+  font-weight: 700;
+  letter-spacing: -0.3px;
+  color: #1d1d1f;
+}
+
+.header-title span {
+  color: #6c5ce7;
+  font-weight: 600;
+}
+
+.header-right {
+  display: flex;
+  gap: 8px;
+}
+
+.header-chip {
+  padding: 8px 16px;
+  font-size: 13px;
+  font-weight: 500;
+  color: #3a3a3c;
+  background: rgba(255, 255, 255, 0.6);
+  backdrop-filter: blur(20px) saturate(180%);
+  border: 1px solid rgba(255, 255, 255, 0.9);
+  border-radius: 20px;
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.8), 0 2px 6px rgba(0,0,0,0.03);
+}
+
+.header-chip:hover {
+  background: rgba(255, 255, 255, 0.9);
+  transform: translateY(-1px);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.9), 0 6px 14px rgba(0,0,0,0.08);
+}
+
+/* Contenu principal */
+main {
   position: relative;
   z-index: 1;
   width: 100%;
-  max-width: 680px;
-  background: rgba(255, 255, 255, 0.55);
-  backdrop-filter: blur(40px) saturate(180%);
-  -webkit-backdrop-filter: blur(40px) saturate(180%);
-  border-radius: 32px;
-  border: 1px solid rgba(255, 255, 255, 0.8);
-  box-shadow:
-    0 8px 32px rgba(0, 0, 0, 0.08),
-    0 2px 8px rgba(0, 0, 0, 0.04),
-    inset 0 1px 0 rgba(255, 255, 255, 0.9),
-    inset 0 -1px 0 rgba(255, 255, 255, 0.3);
-  padding: 40px 32px;
-  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 40px 24px 80px;
+  flex: 1;
 }
 
-.container:hover {
+.hero {
+  text-align: center;
+  margin-bottom: 36px;
+  animation: fadeUp 0.8s cubic-bezier(0.4, 0, 0.2, 1) 0.1s both;
+}
+
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(24px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.hero h1 {
+  font-size: 42px;
+  font-weight: 800;
+  letter-spacing: -1.5px;
+  line-height: 1.1;
+  background: linear-gradient(135deg, #1d1d1f 0%, #6c5ce7 60%, #007aff 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  margin-bottom: 12px;
+}
+
+.hero p {
+  font-size: 16px;
+  color: #6e6e73;
+  font-weight: 400;
+  max-width: 500px;
+  margin: 0 auto;
+  line-height: 1.5;
+}
+
+/* Carte de recherche */
+.search-card {
+  background: rgba(255, 255, 255, 0.55);
+  backdrop-filter: blur(40px) saturate(200%);
+  -webkit-backdrop-filter: blur(40px) saturate(200%);
+  border: 1px solid rgba(255, 255, 255, 0.85);
+  border-radius: 28px;
+  padding: 28px;
   box-shadow:
-    0 12px 48px rgba(0, 0, 0, 0.12),
-    0 4px 12px rgba(0, 0, 0, 0.06),
+    0 12px 40px rgba(0, 0, 0, 0.08),
+    0 2px 8px rgba(0, 0, 0, 0.03),
     inset 0 1px 0 rgba(255, 255, 255, 0.95),
+    inset 0 -1px 0 rgba(255, 255, 255, 0.3);
+  animation: fadeUp 0.8s cubic-bezier(0.4, 0, 0.2, 1) 0.2s both;
+  transition: box-shadow 0.4s ease;
+}
+
+.search-card:hover {
+  box-shadow:
+    0 16px 52px rgba(0, 0, 0, 0.11),
+    0 4px 12px rgba(0, 0, 0, 0.05),
+    inset 0 1px 0 rgba(255, 255, 255, 1),
     inset 0 -1px 0 rgba(255, 255, 255, 0.4);
 }
 
-/* Titre */
-h1 {
-  font-size: 28px;
-  font-weight: 700;
-  color: #1d1d1f;
-  text-align: center;
-  margin-bottom: 8px;
-  letter-spacing: -0.5px;
+/* Onglets de type de recherche */
+.tabs {
+  display: flex;
+  gap: 6px;
+  padding: 5px;
+  background: rgba(255, 255, 255, 0.45);
+  backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.8);
+  border-radius: 16px;
+  margin-bottom: 18px;
+  overflow-x: auto;
+  scrollbar-width: none;
 }
 
-/* Sous-titre */
-.subtitle {
-  font-size: 14px;
+.tabs::-webkit-scrollbar { display: none; }
+
+.tab {
+  flex: 1;
+  min-width: 90px;
+  padding: 11px 14px;
+  font-size: 13px;
+  font-weight: 600;
   color: #6e6e73;
-  text-align: center;
-  margin-bottom: 32px;
-  font-weight: 400;
+  background: transparent;
+  border: none;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  white-space: nowrap;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
 }
 
-/* Groupe de champs */
-.input-group {
-  position: relative;
-  margin-bottom: 16px;
+.tab.active {
+  color: #ffffff;
+  background: linear-gradient(135deg, rgba(0,122,255,0.95), rgba(120,90,255,0.95));
+  box-shadow:
+    0 4px 14px rgba(0,122,255,0.35),
+    inset 0 1px 0 rgba(255,255,255,0.4);
 }
 
-/* Champs de saisie avec effet liquid glass */
-.input-group input {
-  width: 100%;
-  padding: 16px 20px;
-  font-size: 16px;
+.tab:hover:not(.active) {
   color: #1d1d1f;
   background: rgba(255, 255, 255, 0.6);
+}
+
+/* Champ de recherche */
+.search-row {
+  display: flex;
+  gap: 10px;
+  align-items: stretch;
+}
+
+.input-wrap {
+  position: relative;
+  flex: 1;
+}
+
+.input-wrap input {
+  width: 100%;
+  padding: 18px 22px 18px 52px;
+  font-size: 16px;
+  font-weight: 500;
+  color: #1d1d1f;
+  background: rgba(255, 255, 255, 0.7);
   backdrop-filter: blur(20px) saturate(180%);
-  -webkit-backdrop-filter: blur(20px) saturate(180%);
-  border: 1px solid rgba(255, 255, 255, 0.9);
-  border-radius: 16px;
+  border: 1px solid rgba(255, 255, 255, 0.95);
+  border-radius: 18px;
   outline: none;
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   box-shadow:
-    0 2px 8px rgba(0, 0, 0, 0.04),
-    inset 0 1px 0 rgba(255, 255, 255, 0.8);
+    0 2px 10px rgba(0, 0, 0, 0.04),
+    inset 0 1px 0 rgba(255, 255, 255, 0.9);
 }
 
-.input-group input::placeholder {
+.input-wrap input::placeholder {
   color: #a1a1a6;
   font-weight: 400;
 }
 
-.input-group input:focus {
-  background: rgba(255, 255, 255, 0.85);
-  border-color: rgba(120, 180, 255, 0.6);
+.input-wrap input:focus {
+  background: rgba(255, 255, 255, 0.95);
+  border-color: rgba(0, 122, 255, 0.5);
   box-shadow:
-    0 4px 16px rgba(120, 180, 255, 0.2),
-    0 0 0 4px rgba(120, 180, 255, 0.1),
-    inset 0 1px 0 rgba(255, 255, 255, 0.9);
+    0 6px 24px rgba(0, 122, 255, 0.18),
+    0 0 0 4px rgba(0, 122, 255, 0.12),
+    inset 0 1px 0 rgba(255, 255, 255, 1);
+  transform: translateY(-1px);
 }
 
-/* Bouton principal avec effet liquid glass */
+.input-icon {
+  position: absolute;
+  left: 18px;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 18px;
+  color: #8e8e93;
+  pointer-events: none;
+  transition: color 0.3s ease;
+}
+
+.input-wrap input:focus + .input-icon {
+  color: #007aff;
+}
+
+/* Bouton rechercher */
 .btn-search {
-  width: 100%;
-  padding: 16px 24px;
-  font-size: 17px;
+  padding: 18px 32px;
+  font-size: 15px;
   font-weight: 600;
   color: #ffffff;
-  background: linear-gradient(135deg, rgba(0, 122, 255, 0.9) 0%, rgba(90, 120, 255, 0.9) 100%);
-  backdrop-filter: blur(20px) saturate(180%);
-  -webkit-backdrop-filter: blur(20px) saturate(180%);
+  background: linear-gradient(135deg, rgba(0,122,255,0.95) 0%, rgba(120,90,255,0.95) 100%);
   border: 1px solid rgba(255, 255, 255, 0.4);
-  border-radius: 16px;
+  border-radius: 18px;
   cursor: pointer;
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   box-shadow:
-    0 4px 16px rgba(0, 122, 255, 0.3),
-    inset 0 1px 0 rgba(255, 255, 255, 0.4);
-  letter-spacing: -0.2px;
-  margin-top: 8px;
+    0 6px 20px rgba(0,122,255,0.35),
+    inset 0 1px 0 rgba(255, 255, 255, 0.45);
+  position: relative;
+  overflow: hidden;
+  white-space: nowrap;
+}
+
+.btn-search::before {
+  content: '';
+  position: absolute;
+  top: 0; left: -100%;
+  width: 100%; height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.4), transparent);
+  transition: left 0.6s ease;
+}
+
+.btn-search:hover::before {
+  left: 100%;
 }
 
 .btn-search:hover {
-  transform: translateY(-1px);
+  transform: translateY(-2px);
   box-shadow:
-    0 8px 24px rgba(0, 122, 255, 0.4),
-    inset 0 1px 0 rgba(255, 255, 255, 0.5);
-  background: linear-gradient(135deg, rgba(0, 122, 255, 1) 0%, rgba(90, 120, 255, 1) 100%);
+    0 10px 28px rgba(0,122,255,0.5),
+    inset 0 1px 0 rgba(255, 255, 255, 0.55);
 }
 
 .btn-search:active {
   transform: translateY(0) scale(0.98);
-  box-shadow:
-    0 2px 8px rgba(0, 122, 255, 0.3),
-    inset 0 1px 0 rgba(255, 255, 255, 0.3);
 }
 
-/* Zone de résultats */
-.results {
-  margin-top: 24px;
-  display: none;
+.btn-search:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
 }
 
-.results.active {
-  display: block;
-  animation: fadeIn 0.4s ease-out;
+/* Historique */
+.history-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 16px;
 }
 
-@keyframes fadeIn {
-  from { opacity: 0; transform: translateY(8px); }
-  to { opacity: 1; transform: translateY(0); }
-}
-
-.result-card {
-  background: rgba(255, 255, 255, 0.65);
-  backdrop-filter: blur(20px) saturate(180%);
-  -webkit-backdrop-filter: blur(20px) saturate(180%);
-  border: 1px solid rgba(255, 255, 255, 0.9);
-  border-radius: 16px;
-  padding: 20px;
-  margin-bottom: 12px;
-  box-shadow:
-    0 2px 8px rgba(0, 0, 0, 0.04),
-    inset 0 1px 0 rgba(255, 255, 255, 0.8);
-  transition: all 0.3s ease;
-}
-
-.result-card:hover {
-  background: rgba(255, 255, 255, 0.8);
-  box-shadow:
-    0 4px 16px rgba(0, 0, 0, 0.08),
-    inset 0 1px 0 rgba(255, 255, 255, 0.9);
-}
-
-.result-card h3 {
-  font-size: 15px;
-  font-weight: 600;
-  color: #1d1d1f;
-  margin-bottom: 8px;
+.chip {
+  padding: 7px 14px;
+  font-size: 12px;
+  font-weight: 500;
+  color: #3a3a3c;
+  background: rgba(255, 255, 255, 0.55);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.85);
+  border-radius: 20px;
+  cursor: pointer;
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 6px;
 }
 
-.result-card h3 .icon {
-  width: 20px;
-  height: 20px;
-  border-radius: 6px;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 11px;
-  font-weight: 700;
-  color: #fff;
+.chip:hover {
+  background: rgba(255, 255, 255, 0.9);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 10px rgba(0,0,0,0.06);
 }
 
-.icon.email { background: linear-gradient(135deg, #ff6b6b, #ee5a24); }
-.icon.username { background: linear-gradient(135deg, #4ecdc4, #44a08d); }
-.icon.name { background: linear-gradient(135deg, #a29bfe, #6c5ce7); }
-.icon.phone { background: linear-gradient(135deg, #fdcb6e, #f39c12); }
-.icon.social { background: linear-gradient(135deg, #74b9ff, #0984e3); }
-
-.result-card p {
-  font-size: 14px;
-  color: #3a3a3c;
-  line-height: 1.5;
-  word-break: break-word;
-}
-
-.result-card .source {
-  font-size: 12px;
-  color: #8e8e93;
-  margin-top: 8px;
-  font-style: italic;
-}
-
-/* Barre de chargement */
+/* Loader */
 .loader {
   display: none;
   text-align: center;
-  padding: 20px;
+  padding: 40px 20px;
 }
 
 .loader.active {
   display: block;
+  animation: fadeIn 0.3s ease;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
 }
 
 .spinner {
-  width: 32px;
-  height: 32px;
-  border: 3px solid rgba(0, 122, 255, 0.2);
+  width: 44px;
+  height: 44px;
+  border: 3px solid rgba(0, 122, 255, 0.15);
   border-top-color: #007aff;
+  border-right-color: #6c5ce7;
   border-radius: 50%;
-  animation: spin 0.8s linear infinite;
-  margin: 0 auto 12px;
+  animation: spin 0.9s cubic-bezier(0.5, 0.1, 0.5, 0.9) infinite;
+  margin: 0 auto 16px;
 }
 
 @keyframes spin {
   to { transform: rotate(360deg); }
 }
 
-.loader p {
+.loader-text {
   font-size: 14px;
   color: #6e6e73;
+  font-weight: 500;
+  margin-bottom: 6px;
+}
+
+.loader-progress {
+  max-width: 280px;
+  margin: 0 auto;
+  height: 4px;
+  background: rgba(0, 122, 255, 0.12);
+  border-radius: 2px;
+  overflow: hidden;
+}
+
+.loader-bar {
+  height: 100%;
+  width: 0%;
+  background: linear-gradient(90deg, #007aff, #6c5ce7);
+  border-radius: 2px;
+  transition: width 0.4s ease;
+}
+
+/* Résultats */
+.results {
+  margin-top: 28px;
+  display: none;
+}
+
+.results.active {
+  display: block;
+}
+
+.results-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+  padding: 0 4px;
+}
+
+.results-count {
+  font-size: 13px;
+  font-weight: 600;
+  color: #6e6e73;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.results-actions {
+  display: flex;
+  gap: 6px;
+}
+
+.mini-btn {
+  padding: 6px 12px;
+  font-size: 12px;
+  font-weight: 500;
+  color: #3a3a3c;
+  background: rgba(255,255,255,0.6);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255,255,255,0.85);
+  border-radius: 10px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.mini-btn:hover {
+  background: rgba(255,255,255,0.95);
+  transform: translateY(-1px);
+}
+
+/* Cartes de résultats */
+.result-card {
+  background: rgba(255, 255, 255, 0.6);
+  backdrop-filter: blur(30px) saturate(180%);
+  -webkit-backdrop-filter: blur(30px) saturate(180%);
+  border: 1px solid rgba(255, 255, 255, 0.9);
+  border-radius: 20px;
+  padding: 20px 22px;
+  margin-bottom: 12px;
+  box-shadow:
+    0 4px 16px rgba(0, 0, 0, 0.05),
+    inset 0 1px 0 rgba(255, 255, 255, 0.9);
+  animation: cardIn 0.5s cubic-bezier(0.4, 0, 0.2, 1) both;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+  overflow: hidden;
+}
+
+.result-card::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0;
+  width: 3px; height: 100%;
+  background: linear-gradient(180deg, #007aff, #6c5ce7);
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.result-card:hover::before {
+  opacity: 1;
+}
+
+.result-card:hover {
+  background: rgba(255, 255, 255, 0.85);
+  transform: translateY(-2px);
+  box-shadow:
+    0 10px 32px rgba(0, 0, 0, 0.09),
+    inset 0 1px 0 rgba(255, 255, 255, 1);
+}
+
+@keyframes cardIn {
+  from { opacity: 0; transform: translateY(16px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.result-card:nth-child(1) { animation-delay: 0.03s; }
+.result-card:nth-child(2) { animation-delay: 0.06s; }
+.result-card:nth-child(3) { animation-delay: 0.09s; }
+.result-card:nth-child(4) { animation-delay: 0.12s; }
+.result-card:nth-child(5) { animation-delay: 0.15s; }
+.result-card:nth-child(6) { animation-delay: 0.18s; }
+
+.card-head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 12px;
+}
+
+.card-icon {
+  width: 30px;
+  height: 30px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  color: #fff;
+  flex-shrink: 0;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.3);
+}
+
+.card-icon.email { background: linear-gradient(135deg, #ff6b6b, #ee5a24); }
+.card-icon.username { background: linear-gradient(135deg, #4ecdc4, #44a08d); }
+.card-icon.name { background: linear-gradient(135deg, #a29bfe, #6c5ce7); }
+.card-icon.phone { background: linear-gradient(135deg, #fdcb6e, #f39c12); }
+.card-icon.social { background: linear-gradient(135deg, #74b9ff, #0984e3); }
+.card-icon.breach { background: linear-gradient(135deg, #ff4757, #c0392b); }
+.card-icon.dns { background: linear-gradient(135deg, #26de81, #20bf6b); }
+.card-icon.web { background: linear-gradient(135deg, #45aaf2, #2d98da); }
+
+.card-title {
+  font-size: 15px;
+  font-weight: 700;
+  color: #1d1d1f;
+  letter-spacing: -0.2px;
+}
+
+.card-source {
+  font-size: 11px;
+  color: #8e8e93;
+  font-weight: 500;
+  margin-left: auto;
+  padding: 3px 8px;
+  background: rgba(142, 142, 147, 0.1);
+  border-radius: 6px;
+}
+
+.card-body {
+  font-size: 13.5px;
+  color: #3a3a3c;
+  line-height: 1.65;
+  word-break: break-word;
+}
+
+.card-body a {
+  color: #007aff;
+  text-decoration: none;
+  font-weight: 500;
+  transition: color 0.2s ease;
+}
+
+.card-body a:hover {
+  color: #6c5ce7;
+  text-decoration: underline;
+}
+
+.kv {
+  display: flex;
+  padding: 5px 0;
+  border-bottom: 1px solid rgba(0,0,0,0.04);
+}
+
+.kv:last-child { border-bottom: none; }
+
+.kv-key {
+  font-weight: 600;
+  color: #6e6e73;
+  min-width: 130px;
+  flex-shrink: 0;
+  font-size: 12.5px;
+}
+
+.kv-val {
+  color: #1d1d1f;
+  font-size: 13px;
+  word-break: break-word;
+}
+
+.badge {
+  display: inline-block;
+  padding: 2px 8px;
+  font-size: 11px;
+  font-weight: 600;
+  border-radius: 6px;
+  background: rgba(0,122,255,0.12);
+  color: #007aff;
+  margin-right: 4px;
+}
+
+.badge.danger {
+  background: rgba(255,71,87,0.12);
+  color: #ff4757;
+}
+
+.badge.success {
+  background: rgba(38,222,129,0.15);
+  color: #20bf6b;
 }
 
 /* Aucun résultat */
 .no-result {
   text-align: center;
-  padding:] 24px;
+  padding: 48px 24px;
   color: #8e8e93;
+}
+
+.no-result .icon-big {
+  font-size: 48px;
+  margin-bottom: 12px;
+  opacity: 0.5;
+}
+
+.no-result p {
   font-size: 14px;
+  font-weight: 500;
 }
 
-/* Historique */
-.history {
-  margin-top: 16px;
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-}
-
-.history-chip {
-  padding: 6px 14px;
+/* Footer */
+footer {
+  position: relative;
+  z-index: 1;
+  padding: 20px 24px;
+  text-align: center;
   font-size: 12px;
-  color: #3a3a3c;
-  background: rgba(255, 255, 255, 0.5);
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
-  border: 1px solid rgba(255, 255, 255, 0.8);
-  border-radius: 20px;
-  cursor: pointer;
-  transition: all 0.2s ease;
-}
-
-.history-chip:hover {
-  background: rgba(255, 255, 255, 0.8);
-  transform: translateY(-1px);
+  color: #8e8e93;
+  font-weight: 500;
+  border-top: 1px solid rgba(255,255,255,0.6);
+  background: rgba(255,255,255,0.3);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
 }
 
 /* Responsive */
-@media (max-width: 480px) {
-  .container {
-    padding: 28px 20px;
-    border-radius: 24px;
-  }
-  h1 { font-size: ?22px; }
-  .input-group input { padding:[ 14px 16px; font-size: 015px; }
-  .btn-search { padding: 14px 20px; font-size: 16px; }
+@media (max-width: 640px) {
+  header { padding: 12px 16px; }
+  .header-title { font-size: 15px; }
+  .header-chip { padding: 6px 12px; font-size: 12px; }
+  main { padding: 24px 16px 60px; }
+  .hero h1 { font-size: 30px; }
+  .hero p { font-size: 14px; }
+  .search-card { padding: 20px; border-radius: 22px; }
+  .search-row { flex-direction: column; }
+  .btn-search { width: 100%; }
+  .kv { flex-direction: column; }
+  .kv-key { min-width: auto; margin-bottom: 2px; }
+  .card-source { display: none; }
 }
 </style>
 </head>
 <body>
 
-<div class="container">
-  <h1>🔍 OSINT Search</h1>
-  <p class="subtitle">Recherche d'informations publiques</p>
+<!-- Bulles liquides décoratives -->
+<div class="bubble b1"></div>
+<div class="bubble b2"></div>
+<div class="bubble b3"></div>
+<div class="bubble b4"></div>
 
-  <!-- Champ de recherche principal -->
-  <div class="input-group">
-    <input type="text" id="searchInput" placeholder="Email, nom d'utilisateur, prénom, nom..." autocomplete="off">
+<!-- HEADER LIQUID GLASS -->
+<header>
+  <div class="header-left">
+    <div class="logo">🔍</div>
+    <div class="header-title">OSINT <span>Deep Search</span></div>
+  </div>
+  <div class="header-right">
+    <button class="header-chip" id="clearBtn">Effacer</button>
+    <button class="header-chip" id="exportBtn">Exporter</button>
+  </div>
+</header>
+
+<!-- CONTENU PRINCIPAL -->
+<main>
+
+  <!-- HERO -->
+  <div class="hero">
+    <h1>Recherche approfondie</h1>
+    <p>Analyse multi-sources en temps réel : emails, pseudonymes, identités, fuites de données et profils publics.</p>
   </div>
 
-  <!-- Bouton de recherche -->
-  <button class="btn-search" id="searchBtn">Rechercher</button>
+  <!-- CARTE DE RECHERCHE -->
+  <div class="search-card">
 
-  <!-- Indicateur de chargement -->
+    <!-- Onglets -->
+    <div class="tabs" id="tabs">
+      <button class="tab active" data-type="auto">✨ Auto</button>
+      <button class="tab" data-type="email">📧 Email</button>
+      <button class="tab" data-type="username">👤 Username</button>
+      <button class="tab" data-type="name">📛 Nom</button>
+      <button class="tab" data-type="phone">📱 Téléphone</button>
+    </div>
+
+    <!-- Barre de recherche -->
+    <div class="search-row">
+      <div class="input-wrap">
+        <input type="text" id="searchInput" placeholder="Entrez votre recherche..." autocomplete="off" spellcheck="false">
+        <span class="input-icon">⌕</span>
+      </div>
+      <button class="btn-search" id="searchBtn">Rechercher</button>
+    </div>
+
+    <!-- Historique -->
+    <div class="history-row" id="history"></div>
+  </div>
+
+  <!-- LOADER -->
   <div class="loader" id="loader">
     <div class="spinner"></div>
-    <p>Recherche en cours...</p>
+    <div class="loader-text" id="loaderText">Analyse multi-sources en cours...</div>
+    <div class="loader-progress">
+      <div class="loader-bar" id="loaderBar"></div>
+    </div>
   </div>
 
-  <!-- Zone de résultats -->
-  <div class="results" id="results"></div>
+  <!-- RÉSULTATS -->
+  <div class="results" id="results">
+    <div class="results-header">
+      <div class="results-count" id="resultsCount">0 résultat</div>
+      <div class="results-actions">
+        <button class="mini-btn" id="copyAllBtn">Copier tout</button>
+      </div>
+    </div>
+    <div id="resultsList"></div>
+  </div>
 
-  <!-- Historique des recherches -->
-  <div class="history" id="history"></div>
-</div>
+</main>
+
+<footer>
+  OSINT Deep Search · Sources publiques · Usage légal uniquement
+</footer>
 
 <script>
 /* ============================================================
-   MODULE DE RECHERCHE OSINT - VERSION FONCTIONNELLE
-   Utilise des APIs publiques gratuites sans clé API
+   OSINT DEEP SEARCH - MOTEUR DE RECHERCHE MULTI-SOURCES
+   Sources publiques gratuites sans clé API
    ============================================================ */
 
 // Références DOM
 const searchInput = document.getElementById('searchInput');
 const searchBtn = document.getElementById('searchBtn');
 const resultsDiv = document.getElementById('results');
+const resultsList = document.getElementById('resultsList');
+const resultsCount = document.getElementById('resultsCount');
 const loader = document.getElementById('loader');
+const loaderText = document.getElementById('loaderText');
+const loaderBar = document.getElementById('loaderBar');
 const historyDiv = document.getElementById('history');
+const tabs = document.getElementById('tabs');
+const clearBtn = document.getElementById('clearBtn');
+const exportBtn = document.getElementById('exportBtn');
+const copyAllBtn = document.getElementById('copyAllBtn');
 
-// Historique local
-let searchHistory = JSON.parse(localStorage.getItem('osint_history') || '[]');
+// État
+let currentType = 'auto';
+let currentResults = [];
+let searchHistory = JSON.parse(localStorage.getItem('osint_deep_history') || '[]');
 
 /* ============================================================
-   FONCTION: Détection du type de requête
+   UTILITAIRES
    ============================================================ */
-function detectQueryType(query) {
+
+function setProgress(pct, text) {
+  loaderBar.style.width = pct + '%';
+  if (text) loaderText.textContent = text;
+}
+
+function escapeHtml(str) {
+  if (str === null || str === undefined) return '';
+  return String(str)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#039;');
+}
+
+function linkify(text) {
+  const urlRegex = /(https?:\/\/[^\s<]+)/g;
+  return escapeHtml(text).replace(urlRegex, '<a href="$1" target="_blank" rel="noopener">$1</a>');
+}
+
+function detectType(query) {
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-  const phoneRegex = /^[\+]?[(]?[0-9]{1,4}[)]?[-\s\.-9]{1,4}[-\s\.]?[0-9]{1,9}$/;
-  const usernameRegex = /^[a-zA-Z0-9_\.]{3,30}$/;
+  const phoneRegex = /^[\+]?[\d\s\-\.\(\)]{7,20}$/;
+  const usernameRegex = /^[a-zA-Z0-9_\.\-]{3,30}$/;
 
   if (emailRegex.test(query)) return 'email';
-  if (phoneRegex.test(query.replace(/\s/g, ''))) return 'phone';
-  if (usernameRegex.test(query)) return 'username';
+  if (phoneRegex.test(query) && query.replace(/\D/g, '').length >= 7) return 'phone';
+  if (usernameRegex.test(query) && !query.includes(' ')) return 'username';
   return 'name';
 }
 
 /* ============================================================
-   FONCTION: Recherche par email (via API publique)
+   SOURCES DE RECHERCHE
    ============================================================ */
+
+// --- Recherche email ---
 async function searchEmail(email) {
-  const results = [];
-
-  // Vérification de la validité syntaxique
-  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-  if (!emailRegex.test(email)) {
-    return [{ type: 'email', title: 'Email invalide', content: 'Format d\'email non valide.', source: 'Validation locale' }];
-  }
-
-  // Extraction du domaine
+  const out = [];
   const domain = email.split('@')[1];
-  results.push({
+  const local = email.split('@')[0];
+
+  // Analyse syntaxique
+  out.push({
     type: 'email',
-    title: 'Analyse de l\'email',
-    content: `Email: ${email}\nDomaine: ${domain}\nLongueur locale: ${email.split('@')[0].length} caractères`,
-    source: 'Analyse syntaxique'
+    icon: 'email',
+    title: 'Analyse syntaxique',
+    source: 'Local',
+    html: `
+      <div class="kv"><div class="kv-key">Email complet</div><div class="kv-val">${escapeHtml(email)}</div></div>
+      <div class="kv"><div class="kv-key">Partie locale</div><div class="kv-val">${escapeHtml(local)} (${local.length} car.)</div></div>
+      <div class="kv"><div class="kv-key">Domaine</div><div class="kv-val">${escapeHtml(domain)}</div></div>
+      <div class="kv"><div class="kv-key">Type</div><div class="kv-val">${domain.includes('.') ? 'Standard' : 'Invalide'}</div></div>
+    `
   });
 
-  // Vérification DNS du domaine (via API publique Google DNS)
+  // DNS MX
+  setProgress(20, 'Vérification DNS MX...');
   try {
-    const dnsResponse = await fetch(`https://dns.google/resolve?name=${domain}&type=MX`);
-    const dnsData = await dnsResponse.json();
-    if (dnsData.Answer && dnsData.Answer.length > 0) {
-      const mxRecords = dnsData.Answer.filter(r => r.type === 15).map(r => r.data);
-      results.push({
-        type: 'email',
-        title: 'Enregistrements MX',
-        content: mxRecords.length > 0 ? mxRecords.join('\n') : 'Aucun enregistrement MX trouvé',
-        source: 'Google DNS API'
+    const r = await fetch(`https://dns.google/resolve?name=${encodeURIComponent(domain)}&type=MX`);
+    const d = await r.json();
+    if (d.Answer) {
+      const mx = d.Answer.filter(x => x.type === 15).map(x => x.data);
+      out.push({
+        type: 'email', icon: 'dns', title: 'Enregistrements MX', source: 'Google DNS',
+        html: mx.length ? mx.map(m => `<div class="kv"><div class="kv-key">Serveur</div><div class="kv-val">${escapeHtml(m)}</div></div>`).join('') : '<div class="kv-val">Aucun MX</div>'
       });
     }
-  } catch (e) {
-    results.push({
-      type: 'email',
-      title: 'Vérification DNS',
-      content: 'Impossible de vérifier les enregistrements MX.',
-      source: 'Google DNS API'
-    });
-  }
+  } catch(e) {}
 
-  // Vérification de la présence sur des services publics (via haveibeenpwned - API publique)
-  try {
-    const hibpResponse = await fetch(`https://haveibeenpwned.com/api/v3/breachedaccount/${encodeURIComponent(email)}?truncateResponse=false`, {
-      headers: { 'User-Agent': 'OSINT-Search-Tool' }
-    });
-    if (hibpResponse.status === 200) {
-      const breaches = await hibpResponse.json();
-      const breachNames = breaches.map(b => `• ${b.Name} (${b.BreachDate})`).join('\n');
-      results.push({
-        type: 'email',
-        title: 'Fuites de données détectées',
-        content: `${breaches.length} fuite(s) trouvée(s):\n${breachNames}`,
-        source: 'HaveIBeenPwned API'
-      });
-    } else if (hibpResponse.status === 404) {
-      results.push({
-        type: 'email',
-        title: 'Fuites de données',
-        content: 'Aucune fuite détectée pour cet email.',
-        source: 'HaveIBeenPwned API'
-      });
-    }
-  } catch (e) {
-    // API peut être bloquée par CORS, on continue
-  }
-
-  return results;
-}
-
-/* ============================================================
-   FONCTION: Recherche par username (via API GitHub publique)
-   ============================================================ */
-async function searchUsername(username) {
-  const results = [];
-
-  // Recherche GitHub (API publique)
-  try {
-    const ghResponse = await fetch(`https://api.github.com/users/${encodeURIComponent(username)}`);
-    if (ghResponse.status === 200) {
-      const ghData = await ghResponse.json();
-      results.push({
-        type: 'username',
-        title: 'GitHub',
-        content: `Nom: ${ghData.name || 'N/A'}\nBio: ${ghData.bio || 'N/A'}\nRepos publics: ${ghData.public_repos}\nFollowers: ${ghData.followers}\nCompte créé: ${new Date(ghData.created_at).toLocaleDateString('fr-FR')}\nURL: ${ghData.html_url}`,
-        source: 'GitHub API'
-      });
-    } else if (ghResponse.status === 404) {
-      results.push({
-        type: 'username',
-        title: 'GitHub',
-        content: 'Aucun utilisateur trouvé avec ce nom.',
-        source: 'GitHub API'
-      });
-    }
-  } catch (e) {
-    results.push({
-      type: 'username',
-      title: 'GitHub',
-      content: 'Erreur lors de la requête GitHub.',
-      source: 'GitHub API'
-    });
-  }
-
-  // Vérification de disponibilité sur des plateformes (via HTTP HEAD)
-  const platforms = [
-    { name: 'Twitter/X', url: `https://x.com/${username}` },
-    { name: 'Instagram', url: `https://instagram.com/${username}` },
-    { name: 'Reddit', url: `https://reddit.com/user/${username}` },
-    { name: 'TikTok', url: `https://tiktok.com/@${username}` }
-  ];
-
-  for (const platform of platforms) {
-    try {
-      // Utilisation de allorigins comme proxy CORS pour vérifier l'existence
-      const proxyUrl = `https://api.allorigins.win/raw?url=${encodeURIComponent(platform.url)}`;
-      const response = await fetch(proxyUrl, { method: 'GET' });
-      if (response.ok) {
-        const text = await response.text();
-        const exists = !text.includes('Page Not Found') && !text.includes('not found') && text.length > 500;
-        results.push({
-          type: 'username',
-          title: platform.name,
-          content: exists ? `Profil probablement existant: ${platform.url}` : `Aucun profil détecté: ${platform.url}`,
-          source: 'Vérification HTTP via proxy'
-        });
-      }
-    } catch (e) {
-      // Ignorer les erreurs de proxy
-    }
-  }
-
-  return results;
-}
-
-/* ============================================================
-   FONCTION: Recherche par nom/prénom (via API publique)
-   ============================================================ */
-async function searchName(name) {
-  const results = [];
-
-  // Analyse du nom
-  const parts = name.trim().split(/\s+/);
-  results.push({
-    type: 'name',
-    title: 'Analyse du nom',
-    content: `Nom complet: ${name}\nNombre de parties: ${parts.length}\nParties: ${parts.join(', ')}`,
-    source: 'Analyse locale'
-  });
-
-  // Recherche sur GitHub par nom (API publique)
-  try {
-    const ghResponse = await fetch(`https://api.github.com/search/users?q=${encodeURIComponent(name)}+in:fullname&per_page=5`);
-    if (ghResponse.ok) {
-      const ghData = await ghResponse.json();
-      if (ghData.total_count > 0) {
-        const users = ghData.items.map(u => `• ${u.login} (${u.html_url})`).join('\n');
-        results.push({
-          type: 'name',
-          title: 'GitHub - Correspondances',
-          content: `${ghData.total_count} résultat(s):\n${users}`,
-          source: 'GitHub Search API'
-        });
-      } else {
-        results.push({
-          type: 'name',
-          title: 'GitHub - Correspondances',
-          content: 'Aucun utilisateur GitHub trouvé avec ce nom.',
-          source: 'GitHub Search API'
-        });
-      }
-    }
-  } catch (e) {
-    // Ignorer
-  }
-
-  // Recherche sur Reddit par nom (API publique)
-  try {
-    const redditResponse = await fetch(`https://www.reddit.com/search.json?q=${encodeURIComponent(name)}&limit=5`);
-    if (redditResponse.ok) {
-      const redditData = await redditResponse.json();
-      if (redditData.data && redditData.data.children.length > 0) {
-        const posts = redditData.data.children.map(p => `• ${p.data.title} (r/${p.data.subreddit})`).join('\n');
-        results.push({
-          type: 'name',
-          title: 'Reddit - Mentions',
-          content: `Publications trouvées:\n${posts}`,
-          source: 'Reddit API'
-        });
-      }
-    }
-  } catch (e) {
-    // Ignorer
-  }
-
-  return results;
-}
-
-/* ============================================================
-   FONCTION: Recherche par téléphone
-   ============================================================ */
-async function searchPhone(phone) {
-  const results = [];
-
-  // Nettoyage du numéro
-  const cleanPhone = phone.replace(/[\s\-\.\(\)]/g, '');
-  results.push({
-    type: 'phone',
-    title: 'Analyse du numéro',
-    content: `Numéro: ${phone}\nFormat nettoyé: ${cleanPhone}\nLongueur: ${cleanPhone.length} chiffres`,
-    source: 'Analyse locale'
-  });
-
-  // Vérification de l'indicatif pays
-  const countryCodes = {
-    '33': 'France', '1': 'États-Unis/Canada', '44': 'Royaume-Uni',
-    '49': 'Allemagne', '34': 'Espagne', '39': 'Italie', '32': 'Belgique',
-    '41': 'Suisse', '212': 'Maroc', '213': 'Algérie', '216': 'Tunisie'
-  };
-
-  const code = cleanPhone.startsWith('+') ? cleanPhone.substring(1, 3) : cleanPhone.substring(0, 2);
-  if (countryCodes[code]) {
-    results.push({
-      type: 'phone',
-      title: 'Indicatif pays',
-      content: `Code: +${code}\nPays: ${countryCodes[code]}`,
-      source: 'Base de données locale'
-    });
-  }
-
-  return results;
-}
-
-/* ============================================================
-   FONCTION: Affichage des résultats
-   ============================================================ */
-function displayResults(results) {
-  resultsDiv.innerHTML = '';
-
-  if (!results || results.length === 0) {
-    resultsDiv.innerHTML = '<div class="no-result">Aucun résultat trouvé.</div>';
-    resultsDiv.classList.add('active');
-    return;
-  }
-
-  results.forEach(result => {
-    const card = document.createElement('div');
-    card.className = 'result-card';
-
-    const iconClass = result.type || 'name';
-    const iconLabel = iconClass.substring(0, 2).toUpperCase();
-
-    card.innerHTML = `
-      <h3><span class="icon ${iconClass}">${iconLabel}</span>${result.title}</h3>
-      <p>${result.content.replace(/\n/g, '<br>')}</p>
-      <div class="source">Source: ${result.source}</div>
-    `;
-
-    resultsDiv.appendChild(card);
-  });
-
-  resultsDiv.classList.add('active');
-}
-
-/* ============================================================
-   FONCTION: Ajout à l'historique
-   ============================================================ */
-function addToHistory(query) {
-  searchHistory = searchHistory.filter(q => q !== query);
-  searchHistory.unshift(query);
-  if (searchHistory.length > 5) searchHistory.pop();
-  localStorage.setItem('osint_history', JSON.stringify(searchHistory));
-  renderHistory();
-}
-
-function renderHistory() {
-  historyDiv.innerHTML = '';
-  searchHistory.forEach(query => {
-    const chip = document.createElement('span');
-    chip.className = 'history-chip';
-    chip.textContent = query;
-    chip.addEventListener('click', () => {
-      searchInput.value = query;
-      performSearch();
-    });
-    historyDiv.appendChild(chip);
-  });
-}
-
-/* ============================================================
-   FONCTION: Exécution de la recherche
-   ============================================================ */
-async function performSearch() {
-  const query = searchInput.value.trim();
-  if (!query) return;
-
-  // Afficher le loader
-  loader.classList.add('active');
-  resultsDiv.classList.remove('active');
-  resultsDiv.innerHTML = '';
-
-  // Détection du type
-  const type = detectQueryType(query);
-  let results = [];
-
-  try {
-    switch (type) {
-      case 'email':
-        results = await searchEmail(query);
-        break;
-      case 'username':
-        results = await searchUsername(query);
-        break;
-      case 'phone':
-        results = await searchPhone(query);
-        break;
-      default:
-        results = await searchName(query);
-    }
-  } catch (e) {
-    results = [{
-      type: 'name',
-      title: 'Erreur',
-      content: 'Une erreur est survenue lors de la recherche: ' + e.message,
-      source: 'Système'
-    }];
-  }
-
-  // Masquer le loader
-  loader.classList.remove('active');
-
-  // Afficher les résultats
-  displayResults(results);
-
-  // Ajouter à l'historique
-  addToHistory(query);
-}
-
-/* ============================================================
-   ÉVÉNEMENTS
-   ============================================================ */
-searchBtn.addEventListener('click', performSearch);
-
-searchInput.addEventListener('keydown', (e) => {
-  if (e.key === 'Enter') performSearch();
-});
-
-// Initialisation
-renderHistory();
-</script>
-
-</body>
-</html>
+  // DNS A
+  setProgress(35, 'Vérification DNS A...');
