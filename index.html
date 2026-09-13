@@ -3,285 +3,232 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>OSINT AI — Recherche Email / Username / Nom</title>
+<title>OSINT AI</title>
 <style>
-  /* Reset technique */
   * { margin:0; padding:0; box-sizing:border-box; }
   body {
-    background:#0a0a0a;
-    color:#e0e0e0;
-    font-family:'Courier New', monospace;
+    background:#000;
+    color:#eaeaea;
+    font-family:-apple-system, 'Segoe UI', Roboto, sans-serif;
     min-height:100vh;
     display:flex;
-    flex-direction:column;
-    align-items:center;
-    padding:40px 20px;
+    justify-content:center;
+    padding:60px 20px;
   }
+  .wrap { width:100%; max-width:640px; }
   h1 {
-    color:#00ff9d;
-    font-size:1.6rem;
-    letter-spacing:2px;
-    margin-bottom:8px;
-    text-shadow:0 0 10px #00ff9d55;
+    font-size:1.1rem;
+    font-weight:600;
+    letter-spacing:0.5px;
+    margin-bottom:4px;
+    color:#fff;
   }
   .sub {
-    color:#555;
     font-size:0.75rem;
-    margin-bottom:30px;
-    letter-spacing:1px;
+    color:#555;
+    margin-bottom:32px;
   }
-  .panel {
-    width:100%;
-    max-width:720px;
-    background:#111;
-    border:1px solid #1f1f1f;
-    border-radius:10px;
-    padding:24px;
-    box-shadow:0 0 30px #000000aa;
-  }
-  label {
-    display:block;
-    font-size:0.7rem;
-    color:#00ff9d;
-    margin-bottom:6px;
-    letter-spacing:1px;
-  }
-  input, select {
-    width:100%;
-    background:#0a0a0a;
-    border:1px solid #222;
-    color:#e0e0e0;
-    padding:12px;
-    border-radius:6px;
-    font-family:inherit;
+  .row { display:flex; gap:10px; margin-bottom:12px; }
+  select, input {
+    background:#0d0d0d;
+    border:1px solid #1e1e1e;
+    color:#eaeaea;
+    padding:12px 14px;
+    border-radius:8px;
     font-size:0.85rem;
-    margin-bottom:16px;
+    font-family:inherit;
     outline:none;
-    transition:border 0.2s;
+    transition:border 0.15s;
   }
-  input:focus, select:focus { border-color:#00ff9d; }
+  select { width:150px; }
+  input { flex:1; }
+  select:focus, input:focus { border-color:#333; }
   button {
     width:100%;
-    background:#00ff9d;
+    background:#fff;
     color:#000;
     border:none;
-    padding:14px;
-    border-radius:6px;
-    font-family:inherit;
-    font-weight:bold;
-    font-size:0.85rem;
-    letter-spacing:1px;
-    cursor:pointer;
-    transition:background 0.2s;
-  }
-  button:hover { background:#00cc7d; }
-  button:disabled { background:#333; color:#666; cursor:not-allowed; }
-  .results {
-    margin-top:24px;
-    background:#0a0a0a;
-    border:1px solid #1f1f1f;
+    padding:13px;
     border-radius:8px;
-    padding:16px;
-    min-height:120px;
+    font-size:0.85rem;
+    font-weight:600;
+    cursor:pointer;
+    transition:opacity 0.15s;
+  }
+  button:hover { opacity:0.85; }
+  button:disabled { background:#1a1a1a; color:#555; cursor:default; }
+  #out { margin-top:28px; }
+  .empty {
+    color:#444;
     font-size:0.8rem;
-    line-height:1.6;
-    white-space:pre-wrap;
-    word-break:break-all;
+    text-align:center;
+    padding:20px;
   }
+  .card {
+    background:#0b0b0b;
+    border:1px solid #181818;
+    border-radius:10px;
+    padding:16px 18px;
+    margin-bottom:10px;
+  }
+  .card .label {
+    font-size:0.68rem;
+    color:#666;
+    text-transform:uppercase;
+    letter-spacing:1px;
+    margin-bottom:8px;
+  }
+  .card .value {
+    font-size:0.85rem;
+    color:#eaeaea;
+    line-height:1.5;
+    word-break:break-word;
+  }
+  .card a { color:#4da3ff; text-decoration:none; }
+  .card a:hover { text-decoration:underline; }
+  .tags { display:flex; flex-wrap:wrap; gap:6px; }
   .tag {
-    display:inline-block;
-    background:#00ff9d22;
-    color:#00ff9d;
-    border:1px solid #00ff9d55;
-    border-radius:4px;
-    padding:2px 8px;
-    font-size:0.7rem;
-    margin:2px;
-  }
-  .err { color:#ff4d4d; }
-  .ok { color:#00ff9d; }
-  .info { color:#888; }
-  .loader {
-    display:none;
-    color:#00ff9d;
+    background:#141414;
+    border:1px solid #222;
+    border-radius:6px;
+    padding:6px 12px;
     font-size:0.75rem;
-    margin-top:12px;
   }
-  .footer {
-    margin-top:20px;
-    font-size:0.65rem;
-    color:#333;
+  .tag a { color:#eaeaea; }
+  .score {
+    font-size:0.75rem;
+    color:#666;
+    margin-bottom:20px;
     text-align:center;
   }
 </style>
 </head>
 <body>
+<div class="wrap">
+  <h1>OSINT AI</h1>
+  <div class="sub">email · username · nom prénom</div>
 
-<h1>OSINT AI TERMINAL</h1>
-<div class="sub">RECHERCHE : EMAIL / USERNAME / NOM / PRÉNOM</div>
-
-<div class="panel">
-  <label>TYPE DE RECHERCHE</label>
-  <select id="type">
-    <option value="email">Email</option>
-    <option value="username">Username</option>
-    <option value="fullname">Prénom + Nom</option>
-  </select>
-
-  <label>CIBLE</label>
-  <input id="target" type="text" placeholder="ex: john.doe@mail.com / johndoe / John Doe">
-
-  <button id="go">LANCER LA RECHERCHE</button>
-  <div class="loader" id="loader">> Analyse en cours...</div>
-
-  <div class="results" id="results">
-    <span class="info">> En attente d'une requête.</span>
+  <div class="row">
+    <select id="type">
+      <option value="email">Email</option>
+      <option value="username">Username</option>
+      <option value="fullname">Nom Prénom</option>
+    </select>
+    <input id="target" placeholder="cible..." autocomplete="off">
   </div>
+  <button id="go">Rechercher</button>
+
+  <div id="out"></div>
 </div>
 
-<div class="footer">Mod made by me — usage local uniquement</div>
-
 <script>
-/* ============================================================
-   MOTEUR OSINT — GÉNÉRATION DE DORKS + LIENS OUTILS + IA LOCALE
-   ============================================================ */
+// Génère les dorks selon le type de cible
+function buildDorks(type, t) {
+  t = t.trim();
+  if (type === "email") return [
+    `"${t}"`,
+    `"${t}" site:pastebin.com`,
+    `"${t}" filetype:pdf`,
+    `"${t}" -site:${t.split("@")[1] || "mail.com"}`
+  ];
+  if (type === "username") return [
+    `"${t}" site:github.com`,
+    `"${t}" (site:twitter.com OR site:x.com)`,
+    `"${t}" site:reddit.com`,
+    `"${t}" inurl:profile`,
+    `intitle:"${t}"`
+  ];
+  const p = t.split(/\s+/);
+  if (p.length >= 2) return [
+    `"${p[0]}" "${p[1]}"`,
+    `"${p[0]} ${p[1]}" site:linkedin.com`,
+    `"${p[0]} ${p[1]}" site:facebook.com`,
+    `"${p[0]} ${p[1]}" filetype:pdf`,
+    `"${p[0]} ${p[1]}" email OR contact`
+  ];
+  return [`"${t}"`];
+}
 
-// Génère les Google Dorks selon le type et la cible
-function buildDorks(type, target) {
-  const t = target.trim();
-  const dorks = [];
+// Liens directs vers outils OSINT selon type
+function buildTools(type, t) {
+  const e = encodeURIComponent(t.trim());
+  if (type === "email") return [
+    ["Have I Been Pwned", `https://haveibeenpwned.com/account/${e}`],
+    ["Hunter.io", `https://hunter.io/search/${e}`],
+    ["Epieos", `https://epieos.com/?q=${e}`]
+  ];
+  if (type === "username") return [
+    ["WhatsMyName", `https://whatsmyname.app/?q=${e}`],
+    ["GitHub Users", `https://github.com/search?q=${e}&type=users`],
+    ["Namechk", `https://namechk.com/?q=${e}`]
+  ];
+  return [
+    ["LinkedIn", `https://www.linkedin.com/search/results/all/?keywords=${e}`],
+    ["TruePeopleSearch", `https://www.truepeoplesearch.com/results?name=${e}`],
+    ["Facebook", `https://www.facebook.com/search/top?q=${e}`]
+  ];
+}
+
+// Score IA local — heuristique de pertinence du format de cible
+function aiScore(type, t) {
+  t = t.trim();
+  let s = 0;
   if (type === "email") {
-    dorks.push(`"${t}"`);
-    dorks.push(`"${t}" site:pastebin.com`);
-    dorks.push(`"${t}" filetype:pdf`);
-    dorks.push(`"${t}" -site:${t.split("@")[1] || "example.com"}`);
+    if (/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(t)) s += 60;
+    if (/\d/.test(t)) s += 20;
+    if (t.length > 15) s += 20;
   } else if (type === "username") {
-    dorks.push(`"${t}" site:github.com`);
-    dorks.push(`"${t}" site:twitter.com OR site:x.com`);
-    dorks.push(`"${t}" site:reddit.com`);
-    dorks.push(`"${t}" inurl:profile`);
-    dorks.push(`intitle:"${t}"`);
+    if (/^[a-zA-Z0-9_.]+$/.test(t)) s += 40;
+    if (t.length >= 6 && t.length <= 15) s += 40;
+    if (/\d/.test(t)) s += 20;
   } else {
-    // Prénom + Nom : dorks croisés
-    const parts = t.split(" ");
-    if (parts.length >= 2) {
-      dorks.push(`"${parts[0]}" "${parts[1]}"`);
-      dorks.push(`"${parts[0]} ${parts[1]}" site:linkedin.com`);
-      dorks.push(`"${parts[0]} ${parts[1]}" site:facebook.com`);
-      dorks.push(`"${parts[0]} ${parts[1]}" filetype:pdf`);
-      dorks.push(`"${parts[0]} ${parts[1]}" email OR contact`);
-      dorks.push(`"${parts[1]}" "${parts[0]}" site:github.com`);
-    } else {
-      dorks.push(`"${t}"`);
-    }
+    const p = t.split(/\s+/);
+    if (p.length >= 2) s += 50;
+    if (p.every(x => /^[A-Za-zÀ-ÿ-]+$/.test(x))) s += 30;
+    if (t.length > 8) s += 20;
   }
-  return dorks;
+  return Math.min(s, 100);
 }
 
-// Construit les URLs de moteurs de recherche à partir des dorks
-function buildSearchLinks(dorks) {
-  return dorks.map(d => {
-    const encoded = encodeURIComponent(d);
-    return {
-      dork: d,
-      google: `https://www.google.com/search?q=${encoded}`,
-      bing: `https://www.bing.com/search?q=${encoded}`,
-      duck: `https://duckduckgo.com/?q=${encoded}`
-    };
-  });
-}
-
-// Outils OSINT externes (liens directs, pas d'API pour rester local)
-function buildTools(type, target) {
-  const t = encodeURIComponent(target.trim());
-  const tools = [];
-  if (type === "email") {
-    tools.push({ name: "Have I Been Pwned", url: `https://haveibeenpwned.com/account/${t}` });
-    tools.push({ name: "Hunter.io", url: `https://hunter.io/search/${t}` });
-    tools.push({ name: "Epieos", url: `https://epieos.com/?q=${t}` });
-    tools.push({ name: "EmailRep", url: `https://emailrep.io/${t}` });
-  } else if (type === "username") {
-    tools.push({ name: "Namechk", url: `https://namechk.com/?q=${t}` });
-    tools.push({ name: "WhatsMyName", url: `https://whatsmyname.app/?q=${t}` });
-    tools.push({ name: "Sherlock (local)", url: `#` });
-    tools.push({ name: "GitHub Search", url: `https://github.com/search?q=${t}&type=users` });
-  } else {
-    tools.push({ name: "TruePeopleSearch", url: `https://www.truepeoplesearch.com/results?name=${t}` });
-    tools.push({ name: "FastPeopleSearch", url: `https://www.fastpeoplesearch.com/name/${t}` });
-    tools.push({ name: "LinkedIn", url: `https://www.linkedin.com/search/results/all/?keywords=${t}` });
-    tools.push({ name: "Facebook", url: `https://www.facebook.com/search/top?q=${t}` });
-  }
-  return tools;
-}
-
-// "IA" locale : scoring de probabilité basé sur heuristiques
-function aiScore(type, target) {
-  let score = 0;
-  const t = target.trim();
-  if (type === "email") {
-    if (/^[^@]+@[^@]+\.[^@]+$/.test(t)) score += 40;
-    if (/gmail|yahoo|outlook|hotmail|proton/i.test(t)) score += 20;
-    if (/\d/.test(t)) score += 10;
-    if (t.length > 15) score += 10;
-  } else if (type === "username") {
-    if (/^[a-zA-Z0-9_.]+$/.test(t)) score += 30;
-    if (t.length >= 6 && t.length <= 15) score += 30;
-    if (/\d/.test(t)) score += 15;
-  } else {
-    const parts = t.split(" ");
-    if (parts.length >= 2) score += 40;
-    if (parts.every(p => /^[A-Za-zÀ-ÿ-]+$/.test(p))) score += 30;
-    if (t.length > 8) score += 10;
-  }
-  return Math.min(score, 100);
-}
-
-// Rendu des résultats dans le DOM
+// Rendu final : uniquement les résultats exploitables
 function render(type, target) {
-  const results = document.getElementById("results");
+  const out = document.getElementById("out");
   const dorks = buildDorks(type, target);
-  const links = buildSearchLinks(dorks);
   const tools = buildTools(type, target);
   const score = aiScore(type, target);
 
-  let html = "";
-  html += `<span class="ok">> CIBLE : ${target}</span>\n`;
-  html += `<span class="info">> TYPE : ${type}</span>\n`;
-  html += `<span class="info">> SCORE IA (pertinence) : ${score}/100</span>\n\n`;
+  let html = `<div class="score">pertinence ${score}/100</div>`;
 
-  html += `<span class="ok">[ GOOGLE DORKS ]</span>\n`;
-  links.forEach((l, i) => {
-    html += `${i + 1}. ${l.dork}\n`;
-    html += `   <a href="${l.google}" target="_blank" style="color:#00ff9d">Google</a> | `;
-    html += `<a href="${l.bing}" target="_blank" style="color:#00ff9d">Bing</a> | `;
-    html += `<a href="${l.duck}" target="_blank" style="color:#00ff9d">DuckDuckGo</a>\n`;
-  });
+  if (dorks.length) {
+    html += `<div class="card"><div class="label">Google Dorks</div><div class="value">`;
+    dorks.forEach(d => {
+      const q = encodeURIComponent(d);
+      html += `<div>· ${d} — <a href="https://www.google.com/search?q=${q}" target="_blank">Google</a></div>`;
+    });
+    html += `</div></div>`;
+  }
 
-  html += `\n<span class="ok">[ OUTILS OSINT ]</span>\n`;
-  tools.forEach(t => {
-    html += `<span class="tag"><a href="${t.url}" target="_blank" style="color:#00ff9d;text-decoration:none">${t.name}</a></span>`;
-  });
+  if (tools.length) {
+    html += `<div class="card"><div class="label">Outils</div><div class="tags">`;
+    tools.forEach(([n, u]) => {
+      html += `<span class="tag"><a href="${u}" target="_blank">${n}</a></span>`;
+    });
+    html += `</div></div>`;
+  }
 
-  results.innerHTML = html;
+  out.innerHTML = html;
 }
 
-// Événement bouton
 document.getElementById("go").addEventListener("click", () => {
   const type = document.getElementById("type").value;
   const target = document.getElementById("target").value;
+  const out = document.getElementById("out");
   if (!target.trim()) {
-    document.getElementById("results").innerHTML = `<span class="err">> ERREUR : cible vide.</span>`;
+    out.innerHTML = `<div class="empty">saisir une cible</div>`;
     return;
   }
-  const loader = document.getElementById("loader");
-  loader.style.display = "block";
-  document.getElementById("go").disabled = true;
-  // Simulation latence IA
-  setTimeout(() => {
-    loader.style.display = "none";
-    document.getElementById("go").disabled = false;
-    render(type, target);
-  }, 600);
+  out.innerHTML = `<div class="empty">analyse...</div>`;
+  setTimeout(() => render(type, target), 300);
 });
 </script>
 </body>
