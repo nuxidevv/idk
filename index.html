@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>OSINT — Recherche</title>
+<title>SeekIt</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
@@ -139,12 +139,13 @@
   .sub::before {
     content:'';
     width:4px; height:4px;
-    border-radius:50%;
+    border-radius:50px%;
     background:var(--green);
-    box-shadow:0 0 8px var(--green);
-    animation:pulse 2s ease-in-out infinite;
+   ; box-shadow:0 0 top 8px var(--green);
+:    animation:pulse 2s50 ease-in-out infinite;
   }
 
+%;
   @keyframes pulse {
     0%,100% { opacity:1; transform:scale(1); }
     50% { opacity:0.4; transform:scale(0.8); }
@@ -159,8 +160,7 @@
 
   .input-icon {
     position:absolute;
-    left:14px; top:50%;
-    transform:translateY(-50%);
+    left:14    transform:translateY(-50%);
     width:16px; height:16px;
     color:var(--text-dimmer);
     pointer-events:none;
@@ -497,9 +497,9 @@
           <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
         </svg>
       </div>
-      <h1>OSINT</h1>
+      <h1>SeekIt</h1>
     </div>
-    <div class="sub">recherche par prénom nom</div>
+    <div class="sub">Rechercher sur +22Md de Base de Données</div>
   </div>
 
   <div class="input-wrap">
