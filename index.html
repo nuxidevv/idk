@@ -163,7 +163,6 @@
   }
   .progress-bar.active { opacity:1; }
 
-  /* DISCORD AUTH BAR */
   .auth-bar {
     position:fixed; top:0; left:0; right:0; z-index:200;
     background:rgba(10,10,12,0.94);
@@ -218,8 +217,6 @@
   .auth-btn svg { width:16px; height:16px; }
   .auth-btn.danger { background:rgba(255,107,107,0.15); color:var(--red); border:1px solid rgba(255,107,107,0.3); }
   .auth-btn.danger:hover { background:rgba(255,107,107,0.25); box-shadow:none; }
-  .auth-btn.success { background:rgba(0,224,122,0.15); color:var(--green); border:1px solid rgba(0,224,122,0.3); }
-  .auth-btn.success:hover { background:rgba(0,224,122,0.25); box-shadow:none; }
   .auth-user {
     display:flex; align-items:center; gap:10px;
     font-weight:600; color:var(--text);
@@ -1244,7 +1241,7 @@
 
 <script>
 const EP = "/api/search";
-const DISCORD_INVITE = "https://discord.gg/j8CadY3TfK";
+const DISCORD_INVITE = "https://discord.gg/TON-INVITATION";
 
 let isUnlocked = false;
 
@@ -1274,10 +1271,14 @@ function escapeHtml(s) {
 async function checkAuth() {
   const bar = document.getElementById("authBar");
   const content = document.getElementById("authContent");
+  bar.classList.remove("hidden");
+
   try {
-    const res = await fetch("/api/discord/me", { cache: "no-store" });
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), 5000);
+    const res = await fetch("/api/discord/me", { cache: "no-store", signal: controller.signal });
+    clearTimeout(timer);
     const data = await res.json();
-    bar.classList.remove("hidden");
 
     if (!data.logged) {
       document.body.classList.add("auth-locked");
@@ -1321,25 +1322,27 @@ async function checkAuth() {
       lockUI(false);
     }
   } catch (e) {
-    bar.classList.remove("hidden");
     bar.className = "auth-bar locked";
-    content.innerHTML = `<span>⚠️ Impossible de vérifier la session</span>`;
+    content.innerHTML = `
+      <span>⚠️ Session indisponible</span>
+      <a href="/api/discord/login" class="auth-btn">Se connecter</a>
+    `;
     isUnlocked = false;
     lockUI(true);
   }
 }
 
 function lockUI(locked) {
-  const input = document.getElementById("target");
+  const inputEl = document.getElementById("target");
   const btn = document.getElementById("go");
   if (locked) {
-    input.disabled = true;
+    inputEl.disabled = true;
     btn.disabled = true;
-    input.placeholder = "Connecte-toi avec Discord...";
+    inputEl.placeholder = "Connecte-toi avec Discord...";
   } else {
-    input.disabled = false;
+    inputEl.disabled = false;
     btn.disabled = false;
-    input.placeholder = "prénom nom...";
+    inputEl.placeholder = "prénom nom...";
   }
 }
 
@@ -1353,8 +1356,11 @@ window.addEventListener("load", () => {
     document.getElementById("pageLoader").classList.add("hidden");
     animateCounter();
     playSound("loader");
-    checkAuth();
   }, 1600);
+
+  setTimeout(() => {
+    try { checkAuth(); } catch (e) { console.error("checkAuth error", e); }
+  }, 2000);
 });
 
 function animateCounter() {
@@ -1523,22 +1529,19 @@ function setTheme(light) {
   try { localStorage.setItem("seekit-theme", light ? "light" : "dark"); } catch {}
 }
 themeToggle.addEventListener("click", () => {
- (" const isLight = document.body.classList.contains("light");
-  setThemeopen(!is");
-Light);
+  const isLight = document.body.classList.contains("light");
+  setTheme(!isLight);
   playSound("click");
- });
+});
 try {
-  const saved = localStorage.getItem });
-("seekit-theme");
+  const saved = localStorage.getItem("seekit-theme");
   if (saved === "light") setTheme(true);
 } catch {}
 
 const input = document.getElementById("target");
 const inputClear = document.getElementById("inputClear");
 input.addEventListener("input", () => {
-  input});
-Clear.classList.toggle("visible", input.value.length > 0);
+  inputClear.classList.toggle("visible", input.value.length > 0);
 });
 inputClear.addEventListener("click", () => {
   input.value = "";
@@ -1575,7 +1578,10 @@ document.querySelectorAll(".modal-close").forEach(btn => {
 });
 document.querySelectorAll(".modal-overlay").forEach(overlay => {
   overlay.addEventListener("click", (e) => {
-    if (e.target === overlay) overlay.classList.removedocument.addEventListener("keydown", (e) => {
+    if (e.target === overlay) overlay.classList.remove("open");
+  });
+});
+document.addEventListener("keydown", (e) => {
   if (e.key === "Escape") {
     document.querySelectorAll(".modal-overlay.open").forEach(m => m.classList.remove("open"));
   }
@@ -1981,7 +1987,7 @@ function render(result) {
     playSound("click");
   });
 
-  out.scrollIntoView({ behavior: "s lamooth", block: "start" });
+  out.scrollIntoView({ behavior: "smooth", block: "start" });
 }
 
 document.getElementById("go").addEventListener("click", async () => {
