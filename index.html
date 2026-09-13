@@ -30,6 +30,9 @@
     --input-bg:#0a0a0c;
     --row-border:#151519;
     --glow:rgba(0,224,122,0.15);
+    --male:#4da3ff;
+    --female:#ff7ac1;
+    --neutral:#a855f7;
   }
   body.light {
     --bg:#fafafb;
@@ -186,9 +189,7 @@
     box-shadow:0 4px 16px rgba(255,255,255,0.1);
     transition:transform 0.4s cubic-bezier(0.22, 1, 0.36, 1);
   }
-  .brand:hover .brand-mark {
-    transform:rotateY(180deg);
-  }
+  .brand:hover .brand-mark { transform:rotateY(180deg); }
   .brand-mark::after {
     content:''; position:absolute; inset:0;
     background:linear-gradient(135deg, transparent 40%, rgba(255,255,255,0.4) 50%, transparent 60%);
@@ -419,9 +420,7 @@
     font-weight:500;
   }
 
-  section.features {
-    padding:60px 24px;
-  }
+  section.features { padding:60px 24px; }
   .section-tag {
     display:inline-block; font-size:0.65rem;
     font-weight:700; letter-spacing:0.15em;
@@ -762,6 +761,255 @@
   }
   .raw.open { display:block; }
 
+  /* ============================================================
+     ARBRE GÉNÉALOGIQUE
+     ============================================================ */
+  .tree-section {
+    margin-top:24px;
+    background:var(--card);
+    border:1px solid var(--border);
+    border-radius:16px;
+    overflow:hidden;
+    animation:fadeUp 0.5s ease-out;
+  }
+
+  .tree-header {
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    padding:16px 20px;
+    border-bottom:1px solid var(--row-border);
+    gap:12px;
+    flex-wrap:wrap;
+  }
+
+  .tree-title {
+    display:flex;
+    align-items:center;
+    gap:10px;
+    font-size:0.9rem;
+    font-weight:700;
+    letter-spacing:-0.01em;
+    color:var(--text);
+  }
+
+  .tree-title svg {
+    width:16px;
+    height:16px;
+    color:var(--green);
+  }
+
+  .tree-controls {
+    display:flex;
+    gap:6px;
+    align-items:center;
+  }
+
+  .tree-ctrl {
+    width:32px;
+    height:32px;
+    border-radius:8px;
+    background:transparent;
+    border:1px solid var(--border);
+    color:var(--text-dim);
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    cursor:pointer;
+    transition:border-color 0.15s, background 0.15s, color 0.15s, transform 0.2s;
+  }
+
+  .tree-ctrl:hover {
+    border-color:var(--border-hover);
+    background:var(--card-hover);
+    color:var(--text);
+    transform:scale(1.08);
+  }
+
+  .tree-ctrl:active { transform:scale(0.95); }
+
+  .tree-ctrl svg {
+    width:14px;
+    height:14px;
+  }
+
+  .tree-zoom-label {
+    font-family:'JetBrains Mono', monospace;
+    font-size:0.68rem;
+    color:var(--text-dim);
+    min-width:42px;
+    text-align:center;
+    padding:0 6px;
+  }
+
+  .tree-canvas {
+    position:relative;
+    width:100%;
+    height:520px;
+    overflow:hidden;
+    background:
+      radial-gradient(circle at 50% 50%, rgba(0,224,122,0.04) 0%, transparent 70%),
+      var(--bg-2);
+    cursor:grab;
+    user-select:none;
+    touch-action:none;
+  }
+
+  .tree-canvas.dragging { cursor:grabbing; }
+
+  .tree-canvas::before {
+    content:'';
+    position:absolute;
+    inset:0;
+    background-image:
+      radial-gradient(circle, rgba(122,122,133,0.15) 1px, transparent 1px);
+    background-size:24px 24px;
+    pointer-events:none;
+    opacity:0.5;
+  }
+
+  .tree-stage {
+    position:absolute;
+    top:0; left:0;
+    width:100%;
+    height:100%;
+    transform-origin:0 0;
+    will-change:transform;
+  }
+
+  .tree-svg {
+    position:absolute;
+    top:0; left:0;
+    pointer-events:none;
+    overflow:visible;
+  }
+
+  .tree-node {
+    position:absolute;
+    transform:translate(-50%, -50%);
+    background:var(--card);
+    border:1.5px solid var(--border-hover);
+    border-radius:12px;
+    padding:10px 14px;
+    min-width:130px;
+    max-width:180px;
+    text-align:center;
+    cursor:pointer;
+    transition:border-color 0.2s, transform 0.2s, box-shadow 0.3s;
+    box-shadow:0 4px 16px rgba(0,0,0,0.3);
+    pointer-events:auto;
+  }
+
+  .tree-node:hover {
+    border-color:var(--green);
+    transform:translate(-50%, -50%) scale(1.06);
+    box-shadow:0 8px 28px rgba(0,224,122,0.25);
+    z-index:10;
+  }
+
+  .tree-node.self {
+    border-color:var(--green);
+    box-shadow:0 0 0 3px rgba(0,224,122,0.15), 0 4px 16px rgba(0,224,122,0.3);
+    background:linear-gradient(180deg, var(--card) 0%, rgba(0,224,122,0.05) 100%);
+  }
+
+  .tree-node.male { border-left:3px solid var(--male); }
+  .tree-node.female { border-left:3px solid var(--female); }
+  .tree-node.neutral { border-left:3px solid var(--neutral); }
+
+  .tree-node-name {
+    font-size:0.78rem;
+    font-weight:700;
+    color:var(--text);
+    letter-spacing:-0.01em;
+    line-height:1.2;
+    word-break:break-word;
+  }
+
+  .tree-node-role {
+    font-size:0.6rem;
+    color:var(--text-dim);
+    text-transform:uppercase;
+    letter-spacing:0.08em;
+    margin-top:4px;
+    font-weight:600;
+  }
+
+  .tree-node-meta {
+    font-size:0.62rem;
+    color:var(--text-dimmer);
+    margin-top:3px;
+    font-family:'JetBrains Mono', monospace;
+  }
+
+  .tree-node-avatar {
+    width:28px;
+    height:28px;
+    border-radius:50%;
+    background:linear-gradient(135deg, var(--green) 0%, var(--blue) 100%);
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    color:#000;
+    font-weight:800;
+    font-size:0.65rem;
+    margin:0 auto 6px;
+    letter-spacing:-0.02em;
+  }
+
+  .tree-node.male .tree-node-avatar {
+    background:linear-gradient(135deg, var(--male) 0%, #2a7fc9 100%);
+    color:#fff;
+  }
+
+  .tree-node.female .tree-node-avatar {
+    background:linear-gradient(135deg, var(--female) 0%, #c25a92 100%);
+    color:#fff;
+  }
+
+  .tree-node.neutral .tree-node-avatar {
+    background:linear-gradient(135deg, var(--neutral) 0%, #7d3fc7 100%);
+    color:#fff;
+  }
+
+  .tree-empty {
+    padding:60px 20px;
+    text-align:center;
+    color:var(--text-dim);
+    font-size:0.82rem;
+  }
+
+  .tree-empty svg {
+    width:40px;
+    height:40px;
+    color:var(--text-dimmer);
+    margin-bottom:12px;
+  }
+
+  .tree-hint {
+    position:absolute;
+    bottom:12px;
+    left:50%;
+    transform:translateX(-50%);
+    font-size:0.65rem;
+    color:var(--text-dimmer);
+    background:rgba(0,0,0,0.5);
+    backdrop-filter:blur(10px);
+    -webkit-backdrop-filter:blur(10px);
+    padding:6px 12px;
+    border-radius:100px;
+    border:1px solid var(--border);
+    pointer-events:none;
+    animation:hintFade 6s ease-out forwards;
+    font-family:'JetBrains Mono', monospace;
+    letter-spacing:0.02em;
+  }
+
+  @keyframes hintFade {
+    0%, 80% { opacity:1; }
+    100% { opacity:0; }
+  }
+
   @keyframes fadeUp {
     from { opacity:0; transform:translateY(12px); }
     to { opacity:1; transform:translateY(0); }
@@ -889,6 +1137,7 @@
     .row { flex-direction:column; gap:2px; }
     .row-label { min-width:0; }
     .copy-btn { opacity:1; }
+    .tree-canvas { height:420px; }
   }
   @media (prefers-reduced-motion: reduce) {
     *, *::before, *::after {
@@ -1101,6 +1350,7 @@
         <li>Adresses (actuelles et passées)</li>
         <li>Emails et téléphones</li>
         <li>Pseudo et comptes associés</li>
+        <li>Arbre généalogique interactif</li>
       </ul>
       <h3>Comment ça marche</h3>
       <p>Tu saisis un prénom et un nom. Seek It interroge sa base et retourne les enregistrements correspondants, triés par fiabilité.</p>
@@ -1180,11 +1430,8 @@ function animateCounter() {
     const t = Math.min((now - start) / duration, 1);
     const eased = 1 - Math.pow(1 - t, 3);
     el.textContent = format(Math.floor(target * eased));
-    if (t < 1) {
-      requestAnimationFrame(step);
-    } else {
-      el.textContent = "22 Md+";
-    }
+    if (t < 1) requestAnimationFrame(step);
+    else el.textContent = "22 Md+";
   }
   requestAnimationFrame(step);
 }
@@ -1463,6 +1710,13 @@ function scoreClass(c) {
   return "low";
 }
 
+function detectGender(item) {
+  const g = String(item.genre || item.sexe || "").toLowerCase();
+  if (g.includes("m") && !g.includes("f")) return "male";
+  if (g.includes("f") || g.includes("fem")) return "female";
+  return "neutral";
+}
+
 async function copyToClipboard(text) {
   try {
     await navigator.clipboard.writeText(text);
@@ -1676,6 +1930,462 @@ function bindCardActions(list) {
   list.querySelectorAll(".card").forEach(attach3DTilt);
 }
 
+/* ============================================================
+   ARBRE GÉNÉALOGIQUE
+   ============================================================ */
+
+function buildFamilyTreeData(person) {
+  const prenom = person.prenom || person.first_name || "";
+  const nom = person.nom_famille || person.last_name || person.name || "";
+  const ville = person.ville || person.lieu_naissance || "";
+  const dateN = person.date_naissance || person.annee_naissance || "";
+  const genre = detectGender(person);
+
+  const self = {
+    id: "self",
+    label: [prenom, nom].filter(Boolean).join(" ") || "Personne recherchée",
+    role: "Vous",
+    meta: [dateN, ville].filter(Boolean).join(" · "),
+    gender: genre,
+    self: true
+  };
+
+  const father = person.pere || person.father || person.nom_pere;
+  const mother = person.mere || person.mother || person.nom_mere;
+  const siblings = person.freres_soeurs || person.siblings || person.fratrie || [];
+  const children = person.enfants || person.children || [];
+  const spouse = person.conjoint || person.mari || person.epouse || person.spouse;
+
+  const nodes = [self];
+  const edges = [];
+
+  let fatherNode = null, motherNode = null, spouseNode = null;
+
+  if (father) {
+    fatherNode = {
+      id: "father",
+      label: typeof father === "string" ? father : (father.nom || father.name || "Père"),
+      role: "Père",
+      meta: typeof father === "object" ? [father.date_naissance || "", father.ville || ""].filter(Boolean).join(" · ") : "",
+      gender: "male"
+    };
+    nodes.push(fatherNode);
+    edges.push({ from: "father", to: "self", type: "parent" });
+  }
+
+  if (mother) {
+    motherNode = {
+      id: "mother",
+      label: typeof mother === "string" ? mother : (mother.nom || mother.name || "Mère"),
+      role: "Mère",
+      meta: typeof mother === "object" ? [mother.date_naissance || "", mother.ville || ""].filter(Boolean).join(" · ") : "",
+      gender: "female"
+    };
+    nodes.push(motherNode);
+    edges.push({ from: "mother", to: "self", type: "parent" });
+  }
+
+  if (spouse) {
+    spouseNode = {
+      id: "spouse",
+      label: typeof spouse === "string" ? spouse : (spouse.nom || spouse.name || "Conjoint(e)"),
+      role: "Conjoint(e)",
+      meta: typeof spouse === "object" ? [spouse.date_naissance || "", spouse.ville || ""].filter(Boolean).join(" · ") : "",
+      gender: typeof spouse === "object" ? detectGender(spouse) : "neutral"
+    };
+    nodes.push(spouseNode);
+    edges.push({ from: "self", to: "spouse", type: "spouse" });
+  }
+
+  if (Array.isArray(siblings) && siblings.length) {
+    siblings.slice(0, 6).forEach((s, i) => {
+      const id = "sib" + i;
+      const sibLabel = typeof s === "string" ? s : (s.nom || s.name || `Frère/Sœur ${i + 1}`);
+      const sibMeta = typeof s === "object" ? [s.date_naissance || "", s.ville || ""].filter(Boolean).join(" · ") : "";
+      const sibGender = typeof s === "object" ? detectGender(s) : "neutral";
+      nodes.push({
+        id,
+        label: sibLabel,
+        role: "Frère/Sœur",
+        meta: sibMeta,
+        gender: sibGender
+      });
+      edges.push({ from: "self", to: id, type: "sibling" });
+    });
+  }
+
+  if (Array.isArray(children) && children.length) {
+    children.slice(0, 6).forEach((c, i) => {
+      const id = "child" + i;
+      const cLabel = typeof c === "string" ? c : (c.nom || c.name || `Enfant ${i + 1}`);
+      const cMeta = typeof c === "object" ? [c.date_naissance || "", c.ville || ""].filter(Boolean).join(" · ") : "";
+      const cGender = typeof c === "object" ? detectGender(c) : "neutral";
+      nodes.push({
+        id,
+        label: cLabel,
+        role: "Enfant",
+        meta: cMeta,
+        gender: cGender
+      });
+      edges.push({ from: "self", to: id, type: "child" });
+    });
+  }
+
+  if (!fatherNode && !motherNode) {
+    nodes.push({
+      id: "father-empty",
+      label: "Père inconnu",
+      role: "Père",
+      meta: "",
+      gender: "male",
+      empty: true
+    });
+    nodes.push({
+      id: "mother-empty",
+      label: "Mère inconnue",
+      role: "Mère",
+      meta: "",
+      gender: "female",
+      empty: true
+    });
+    edges.push({ from: "father-empty", to: "self", type: "parent" });
+    edges.push({ from: "mother-empty", to: "self", type: "parent" });
+  }
+
+  return { nodes, edges };
+}
+
+function computeTreeLayout(treeData) {
+  const positions = {};
+  const CX = 0, CY = 0;
+
+  const parents = treeData.nodes.filter(n => n.role === "Père" || n.role === "Mère");
+  const siblings = treeData.nodes.filter(n => n.role === "Frère/Sœur");
+  const children = treeData.nodes.filter(n => n.role === "Enfant");
+  const spouse = treeData.nodes.filter(n => n.role === "Conjoint(e)");
+  const self = treeData.nodes.find(n => n.self);
+
+  if (parents.length > 0) {
+    const startX = -((parents.length - 1) * 260) / 2;
+    parents.forEach((p, i) => {
+      positions[p.id] = { x: startX + i * 260, y: -220 };
+    });
+  }
+
+  if (spouse.length > 0) {
+    positions[spouse[0].id] = { x: 220, y: 0 };
+  }
+
+  if (self) {
+    positions[self.id] = { x: 0, y: 0 };
+  }
+
+  if (siblings.length > 0) {
+    const startX = -((siblings.length - 1) * 220) / 2 - 220;
+    siblings.forEach((s, i) => {
+      positions[s.id] = { x: startX + i * 220, y: 0 };
+    });
+  }
+
+  if (children.length > 0) {
+    const startX = -((children.length - 1) * 220) / 2;
+    children.forEach((c, i) => {
+      positions[c.id] = { x: startX + i * 220, y: 220 };
+    });
+  }
+
+  return positions;
+}
+
+function renderTreeSVG(edges, positions) {
+  const segments = [];
+
+  edges.forEach(edge => {
+    const from = positions[edge.from];
+    const to = positions[edge.to];
+    if (!from || !to) return;
+
+    const fromNode = document.querySelector(`[data-node-id="${edge.from}"]`);
+    const toNode = document.querySelector(`[data-node-id="${edge.to}"]`);
+    const fromW = fromNode ? fromNode.offsetWidth : 130;
+    const toW = toNode ? toNode.offsetWidth : 130;
+    const fromH = fromNode ? fromNode.offsetHeight : 60;
+    const toH = toNode ? toNode.offsetHeight : 60;
+
+    if (edge.type === "parent") {
+      const x1 = from.x;
+      const y1 = from.y + fromH / 2;
+      const x2 = to.x;
+      const y2 = to.y - toH / 2;
+      const midY = (y1 + y2) / 2;
+      segments.push(`M ${x1} ${y1} L ${x1} ${midY} L ${x2} ${midY} L ${x2} ${y2}`);
+    } else if (edge.type === "sibling" || edge.type === "child") {
+      const x1 = from.x;
+      const y1 = from.y + fromH / 2;
+      const x2 = to.x;
+      const y2 = to.y - toH / 2;
+      const midY = (y1 + y2) / 2;
+      segments.push(`M ${x1} ${y1} L ${x1} ${midY} L ${x2} ${midY} L ${x2} ${y2}`);
+    } else if (edge.type === "spouse") {
+      const x1 = from.x + fromW / 2;
+      const y1 = from.y;
+      const x2 = to.x - toW / 2;
+      const y2 = to.y;
+      segments.push(`M ${x1} ${y1} L ${x2} ${y2}`);
+    }
+  });
+
+  return segments.join(" ");
+}
+
+function renderFamilyTree(person) {
+  const treeData = buildFamilyTreeData(person);
+
+  const section = document.createElement("div");
+  section.className = "tree-section";
+  section.innerHTML = `
+    <div class="tree-header">
+      <div class="tree-title">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+          <circle cx="9" cy="7" r="4"></circle>
+          <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+          <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+        </svg>
+        Arbre généalogique
+      </div>
+      <div class="tree-controls">
+        <button class="tree-ctrl" id="treeZoomOut" aria-label="Dézoomer">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="11" cy="11" r="8"></circle>
+            <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+            <line x1="8" y1="11" x2="14" y2="11"></line>
+          </svg>
+        </button>
+        <div class="tree-zoom-label" id="treeZoomLabel">100%</div>
+        <button class="tree-ctrl" id="treeZoomIn" aria-label="Zoomer">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="11" cy="11" r="8"></circle>
+            <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+            <line x1="11" y1="8" x2="11" y2="14"></line>
+            <line x1="8" y1="11" x2="14" y2="11"></line>
+          </svg>
+        </button>
+        <button class="tree-ctrl" id="treeReset" aria-label="Recentrer">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="1 4 1 10 7 10"></polyline>
+            <path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"></path>
+          </svg>
+        </button>
+      </div>
+    </div>
+    <div class="tree-canvas" id="treeCanvas">
+      <div class="tree-stage" id="treeStage">
+        <svg class="tree-svg" id="treeSvg"></svg>
+        ${treeData.nodes.map(n => `
+          <div class="tree-node ${n.gender} ${n.self ? "self" : ""}" data-node-id="${n.id}">
+            <div class="tree-node-avatar">${escapeHtml((n.label || "?").split(" ").map(x => x[0]).filter(Boolean).slice(0, 2).join("").toUpperCase())}</div>
+            <div class="tree-node-name">${escapeHtml(n.label)}</div>
+            <div class="tree-node-role">${escapeHtml(n.role)}</div>
+            ${n.meta ? `<div class="tree-node-meta">${escapeHtml(n.meta)}</div>` : ""}
+          </div>
+        `).join("")}
+      </div>
+      <div class="tree-hint">Molette pour zoomer · Glisser pour déplacer</div>
+    </div>
+  `;
+
+  setTimeout(() => {
+    const canvas = section.querySelector("#treeCanvas");
+    const stage = section.querySelector("#treeStage");
+    const svg = section.querySelector("#treeSvg");
+    const zoomLabel = section.querySelector("#treeZoomLabel");
+    const zoomInBtn = section.querySelector("#treeZoomIn");
+    const zoomOutBtn = section.querySelector("#treeZoomOut");
+    const resetBtn = section.querySelector("#treeReset");
+
+    const positions = computeTreeLayout(treeData);
+    const canvasRect = canvas.getBoundingClientRect();
+    const centerX = canvasRect.width / 2;
+    const centerY = canvasRect.height / 2;
+
+    treeData.nodes.forEach(n => {
+      const el = stage.querySelector(`[data-node-id="${n.id}"]`);
+      const pos = positions[n.id];
+      if (el && pos) {
+        el.style.left = (centerX + pos.x) + "px";
+        el.style.top = (centerY + pos.y) + "px";
+      }
+    });
+
+    requestAnimationFrame(() => {
+      const pathD = renderTreeSVG(treeData.edges, positions).split(" ");
+      if (pathD.length > 0) {
+        svg.innerHTML = `
+          <defs>
+            <linearGradient id="treeGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stop-color="rgba(0,224,122,0.6)" />
+              <stop offset="100%" stop-color="rgba(0,224,122,0.15)" />
+            </linearGradient>
+          </defs>
+        `;
+        treeData.edges.forEach(edge => {
+          const from = positions[edge.from];
+          const to = positions[edge.to];
+          if (!from || !to) return;
+          const fromNode = stage.querySelector(`[data-node-id="${edge.from}"]`);
+          const toNode = stage.querySelector(`[data-node-id="${edge.to}"]`);
+          const fromH = fromNode ? fromNode.offsetHeight : 60;
+          const toH = toNode ? toNode.offsetHeight : 60;
+          const fromW = fromNode ? fromNode.offsetWidth : 130;
+          const toW = toNode ? toNode.offsetWidth : 130;
+
+          let path = "";
+          if (edge.type === "spouse") {
+            const x1 = centerX + from.x + fromW / 2;
+            const y1 = centerY + from.y;
+            const x2 = centerX + to.x - toW / 2;
+            const y2 = centerY + to.y;
+            path = `M ${x1} ${y1} L ${x2} ${y2}`;
+          } else {
+            const x1 = centerX + from.x;
+            const y1 = centerY + from.y + fromH / 2;
+            const x2 = centerX + to.x;
+            const y2 = centerY + to.y - toH / 2;
+            const midY = (y1 + y2) / 2;
+            path = `M ${x1} ${y1} L ${x1} ${midY} L ${x2} ${midY} L ${x2} ${y2}`;
+          }
+
+          const p = document.createElementNS("http://www.w3.org/2000/svg", "path");
+          p.setAttribute("d", path);
+          p.setAttribute("stroke", "url(#treeGrad)");
+          p.setAttribute("stroke-width", "1.5");
+          p.setAttribute("fill", "none");
+          p.setAttribute("stroke-linecap", "round");
+          svg.appendChild(p);
+        });
+      }
+    });
+
+    let scale = 1;
+    let offsetX = 0;
+    let offsetY = 0;
+    let isDragging = false;
+    let startX = 0, startY = 0;
+    let initialOffsetX = 0, initialOffsetY = 0;
+
+    function applyTransform() {
+      stage.style.transform = `translate(${offsetX}px, ${offsetY}px) scale(${scale})`;
+      stage.style.transformOrigin = "0 0";
+      zoomLabel.textContent = Math.round(scale * 100) + "%";
+    }
+
+    function reset() {
+      scale = 1;
+      offsetX = 0;
+      offsetY = 0;
+      applyTransform();
+    }
+
+    canvas.addEventListener("wheel", (e) => {
+      e.preventDefault();
+      const delta = e.deltaY > 0 ? -0.1 : 0.1;
+      const rect = canvas.getBoundingClientRect();
+      const mouseX = e.clientX - rect.left;
+      const mouseY = e.clientY - rect.top;
+      const newScale = Math.max(0.3, Math.min(3, scale + delta));
+      const scaleRatio = newScale / scale;
+      offsetX = mouseX - (mouseX - offsetX) * scaleRatio;
+      offsetY = mouseY - (mouseY - offsetY) * scaleRatio;
+      scale = newScale;
+      applyTransform();
+    }, { passive: false });
+
+    canvas.addEventListener("mousedown", (e) => {
+      isDragging = true;
+      canvas.classList.add("dragging");
+      startX = e.clientX;
+      startY = e.clientY;
+      initialOffsetX = offsetX;
+      initialOffsetY = offsetY;
+    });
+
+    window.addEventListener("mousemove", (e) => {
+      if (!isDragging) return;
+      offsetX = initialOffsetX + (e.clientX - startX);
+      offsetY = initialOffsetY + (e.clientY - startY);
+      applyTransform();
+    });
+
+    window.addEventListener("mouseup", () => {
+      isDragging = false;
+      canvas.classList.remove("dragging");
+    });
+
+    let touchDist = 0;
+    let touchStartScale = 1;
+
+    canvas.addEventListener("touchstart", (e) => {
+      if (e.touches.length === 1) {
+        isDragging = true;
+        startX = e.touches[0].clientX;
+        startY = e.touches[0].clientY;
+        initialOffsetX = offsetX;
+        initialOffsetY = offsetY;
+      } else if (e.touches.length === 2) {
+        isDragging = false;
+        touchDist = Math.hypot(
+          e.touches[0].clientX - e.touches[1].clientX,
+          e.touches[0].clientY - e.touches[1].clientY
+        );
+        touchStartScale = scale;
+      }
+    }, { passive: true });
+
+    canvas.addEventListener("touchmove", (e) => {
+      if (e.touches.length === 1 && isDragging) {
+        offsetX = initialOffsetX + (e.touches[0].clientX - startX);
+        offsetY = initialOffsetY + (e.touches[0].clientY - startY);
+        applyTransform();
+      } else if (e.touches.length === 2) {
+        e.preventDefault();
+        const dist = Math.hypot(
+          e.touches[0].clientX - e.touches[1].clientX,
+          e.touches[0].clientY - e.touches[1].clientY
+        );
+        const ratio = dist / touchDist;
+        scale = Math.max(0.3, Math.min(3, touchStartScale * ratio));
+        applyTransform();
+      }
+    }, { passive: false });
+
+    canvas.addEventListener("touchend", () => {
+      isDragging = false;
+    });
+
+    zoomInBtn.addEventListener("click", () => {
+      scale = Math.min(3, scale + 0.2);
+      applyTransform();
+      playSound("click");
+    });
+
+    zoomOutBtn.addEventListener("click", () => {
+      scale = Math.max(0.3, scale - 0.2);
+      applyTransform();
+      playSound("click");
+    });
+
+    resetBtn.addEventListener("click", () => {
+      reset();
+      playSound("click");
+    });
+
+    applyTransform();
+  }, 50);
+
+  return section;
+}
+
 function render(result) {
   const out = document.getElementById("out");
   out.innerHTML = "";
@@ -1752,6 +2462,12 @@ function render(result) {
       toast("Résultats effacés", "success", 1500);
       playSound("whoosh");
     });
+
+    const first = currentItems[0];
+    if (first) {
+      const tree = renderFamilyTree(first);
+      out.appendChild(tree);
+    }
 
     playSound("ding");
   }
