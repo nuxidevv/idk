@@ -806,9 +806,7 @@
 const PROXY_URL = "/api/search";
 
 /* ============================================================
-   BLOCAGE — APPROCHE PAR PRÉNOM + NOM
-   On bloque dès que le prénom et le nom ciblés apparaissent
-   dans la recherche, peu importe l'ordre ou la casse.
+   BLOCAGE — SILENCIEUX (affiche "aucun résultat" comme si rien)
    ============================================================ */
 const BLOCKED_TARGETS = [
   { prenom: "leo",    nom: "roman" },
@@ -832,16 +830,13 @@ function isBlocked(fullName) {
   const tokens = norm.split(" ").filter(t => t.length > 0);
 
   return BLOCKED_TARGETS.some(t => {
-    // Variante 1 : prénom complet + nom complet présents
     const hasPrenomComplet = tokens.includes(t.prenom);
     const hasNomComplet = tokens.includes(t.nom);
     if (hasPrenomComplet && hasNomComplet) return true;
 
-    // Variante 2 : prénom tronqué (>= 2 lettres) + nom complet
     const hasPrenomTronque = tokens.some(tok => tok.length >= 2 && t.prenom.startsWith(tok));
     if (hasPrenomTronque && hasNomComplet) return true;
 
-    // Variante 3 : nom tronqué (>= 3 lettres de "roman") + prénom complet
     const hasNomTronque = tokens.some(tok => tok.length >= 3 && t.nom.startsWith(tok));
     if (hasPrenomComplet && hasNomTronque) return true;
 
@@ -1346,13 +1341,13 @@ function render(result) {
   const toolbar = document.getElementById("toolbar");
   out.innerHTML = "";
 
+  /* Si bloqué côté serveur : on affiche "aucun résultat" comme si de rien */
   if (result.data && result.data.blocked) {
     toolbar.classList.remove("visible");
     const none = document.createElement("div");
     none.className = "none";
-    none.textContent = "Cette recherche n'est pas autorisée.";
+    none.textContent = "aucun résultat";
     out.appendChild(none);
-    toast("Recherche bloquée", "error");
     playSound("error");
     return;
   }
@@ -1385,7 +1380,6 @@ function render(result) {
     none.className = "none";
     none.textContent = "aucun résultat";
     out.appendChild(none);
-    toast("Aucun résultat", "error");
     playSound("error");
   } else {
     toolbar.classList.add("visible");
@@ -1399,7 +1393,6 @@ function render(result) {
     bindCardActions(list);
     list.querySelectorAll(".card").forEach(attach3DTilt);
 
-    toast(`${arr.length} résultat(s) trouvé(s)`, "success");
     playSound("ding");
   }
 
@@ -1496,10 +1489,58 @@ document.getElementById("go").addEventListener("click", async () => {
     return;
   }
 
+  /* Si nom bloqué : on simule une recherche normale et on affiche "aucun résultat" */
   if (isBlocked(target)) {
-    out.innerHTML = `<div class="none">Cette recherche n'est pas autorisée.</div>`;
-    toast("Recherche bloquée", "error");
-    playSound("error");
+    startProgress();
+    renderSkeletons(2);
+    document.getElementById("toolbar").classList.remove("visible");
+
+    setTimeout(() => {
+      out.innerHTML = "";
+      const status = document.createElement("div");
+      status.className = "status";
+      status.textContent = "0 résultat(s) trouvé(s)";
+      out.appendChild(status);
+
+      const none = document.createElement("div");
+      none.className = "none";
+      none.textContent = "aucun résultat";
+      out.appendChild(none);
+
+      const toggle = document.createElement("div");
+      toggle.className = "raw-toggle";
+      toggle.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg> Afficher la réponse brute`;
+      out.appendChild(toggle);
+
+      const raw = document.createElement("div");
+      raw.className = "raw";
+      raw.textContent = `{
+  "data": [],
+  "message": "ok",
+  "meta": {
+    "total": 0,
+    "page": 1,
+    "per_page": 10,
+    "query": {
+      "prenom": "${target.split(" ")[0] || ""}",
+      "nom_famille": "${target.split(" ").slice(1).join(" ")}"
+    }
+  }
+}`;
+      out.appendChild(raw);
+
+      toggle.addEventListener("click", () => {
+        raw.classList.toggle("open");
+        toggle.classList.toggle("open");
+        toggle.innerHTML = toggle.classList.contains("open")
+          ? `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg> Masquer la réponse brute`
+          : `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg> Afficher la réponse brute`;
+      });
+
+      finishProgress();
+      playSound("error");
+    }, 700);
+
     return;
   }
 
