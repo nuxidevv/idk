@@ -57,7 +57,6 @@
     -webkit-font-smoothing:antialiased;
     perspective:1400px;
   }
-  body.modal-open { overflow:hidden; }
 
   body::before {
     content:''; position:fixed; top:0; left:50%; transform:translateX(-50%);
@@ -783,16 +782,11 @@
     position:fixed; inset:0;
     background:rgba(0,0,0,0.75);
     backdrop-filter:blur(8px); -webkit-backdrop-filter:blur(8px);
-    z-index:500; display:flex; align-items:flex-start; justify-content:center;
-    padding:40px 20px;
-    overflow-y:auto;
-    opacity:0; pointer-events:none;
+    z-index:500; display:flex; align-items:center; justify-content:center;
+    padding:20px; opacity:0; pointer-events:none;
     transition:opacity 0.3s;
   }
-  .modal-overlay.open {
-    opacity:1;
-    pointer-events:auto;
-  }
+  .modal-overlay.open { opacity:1; pointer-events:auto; }
   .modal {
     background:var(--card); border:1px solid var(--border-hover);
     border-radius:16px; max-width:540px; width:100%;
@@ -1373,38 +1367,30 @@ scrollTopBtn.addEventListener("click", () => {
 
 document.getElementById("aboutLink").addEventListener("click", () => {
   document.getElementById("aboutModal").classList.add("open");
-  document.body.classList.add("modal-open");
   playSound("click");
 });
 document.getElementById("aboutLink2").addEventListener("click", () => {
   document.getElementById("aboutModal").classList.add("open");
-  document.body.classList.add("modal-open");
   playSound("click");
 });
 document.getElementById("legalLink").addEventListener("click", () => {
   document.getElementById("legalModal").classList.add("open");
-  document.body.classList.add("modal-open");
   playSound("click");
 });
 document.querySelectorAll(".modal-close").forEach(btn => {
   btn.addEventListener("click", () => {
     document.getElementById(btn.getAttribute("data-close")).classList.remove("open");
-    document.body.classList.remove("modal-open");
     playSound("click");
   });
 });
 document.querySelectorAll(".modal-overlay").forEach(overlay => {
   overlay.addEventListener("click", (e) => {
-    if (e.target === overlay) {
-      overlay.classList.remove("open");
-      document.body.classList.remove("modal-open");
-    }
+    if (e.target === overlay) overlay.classList.remove("open");
   });
 });
 document.addEventListener("keydown", (e) => {
   if (e.key === "Escape") {
     document.querySelectorAll(".modal-overlay.open").forEach(m => m.classList.remove("open"));
-    document.body.classList.remove("modal-open");
   }
 });
 
