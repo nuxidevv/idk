@@ -1,8 +1,5 @@
 {
-  "name": "osintsearch",
-  "version": "1.0.0",
-  "type": "module",
-  "engines": {
-    "node": "20.x"
-  }
+  "name": "Serk sit",
+  "version": "1.2",
+  "type": "module"
 }
