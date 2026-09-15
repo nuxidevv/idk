@@ -351,6 +351,196 @@
   .input-clear.visible { display:flex; }
   .input-clear svg { width:10px; height:10px; color:var(--text-dim); }
 
+  /* ============================================================
+     FILTRES / CRITÈRES
+     ============================================================ */
+  .filters-box {
+    background:var(--card);
+    border:1px solid var(--border);
+    border-radius:14px;
+    padding:14px 16px;
+    margin-bottom:12px;
+    animation:fadeUp 0.6s ease-out 0.45s backwards;
+    transition:border-color 0.2s;
+  }
+  .filters-box:hover { border-color:var(--border-hover); }
+
+  .filters-header {
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    margin-bottom:12px;
+    cursor:pointer;
+    user-select:none;
+  }
+  .filters-title {
+    display:flex;
+    align-items:center;
+    gap:8px;
+    font-size:0.78rem;
+    font-weight:600;
+    color:var(--text);
+    letter-spacing:-0.01em;
+  }
+  .filters-title svg {
+    width:14px; height:14px;
+    color:var(--green);
+  }
+  .filters-count {
+    display:none;
+    background:var(--green);
+    color:#000;
+    font-size:0.6rem;
+    font-weight:700;
+    padding:2px 6px;
+    border-radius:100px;
+    min-width:16px;
+    text-align:center;
+  }
+  .filters-count.visible { display:inline-block; }
+  .filters-toggle {
+    width:24px; height:24px;
+    border-radius:6px;
+    background:transparent;
+    border:1px solid var(--border);
+    display:flex; align-items:center; justify-content:center;
+    cursor:pointer;
+    transition:border-color 0.15s, transform 0.3s;
+  }
+  .filters-toggle svg {
+    width:10px; height:10px;
+    color:var(--text-dim);
+    transition:transform 0.3s cubic-bezier(0.22, 1, 0.36, 1);
+  }
+  .filters-box.open .filters-toggle svg { transform:rotate(180deg); }
+
+  .filters-grid {
+    display:grid;
+    grid-template-columns:repeat(2, 1fr);
+    gap:8px;
+    max-height:0;
+    overflow:hidden;
+    opacity:0;
+    transition:max-height 0.5s cubic-bezier(0.22, 1, 0.36, 1),
+                opacity 0.3s ease-out,
+                margin-top 0.3s;
+  }
+  .filters-box.open .filters-grid {
+    max-height:600px;
+    opacity:1;
+    margin-top:12px;
+  }
+
+  .filter-field {
+    display:flex;
+    flex-direction:column;
+    gap:4px;
+  }
+  .filter-label {
+    font-size:0.6rem;
+    font-weight:600;
+    color:var(--text-dim);
+    text-transform:uppercase;
+    letter-spacing:0.08em;
+    padding-left:2px;
+  }
+  .filter-input, .filter-select {
+    width:100%;
+    background:var(--input-bg);
+    border:1px solid var(--border);
+    color:var(--text);
+    padding:9px 11px;
+    border-radius:9px;
+    font-size:0.78rem;
+    font-family:inherit;
+    outline:none;
+    transition:border-color 0.15s, box-shadow 0.2s;
+  }
+  .filter-input::placeholder { color:var(--text-dimmer); font-size:0.74rem; }
+  .filter-input:focus, .filter-select:focus {
+    border-color:var(--green);
+    box-shadow:0 0 0 3px var(--glow);
+  }
+  .filter-select {
+    cursor:pointer;
+    appearance:none;
+    -webkit-appearance:none;
+    background-image:url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%237a7a85' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");
+    background-repeat:no-repeat;
+    background-position:right 10px center;
+    background-size:12px;
+    padding-right:30px;
+  }
+
+  .filter-field.full { grid-column:1 / -1; }
+
+  .filters-actions {
+    display:flex;
+    gap:8px;
+    margin-top:14px;
+    grid-column:1 / -1;
+  }
+  .filter-btn {
+    flex:1;
+    padding:9px 12px;
+    border-radius:9px;
+    font-size:0.74rem;
+    font-weight:600;
+    font-family:inherit;
+    cursor:pointer;
+    border:1px solid var(--border);
+    background:transparent;
+    color:var(--text-dim);
+    transition:border-color 0.15s, color 0.15s, background 0.15s;
+  }
+  .filter-btn:hover {
+    border-color:var(--border-hover);
+    color:var(--text);
+    background:var(--card-hover);
+  }
+  .filter-btn.danger:hover {
+    border-color:rgba(255,107,107,0.4);
+    color:var(--red);
+    background:rgba(255,107,107,0.05);
+  }
+
+  /* Chips de filtres actifs */
+  .active-filters {
+    display:flex;
+    flex-wrap:wrap;
+    gap:6px;
+    margin-top:10px;
+    animation:fadeUp 0.3s ease-out;
+  }
+  .active-filters:empty { display:none; }
+  .filter-chip {
+    display:inline-flex;
+    align-items:center;
+    gap:6px;
+    padding:5px 10px;
+    background:rgba(0,224,122,0.1);
+    border:1px solid rgba(0,224,122,0.25);
+    color:var(--green);
+    font-size:0.68rem;
+    font-weight:500;
+    border-radius:100px;
+    animation:fadeUp 0.3s ease-out;
+    cursor:default;
+  }
+  .filter-chip button {
+    background:transparent;
+    border:none;
+    color:var(--green);
+    cursor:pointer;
+    font-weight:800;
+    font-size:0.85rem;
+    line-height:1;
+    padding:0;
+    opacity:0.7;
+    transition:opacity 0.15s;
+  }
+  .filter-chip button:hover { opacity:1; }
+
   button.primary {
     width:100%;
     background:var(--accent); color:var(--bg);
@@ -885,8 +1075,8 @@
     .row { flex-direction:column; gap:2px; }
     .row-label { min-width:0; }
     .copy-btn { opacity:1; }
+    .filters-grid { grid-template-columns:1fr; }
   }
-
 </style>
 </head>
 <body>
@@ -962,6 +1152,92 @@
             <line x1="6" y1="6" x2="18" y2="18"></line>
           </svg>
         </button>
+      </div>
+
+      <div class="filters-box" id="filtersBox">
+        <div class="filters-header" id="filtersHeader">
+          <div class="filters-title">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"></polygon>
+            </svg>
+            Critères de recherche
+            <span class="filters-count" id="filtersCount">0</span>
+          </div>
+          <div class="filters-toggle">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+              <polyline points="6 9 12 15 18 9"></polyline>
+            </svg>
+          </div>
+        </div>
+
+        <div class="filters-grid">
+          <div class="filter-field">
+            <label class="filter-label">Ville</label>
+            <input type="text" class="filter-input" id="fCity" placeholder="Paris..." autocomplete="off">
+          </div>
+
+          <div class="filter-field">
+            <label class="filter-label">Code postal</label>
+            <input type="text" class="filter-input" id="fZip" placeholder="75001..." autocomplete="off">
+          </div>
+
+          <div class="filter-field">
+            <label class="filter-label">Pays</label>
+            <input type="text" class="filter-input" id="fCountry" placeholder="France..." autocomplete="off">
+          </div>
+
+          <div class="filter-field">
+            <label class="filter-label">Département</label>
+            <input type="text" class="filter-input" id="fDept" placeholder="75..." autocomplete="off">
+          </div>
+
+          <div class="filter-field">
+            <label class="filter-label">Email</label>
+            <input type="text" class="filter-input" id="fEmail" placeholder="exemple@mail.com" autocomplete="off">
+          </div>
+
+          <div class="filter-field">
+            <label class="filter-label">Téléphone</label>
+            <input type="text" class="filter-input" id="fPhone" placeholder="06..." autocomplete="off">
+          </div>
+
+          <div class="filter-field">
+            <label class="filter-label">Année de naissance</label>
+            <input type="text" class="filter-input" id="fYear" placeholder="1990" autocomplete="off">
+          </div>
+
+          <div class="filter-field">
+            <label class="filter-label">Genre</label>
+            <select class="filter-select" id="fGender">
+              <option value="">Tous</option>
+              <option value="M">Homme</option>
+              <option value="F">Femme</option>
+            </select>
+          </div>
+
+          <div class="filter-field">
+            <label class="filter-label">Source</label>
+            <input type="text" class="filter-input" id="fSource" placeholder="Free, SFR..." autocomplete="off">
+          </div>
+
+          <div class="filter-field">
+            <label class="filter-label">Fiabilité min.</label>
+            <select class="filter-select" id="fConfidence">
+              <option value="">Toutes</option>
+              <option value="30">30% et +</option>
+              <option value="50">50% et +</option>
+              <option value="70">70% et +</option>
+              <option value="90">90% et +</option>
+            </select>
+          </div>
+
+          <div class="filters-actions">
+            <button class="filter-btn danger" id="clearFilters">Réinitialiser</button>
+            <button class="filter-btn" id="applyFilters">Appliquer</button>
+          </div>
+        </div>
+
+        <div class="active-filters" id="activeFilters"></div>
       </div>
 
       <button class="primary" id="go">
@@ -1095,6 +1371,8 @@
       </ul>
       <h3>Comment ça marche</h3>
       <p>Tu saisis un prénom et un nom. Seek It interroge sa base et retourne les enregistrements correspondants, triés par fiabilité.</p>
+      <h3>Filtres avancés</h3>
+      <p>Tu peux affiner ta recherche avec des critères : ville, code postal, pays, email, téléphone, année de naissance, genre, source ou fiabilité minimale.</p>
       <h3>Confidentialité</h3>
       <p>Aucune donnée n'est stockée sur nos serveurs. Les recherches sont anonymes et ne sont pas tracées.</p>
       <p style="margin-top:16px;font-size:0.75rem;color:var(--text-dimmer)">Dernière modification : 15 Sept. 2026</p>
@@ -1391,6 +1669,115 @@ function validate(t) {
   return /^[a-zA-ZÀ-ÿ'\- ]{2,}$/.test(t);
 }
 
+/* ============================================================
+   FILTRES / CRITÈRES
+   ============================================================ */
+const FILTER_DEFS = [
+  { id: "fCity", key: "ville", label: "Ville" },
+  { id: "fZip", key: "code_postal", label: "Code postal" },
+  { id: "fCountry", key: "pays", label: "Pays" },
+  { id: "fDept", key: "departement", label: "Département" },
+  { id: "fEmail", key: "email", label: "Email" },
+  { id: "fPhone", key: "telephone", label: "Téléphone" },
+  { id: "fYear", key: "annee_naissance", label: "Année naissance" },
+  { id: "fGender", key: "genre", label: "Genre" },
+  { id: "fSource", key: "_source_db", label: "Source" },
+  { id: "fConfidence", key: "_confidence_min", label: "Fiabilité min." }
+];
+
+const activeFilters = {};
+
+function readFilterValues() {
+  const values = {};
+  FILTER_DEFS.forEach(def => {
+    const el = document.getElementById(def.id);
+    if (!el) return;
+    const v = (el.value || "").trim();
+    if (v) values[def.key] = v;
+  });
+  return values;
+}
+
+function renderActiveFilters() {
+  const container = document.getElementById("activeFilters");
+  const countEl = document.getElementById("filtersCount");
+  container.innerHTML = "";
+  const entries = Object.entries(activeFilters);
+  countEl.textContent = entries.length;
+  countEl.classList.toggle("visible", entries.length > 0);
+
+  entries.forEach(([key, value]) => {
+    const def = FILTER_DEFS.find(d => d.key === key);
+    const label = def ? def.label : key;
+    const chip = document.createElement("div");
+    chip.className = "filter-chip";
+    chip.innerHTML = `
+      <span>${escapeHtml(label)} : ${escapeHtml(value)}</span>
+      <button type="button" data-key="${escapeHtml(key)}" aria-label="Retirer">×</button>
+    `;
+    chip.querySelector("button").addEventListener("click", () => {
+      delete activeFilters[key];
+      const def2 = FILTER_DEFS.find(d => d.key === key);
+      if (def2) {
+        const el = document.getElementById(def2.id);
+        if (el) el.value = "";
+      }
+      renderActiveFilters();
+      playSound("click");
+    });
+    container.appendChild(chip);
+  });
+}
+
+document.getElementById("filtersHeader").addEventListener("click", () => {
+  document.getElementById("filtersBox").classList.toggle("open");
+  playSound("click");
+});
+
+document.getElementById("applyFilters").addEventListener("click", () => {
+  const values = readFilterValues();
+  Object.keys(activeFilters).forEach(k => delete activeFilters[k]);
+  Object.assign(activeFilters, values);
+  renderActiveFilters();
+  document.getElementById("filtersBox").classList.remove("open");
+  toast(Object.keys(values).length + " filtre(s) appliqué(s)", "success", 1500);
+  playSound("ding");
+});
+
+document.getElementById("clearFilters").addEventListener("click", () => {
+  FILTER_DEFS.forEach(def => {
+    const el = document.getElementById(def.id);
+    if (el) el.value = "";
+  });
+  Object.keys(activeFilters).forEach(k => delete activeFilters[k]);
+  renderActiveFilters();
+  toast("Filtres réinitialisés", "success", 1500);
+  playSound("whoosh");
+});
+
+/* Filtre post-réception (côté client) */
+function applyClientFilters(items) {
+  const filters = activeFilters;
+  if (!filters || Object.keys(filters).length === 0) return items;
+  return items.filter(item => {
+    return Object.entries(filters).every(([key, value]) => {
+      if (key === "_confidence_min") {
+        const conf = Number(item._confidence ?? item.confidence ?? 0);
+        return conf >= Number(value);
+      }
+      if (key === "genre") {
+        const g = String(item.genre || item.sexe || "").toUpperCase();
+        if (value === "M") return g.startsWith("M") || g.startsWith("H");
+        if (value === "F") return g.startsWith("F");
+        return true;
+      }
+      const itemVal = String(item[key] || "").toLowerCase();
+      const filterVal = String(value).toLowerCase();
+      return itemVal.includes(filterVal);
+    });
+  });
+}
+
 const LABELS = {
   _source_db: "Source", _confidence: "Fiabilité", adresse: "Adresse",
   annee_naissance: "Année naissance", code_postal: "Code postal",
@@ -1488,27 +1875,6 @@ function exportJSON(item, idx) {
   URL.revokeObjectURL(url);
   toast("Fichier JSON exporté", "success");
   playSound("ding");
-}
-
-function attach3DTilt(card) {
-  const MAX_ROT = 6;
-  function handleMove(e) {
-    const rect = card.getBoundingClientRect();
-    const x = (e.clientX ?? e.touches?.[0]?.clientX ?? 0) - rect.left;
-    const y = (e.clientY ?? e.touches?.[0]?.clientY ?? 0) - rect.top;
-    const px = x / rect.width;
-    const py = y / rect.height;
-    const rotY = (px - 0.5) * MAX_ROT * 2;
-    const rotX = -(py - 0.5) * MAX_ROT * 2;
-    card.style.transform = `perspective(1000px) rotateX(${rotX}deg) rotateY(${rotY}deg) translateZ(8px) scale(1.008)`;
-  }
-  function handleLeave() {
-    card.style.transform = "perspective(1000px) rotateX(0) rotateY(0) translateZ(0) scale(1)";
-  }
-  card.addEventListener("mousemove", handleMove);
-  card.addEventListener("mouseleave", handleLeave);
-  card.addEventListener("touchmove", handleMove, { passive: true });
-  card.addEventListener("touchend", handleLeave);
 }
 
 function renderCard(item, idx) {
@@ -1660,8 +2026,6 @@ function bindCardActions(list) {
       exportJSON(currentItems[i], i);
     });
   });
-
-  list.querySelectorAll(".card").forEach(attach3DTilt);
 }
 
 function render(result) {
@@ -1678,18 +2042,27 @@ function render(result) {
     return;
   }
 
-  const arr = findArray(result.data) || [];
+  let arr = findArray(result.data) || [];
+
+  /* Application des filtres côté client */
+  arr = applyClientFilters(arr);
+
   currentItems = arr.map(it => typeof it === "string" ? { valeur: it } : it);
 
   const status = document.createElement("div");
   status.className = "status";
-  status.textContent = `${arr.length} résultat(s) trouvé(s)`;
+  const filterInfo = Object.keys(activeFilters).length > 0
+    ? ` · ${Object.keys(activeFilters).length} filtre(s)`
+    : "";
+  status.textContent = `${arr.length} résultat(s) trouvé(s)${filterInfo}`;
   out.appendChild(status);
 
   if (arr.length === 0) {
     const none = document.createElement("div");
     none.className = "none";
-    none.textContent = "aucun résultat";
+    none.textContent = Object.keys(activeFilters).length > 0
+      ? "aucun résultat avec ces critères"
+      : "aucun résultat";
     out.appendChild(none);
     playSound("error");
   } else {
