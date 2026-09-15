@@ -513,6 +513,21 @@
     transition:color 0.15s;
   }
   .footer-links a:hover { color:var(--text); }
+  .credits {
+    font-size:0.72rem;
+    color:var(--text-dim);
+    letter-spacing:0.02em;
+    margin-bottom:8px;
+  }
+  .credits strong {
+    color:var(--green);
+    font-weight:700;
+    text-shadow:0 0 12px rgba(0,224,122,0.4);
+    transition:text-shadow 0.3s;
+  }
+  .credits strong:hover {
+    text-shadow:0 0 20px rgba(0,224,122,0.8);
+  }
   .watermark {
     font-size:0.65rem; color:var(--text-dimmer);
     letter-spacing:0.05em;
@@ -1061,6 +1076,7 @@
       <a id="aboutLink2">À propos</a>
       <a id="legalLink">Mentions légales</a>
     </div>
+    <div class="credits">Fait avec ❤️ par <strong>Nuhi</strong> &amp; <strong>Silentlinux</strong></div>
     <div class="watermark">Seek It © 2026 — Tous droits réservés</div>
   </footer>
 </main>
