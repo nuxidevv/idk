@@ -63,28 +63,6 @@
     50% { opacity:1; transform:translateX(-50%) scale(1.05); }
   }
 
-  #matrix {
-    position:fixed;
-    top:0; left:0;
-    width:100vw;
-    height:100vh;
-    z-index:0;
-    pointer-events:none;
-    opacity:0.55;
-    display:block;
-    will-change:transform;
-    transform:translateZ(0);
-    backface-visibility:hidden;
-  }
-
-  .matrix-overlay {
-    position:fixed;
-    inset:0;
-    z-index:0;
-    pointer-events:none;
-    background:rgba(5,5,5,0.35);
-  }
-
   .page-loader {
     position:fixed; inset:0; background:var(--bg);
     display:flex; flex-direction:column; align-items:center; justify-content:center;
@@ -1365,9 +1343,6 @@
 </head>
 <body>
 
-<canvas id="matrix"></canvas>
-<div class="matrix-overlay"></div>
-
 <div class="page-loader" id="pageLoader">
   <div class="loader-logo">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
@@ -1567,14 +1542,6 @@
 
         <div class="settings-row">
           <div class="settings-info">
-            <div class="settings-title">Effet Matrix</div>
-            <div class="settings-desc">Affiche l'animation de fond</div>
-          </div>
-          <div class="toggle-switch active" id="toggleMatrix"></div>
-        </div>
-
-        <div class="settings-row">
-          <div class="settings-info">
             <div class="settings-title">Animations réduites</div>
             <div class="settings-desc">Désactive les transitions non essentielles</div>
           </div>
@@ -1663,7 +1630,6 @@
 const EP = "/api/search";
 
 const prefs = {
-  matrix: true,
   motion: false,
   threeD: true,
   autoSort: false,
@@ -1680,71 +1646,6 @@ function savePrefs() {
   try { localStorage.setItem("seekit-prefs", JSON.stringify(prefs)); } catch {}
 }
 loadPrefs();
-
-(function matrixRain() {
-  const canvas = document.getElementById("matrix");
-  if (!canvas) return;
-  const ctx = canvas.getContext("2d", { alpha: true });
-
-  let w, h, columns, drops;
-  const font = 16;
-  const chars = "アカサタナハマヤラワイキシチニヒミリウクスツヌフムユルエケセテネヘメレオコソトノホモヨロ0123456789ABCDEF".split("");
-
-  function resize() {
-    const dpr = Math.min(window.devicePixelRatio || 1, 2);
-    w = window.innerWidth;
-    h = window.innerHeight;
-    canvas.width = w * dpr;
-    canvas.height = h * dpr;
-    canvas.style.width = w + "px";
-    canvas.style.height = h + "px";
-    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-    columns = Math.floor(w / font);
-    drops = new Array(columns).fill(0).map(() => Math.random() * -50);
-  }
-
-  function draw() {
-    if (!prefs.matrix) {
-      ctx.clearRect(0, 0, w, h);
-      requestAnimationFrame(draw);
-      return;
-    }
-
-    ctx.fillStyle = "rgba(5, 5, 5, 0.04)";
-    ctx.fillRect(0, 0, w, h);
-
-    ctx.font = font + "px 'JetBrains Mono', monospace";
-    ctx.textBaseline = "top";
-
-    for (let i = 0; i < drops.length; i++) {
-      const char = chars[Math.floor(Math.random() * chars.length)];
-      const x = i * font;
-      const y = drops[i] * font;
-
-      ctx.fillStyle = "rgba(0, 224, 122, 0.9)";
-      ctx.fillText(char, x, y);
-
-      if (drops[i] > 1) {
-        ctx.fillStyle = "rgba(0, 224, 122, 0.35)";
-        const prevChar = chars[Math.floor(Math.random() * chars.length)];
-        ctx.fillText(prevChar, x, y - font);
-      }
-
-      if (y > h && Math.random() > 0.975) {
-        drops[i] = 0;
-      }
-      drops[i]++;
-    }
-
-    requestAnimationFrame(draw);
-  }
-
-  resize();
-  window.addEventListener("resize", resize);
-  window.addEventListener("orientationchange", () => setTimeout(resize, 200));
-
-  requestAnimationFrame(draw);
-})();
 
 function applyMotionPreference() {
   document.documentElement.style.setProperty(
@@ -1774,9 +1675,6 @@ function setupToggle(id, prefKey, onChange) {
   });
 }
 
-setupToggle("toggleMatrix", "matrix", (v) => {
-  toast(v ? "Effet Matrix activé" : "Effet Matrix désactivé", "success", 1500);
-});
 setupToggle("toggleMotion", "motion", (v) => {
   applyMotionPreference();
   toast(v ? "Animations réduites" : "Animations normales", "success", 1500);
