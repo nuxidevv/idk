@@ -38,42 +38,6 @@
     --btn-text:#050505;
     --btn-highlight:rgba(255,255,255,0.6);
     --nav-shine:rgba(0,224,122,0.10);
-    --matrix-color:0, 224, 122;
-    --matrix-bg:5, 5, 5;
-    --matrix-overlay:rgba(5,5,5,0.35);
-  }
-  body.light {
-    --bg:#f0f2f5;
-    --bg-2:#e8ebf0;
-    --card:rgba(255,255,255,0.75);
-    --card-solid:#ffffff;
-    --card-hover:rgba(255,255,255,0.95);
-    --border:rgba(0,0,0,0.10);
-    --border-hover:rgba(0,0,0,0.22);
-    --text:#0a0a0a;
-    --text-dim:#6a6a75;
-    --text-dimmer:#a0a0aa;
-    --accent:#000;
-    --green:#00a055;
-    --green-dim:rgba(0,160,85,0.14);
-    --orange:#d97a00;
-    --orange-dim:rgba(217,122,0,0.14);
-    --red:#d93a3a;
-    --blue:#0066cc;
-    --input-bg:rgba(255,255,255,0.85);
-    --row-border:rgba(0,0,0,0.06);
-    --glow:rgba(0,160,85,0.20);
-    --glass-tint:rgba(255,255,255,0.6);
-    --glass-highlight:rgba(255,255,255,0.9);
-    --glass-shadow:rgba(0,0,0,0.10);
-    --btn-bg:linear-gradient(180deg, #0a0a0a 0%, #2a2a2a 100%);
-    --btn-border:rgba(0,0,0,0.4);
-    --btn-text:#ffffff;
-    --btn-highlight:rgba(255,255,255,0.15);
-    --nav-shine:rgba(0,160,85,0.15);
-    --matrix-color:0, 130, 70;
-    --matrix-bg:240, 242, 245;
-    --matrix-overlay:rgba(240,242,245,0.5);
   }
   html, body { height:100%; }
   body {
@@ -98,9 +62,6 @@
     0%,100% { opacity:0.8; transform:translateX(-50%) scale(1); }
     50% { opacity:1; transform:translateX(-50%) scale(1.05); }
   }
-  body.light::before {
-    background:radial-gradient(ellipse at top, rgba(0,160,85,0.12) 0%, transparent 60%);
-  }
 
   #matrix {
     position:fixed;
@@ -114,10 +75,6 @@
     will-change:transform;
     transform:translateZ(0);
     backface-visibility:hidden;
-    transition:opacity 0.4s;
-  }
-  body.light #matrix {
-    opacity:0.35;
   }
 
   .matrix-overlay {
@@ -125,8 +82,7 @@
     inset:0;
     z-index:0;
     pointer-events:none;
-    background:var(--matrix-overlay);
-    transition:background 0.4s;
+    background:rgba(5,5,5,0.35);
   }
 
   .page-loader {
@@ -290,9 +246,19 @@
       0 1px 0 0 var(--glass-highlight) inset;
   }
   .nav-btn:active { transform:translateY(0) scale(0.95); }
-  .nav-btn svg { width:15px; height:15px; color:var(--text-dim); transition:color 0.2s; position:relative; z-index:1; }
+  .nav-btn svg {
+    width:15px; height:15px;
+    color:var(--text-dim);
+    transition:color 0.2s, transform 0.4s cubic-bezier(0.22, 1, 0.36, 1);
+    position:relative; z-index:1;
+  }
   .nav-btn:hover svg { color:var(--text); }
   .nav-btn.off svg { color:var(--text-dimmer); }
+
+  /* Bouton engrenage — rotation au survol */
+  #settingsToggle:hover svg {
+    transform:rotate(90deg);
+  }
 
   .nav-link {
     font-size:0.78rem; font-weight:500;
@@ -408,13 +374,6 @@
   @keyframes accentGlow {
     0%,100% { filter:drop-shadow(0 0 8px rgba(0,224,122,0.4)); }
     50% { filter:drop-shadow(0 0 20px rgba(0,224,122,0.7)); }
-  }
-  body.light h1.hero-title .accent {
-    animation:accentGlowLight 4s ease-in-out infinite;
-  }
-  @keyframes accentGlowLight {
-    0%,100% { filter:drop-shadow(0 0 6px rgba(0,160,85,0.3)); }
-    50% { filter:drop-shadow(0 0 14px rgba(0,160,85,0.6)); }
   }
 
   .hero-sub {
@@ -548,19 +507,11 @@
   }
   button.primary .spinner {
     display:none; width:14px; height:14px;
-    border:2px solid rgba(255,255,255,0.3);
-    border-top-color:currentColor;
+    border:2px solid rgba(0,0,0,0.15);
+    border-top-color:#000;
     border-radius:50%; animation:spin 0.7s linear infinite;
     margin-right:8px; vertical-align:middle;
     position:relative; z-index:1;
-  }
-  body.light button.primary .spinner {
-    border-color:rgba(255,255,255,0.3);
-    border-top-color:#fff;
-  }
-  body:not(.light) button.primary .spinner {
-    border-color:rgba(0,0,0,0.15);
-    border-top-color:#000;
   }
   button.primary.loading .spinner { display:inline-block; }
   @keyframes spin { to { transform:rotate(360deg); } }
@@ -941,13 +892,10 @@
     width:44px; height:44px; border-radius:50%;
     background:linear-gradient(135deg, var(--green) 0%, var(--blue) 100%);
     display:flex; align-items:center; justify-content:center;
-    color:#fff; font-weight:800; font-size:0.9rem;
+    color:#000; font-weight:800; font-size:0.9rem;
     flex-shrink:0; letter-spacing:-0.03em;
     box-shadow:0 4px 16px var(--glow), 0 1px 0 0 rgba(255,255,255,0.4) inset;
     transition:transform 0.4s cubic-bezier(0.22, 1, 0.36, 1);
-  }
-  body.light .card-avatar {
-    color:#000;
   }
   .card:hover .card-avatar {
     transform:scale(1.08) rotate(-6deg);
@@ -1009,10 +957,6 @@
     border-color:rgba(255,107,107,0.3);
     box-shadow:0 0 12px rgba(255,107,107,0.2), 0 1px 0 0 rgba(255,255,255,0.1) inset;
   }
-  body.light .score.low {
-    background:rgba(217,58,58,0.12);
-    border-color:rgba(217,58,58,0.3);
-  }
 
   .row {
     display:flex; gap:16px; padding:9px 0;
@@ -1027,7 +971,6 @@
     padding-right:8px;
   }
   .row:hover { background:rgba(255,255,255,0.02); }
-  body.light .row:hover { background:rgba(0,0,0,0.03); }
   .row-label {
     color:var(--text-dim); min-width:110px; flex-shrink:0;
     font-size:0.68rem; padding-top:2px;
@@ -1131,9 +1074,6 @@
     opacity:0; pointer-events:none;
     transition:opacity 0.3s;
   }
-  body.light .modal-overlay {
-    background:rgba(0,0,0,0.35);
-  }
   .modal-overlay.open { opacity:1; pointer-events:auto; }
   .modal {
     background:var(--card-solid);
@@ -1199,6 +1139,126 @@
   .modal-body ul { padding-left:18px; margin-bottom:12px; }
   .modal-body li { margin-bottom:4px; }
 
+  /* ============================================================
+     MODALE PARAMÈTRES
+     ============================================================ */
+  .settings-section {
+    margin-bottom:22px;
+  }
+  .settings-section:last-child { margin-bottom:0; }
+  .settings-label {
+    font-size:0.65rem;
+    font-weight:700;
+    color:var(--green);
+    letter-spacing:0.12em;
+    text-transform:uppercase;
+    margin-bottom:10px;
+  }
+  .settings-row {
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:12px;
+    padding:11px 0;
+    border-bottom:1px solid var(--row-border);
+  }
+  .settings-row:last-child { border-bottom:none; }
+  .settings-info {
+    flex:1;
+    min-width:0;
+  }
+  .settings-title {
+    font-size:0.82rem;
+    font-weight:600;
+    color:var(--text);
+    margin-bottom:3px;
+    letter-spacing:-0.01em;
+  }
+  .settings-desc {
+    font-size:0.7rem;
+    color:var(--text-dim);
+    line-height:1.5;
+  }
+
+  /* Toggle switch */
+  .toggle-switch {
+    position:relative;
+    width:42px;
+    height:24px;
+    flex-shrink:0;
+    border-radius:100px;
+    background:var(--border);
+    border:1px solid var(--border-hover);
+    cursor:pointer;
+    transition:all 0.3s cubic-bezier(0.22, 1, 0.36, 1);
+  }
+  .toggle-switch::after {
+    content:'';
+    position:absolute;
+    top:2px; left:2px;
+    width:18px; height:18px;
+    border-radius:50%;
+    background:var(--text-dim);
+    transition:all 0.3s cubic-bezier(0.22, 1, 0.36, 1);
+    box-shadow:0 2px 4px rgba(0,0,0,0.3);
+  }
+  .toggle-switch.active {
+    background:var(--green);
+    border-color:var(--green);
+  }
+  .toggle-switch.active::after {
+    left:calc(100% - 20px);
+    background:#fff;
+  }
+
+  /* Bouton reset settings */
+  .settings-btn {
+    width:100%;
+    padding:12px 16px;
+    background:var(--glass-tint);
+    border:1px solid var(--border);
+    color:var(--text-dim);
+    border-radius:12px;
+    font-size:0.78rem;
+    font-weight:600;
+    font-family:inherit;
+    cursor:pointer;
+    transition:all 0.2s cubic-bezier(0.22, 1, 0.36, 1);
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    gap:8px;
+    position:relative;
+    overflow:hidden;
+  }
+  .settings-btn::before {
+    content:'';
+    position:absolute;
+    top:0; left:0; right:0;
+    height:50%;
+    background:linear-gradient(180deg, var(--glass-highlight) 0%, transparent 100%);
+    border-radius:12px 12px 0 0;
+    pointer-events:none;
+  }
+  .settings-btn:hover {
+    border-color:var(--border-hover);
+    color:var(--text);
+    background:var(--card-hover);
+    transform:translateY(-1px);
+  }
+  .settings-btn:active { transform:translateY(0) scale(0.98); }
+  .settings-btn svg { width:14px; height:14px; position:relative; z-index:1; }
+  .settings-btn span { position:relative; z-index:1; }
+
+  .settings-btn.danger:hover {
+    border-color:rgba(255,107,107,0.5);
+    color:var(--red);
+    background:rgba(255,107,107,0.08);
+  }
+
+  /* ============================================================
+     TOASTS
+     ============================================================ */
   .toast-container {
     position:fixed; bottom:24px; left:50%;
     transform:translateX(-50%);
@@ -1348,9 +1408,10 @@
         <path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"></path>
       </svg>
     </button>
-    <button class="nav-btn" id="themeToggle" aria-label="Mode">
-      <svg id="themeIcon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-        <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+    <button class="nav-btn" id="settingsToggle" aria-label="Paramètres">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <circle cx="12" cy="12" r="3"></circle>
+        <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
       </svg>
     </button>
     <button class="nav-link hide-mobile" id="aboutLink">À propos</button>
@@ -1499,6 +1560,86 @@
 
 <div class="toast-container" id="toastContainer"></div>
 
+<!-- MODALE PARAMÈTRES -->
+<div class="modal-overlay" id="settingsModal">
+  <div class="modal">
+    <button class="modal-close" data-close="settingsModal">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+        <line x1="18" y1="6" x2="6" y2="18"></line>
+        <line x1="6" y1="6" x2="18" y2="18"></line>
+      </svg>
+    </button>
+    <div class="modal-title">Paramètres</div>
+    <div class="modal-body">
+
+      <!-- Section Apparence -->
+      <div class="settings-section">
+        <div class="settings-label">Apparence</div>
+
+        <div class="settings-row">
+          <div class="settings-info">
+            <div class="settings-title">Effet Matrix</div>
+            <div class="settings-desc">Affiche l'animation de fond</div>
+          </div>
+          <div class="toggle-switch active" id="toggleMatrix"></div>
+        </div>
+
+        <div class="settings-row">
+          <div class="settings-info">
+            <div class="settings-title">Animations réduites</div>
+            <div class="settings-desc">Désactive les transitions non essentielles</div>
+          </div>
+          <div class="toggle-switch" id="toggleMotion"></div>
+        </div>
+
+        <div class="settings-row">
+          <div class="settings-info">
+            <div class="settings-title">Effets 3D sur les cartes</div>
+            <div class="settings-desc">Les cartes s'inclinent au survol</div>
+          </div>
+          <div class="toggle-switch active" id="toggle3D"></div>
+        </div>
+      </div>
+
+      <!-- Section Recherche -->
+      <div class="settings-section">
+        <div class="settings-label">Recherche</div>
+
+        <div class="settings-row">
+          <div class="settings-info">
+            <div class="settings-title">Tri automatique par fiabilité</div>
+            <div class="settings-desc">Trie les résultats dès l'affichage</div>
+          </div>
+          <div class="toggle-switch" id="toggleAutoSort"></div>
+        </div>
+
+        <div class="settings-row">
+          <div class="settings-info">
+            <div class="settings-title">Validation stricte</div>
+            <div class="settings-desc">Refuse les recherches trop courtes</div>
+          </div>
+          <div class="toggle-switch active" id="toggleStrict"></div>
+        </div>
+      </div>
+
+      <!-- Section Données -->
+      <div class="settings-section">
+        <div class="settings-label">Données</div>
+
+        <button class="settings-btn danger" id="clearCacheBtn">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="3 6 5 6 21 6"></polyline>
+            <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+          </svg>
+          <span>Vider le cache et les préférences</span>
+        </button>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- MODALE À PROPOS -->
 <div class="modal-overlay" id="aboutModal">
   <div class="modal">
     <button class="modal-close" data-close="aboutModal">
@@ -1527,6 +1668,7 @@
   </div>
 </div>
 
+<!-- MODALE MENTIONS -->
 <div class="modal-overlay" id="legalModal">
   <div class="modal">
     <button class="modal-close" data-close="legalModal">
@@ -1555,6 +1697,31 @@
 <script>
 const EP = "/api/search";
 
+/* ============================================================
+   PRÉFÉRENCES UTILISATEUR
+   ============================================================ */
+const prefs = {
+  matrix: true,
+  motion: false,
+  threeD: true,
+  autoSort: false,
+  strict: true
+};
+
+function loadPrefs() {
+  try {
+    const saved = JSON.parse(localStorage.getItem("seekit-prefs") || "{}");
+    Object.assign(prefs, saved);
+  } catch {}
+}
+function savePrefs() {
+  try { localStorage.setItem("seekit-prefs", JSON.stringify(prefs)); } catch {}
+}
+loadPrefs();
+
+/* ============================================================
+   MATRIX — FONCTIONNE PENDANT LE SCROLL (iOS)
+   ============================================================ */
 (function matrixRain() {
   const canvas = document.getElementById("matrix");
   if (!canvas) return;
@@ -1563,17 +1730,6 @@ const EP = "/api/search";
   let w, h, columns, drops;
   const font = 16;
   const chars = "アカサタナハマヤラワイキシチニヒミリウクスツヌフムユルエケセテネヘメレオコソトノホモヨロ0123456789ABCDEF".split("");
-
-  function getColors() {
-    const light = document.body.classList.contains("light");
-    return {
-      fadeColor: light ? "rgba(240, 242, 245, 0.05)" : "rgba(5, 5, 5, 0.04)",
-      headColor: light ? "rgba(0, 130, 70, 0.95)" : "rgba(0, 224, 122, 0.9)",
-      trailColor: light ? "rgba(0, 130, 70, 0.4)" : "rgba(0, 224, 122, 0.35)"
-    };
-  }
-
-  let colors = getColors();
 
   function resize() {
     const dpr = Math.min(window.devicePixelRatio || 1, 2);
@@ -1589,7 +1745,8 @@ const EP = "/api/search";
   }
 
   function draw() {
-    ctx.fillStyle = colors.fadeColor;
+    if (!prefs.matrix) return;
+    ctx.fillStyle = "rgba(5, 5, 5, 0.04)";
     ctx.fillRect(0, 0, w, h);
 
     ctx.font = font + "px 'JetBrains Mono', monospace";
@@ -1600,11 +1757,11 @@ const EP = "/api/search";
       const x = i * font;
       const y = drops[i] * font;
 
-      ctx.fillStyle = colors.headColor;
+      ctx.fillStyle = "rgba(0, 224, 122, 0.9)";
       ctx.fillText(char, x, y);
 
       if (drops[i] > 1) {
-        ctx.fillStyle = colors.trailColor;
+        ctx.fillStyle = "rgba(0, 224, 122, 0.35)";
         const prevChar = chars[Math.floor(Math.random() * chars.length)];
         ctx.fillText(prevChar, x, y - font);
       }
@@ -1616,19 +1773,87 @@ const EP = "/api/search";
     }
   }
 
+  function clearCanvas() {
+    ctx.clearRect(0, 0, w, h);
+  }
+
   resize();
   window.addEventListener("resize", resize);
   window.addEventListener("orientationchange", () => setTimeout(resize, 200));
 
-  setInterval(draw, 55);
-
-  // Réagit au changement de thème : met à jour les couleurs
-  const observer = new MutationObserver(() => {
-    colors = getColors();
-  });
-  observer.observe(document.body, { attributes: true, attributeFilter: ["class"] });
+  setInterval(() => {
+    if (prefs.matrix) {
+      draw();
+    } else {
+      clearCanvas();
+    }
+  }, 55);
 })();
 
+/* ============================================================
+   EFFET "ANIMATIONS RÉDUITES"
+   ============================================================ */
+function applyMotionPreference() {
+  document.documentElement.style.setProperty(
+    "--motion-multiplier",
+    prefs.motion ? "0.01" : "1"
+  );
+  if (prefs.motion) {
+    document.body.classList.add("reduced-motion");
+  } else {
+    document.body.classList.remove("reduced-motion");
+  }
+}
+
+/* ============================================================
+   TOGGLES DE LA MODALE PARAMÈTRES
+   ============================================================ */
+function setupToggle(id, prefKey, onChange) {
+  const el = document.getElementById(id);
+  if (!el) return;
+
+  // État initial
+  if (prefs[prefKey]) el.classList.add("active");
+  else el.classList.remove("active");
+
+  el.addEventListener("click", () => {
+    prefs[prefKey] = !prefs[prefKey];
+    el.classList.toggle("active", prefs[prefKey]);
+    savePrefs();
+    playSound("click");
+    if (onChange) onChange(prefs[prefKey]);
+  });
+}
+
+setupToggle("toggleMatrix", "matrix", (v) => {
+  toast(v ? "Effet Matrix activé" : "Effet Matrix désactivé", "success", 1500);
+});
+setupToggle("toggleMotion", "motion", (v) => {
+  applyMotionPreference();
+  toast(v ? "Animations réduites" : "Animations normales", "success", 1500);
+});
+setupToggle("toggle3D", "threeD");
+setupToggle("toggleAutoSort", "autoSort");
+setupToggle("toggleStrict", "strict");
+
+// Applique la préférence au démarrage
+applyMotionPreference();
+
+/* ============================================================
+   VIDER LE CACHE
+   ============================================================ */
+document.getElementById("clearCacheBtn").addEventListener("click", () => {
+  try {
+    localStorage.removeItem("seekit-prefs");
+    localStorage.removeItem("seekit-sound");
+  } catch {}
+  toast("Cache vidé — rechargement…", "success", 1500);
+  setTimeout(() => location.reload(), 800);
+});
+
+/* ============================================================
+   LOADER + COMPTEUR
+   ============================================================ */
 window.addEventListener("load", () => {
   setTimeout(() => {
     document.getElementById("pageLoader").classList.add("hidden");
@@ -1793,25 +2018,6 @@ function playSound(type) {
 
 document.addEventListener("click", () => { ensureAudio(); }, { once: true });
 
-const themeToggle = document.getElementById("themeToggle");
-const themeIcon = document.getElementById("themeIcon");
-const sunSVG = `<circle cx="12" cy="12" r="4"></circle><line x1="12" y1="2" x2="12" y2="4"></line><line x1="12" y1="20" x2="12" y2="22"></line><line x1="4.93" y1="4.93" x2="6.34" y2="6.34"></line><line x1="17.66" y1="17.66" x2="19.07" y2="19.07"></line><line x1="2" y1="12" x2="4" y2="12"></line><line x1="20" y1="12" x2="22" y2="12"></line><line x1="4.93" y1="19.07" x2="6.34" y2="17.66"></line><line x1="17.66" y1="6.34" x2="19.07" y2="4.93"></line>`;
-const moonSVG = `<path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>`;
-function setTheme(light) {
-  document.body.classList.toggle("light", light);
-  themeIcon.innerHTML = light ? sunSVG : moonSVG;
-  try { localStorage.setItem("seekit-theme", light ? "light" : "dark"); } catch {}
-}
-themeToggle.addEventListener("click", () => {
-  const isLight = document.body.classList.contains("light");
-  setTheme(!isLight);
-  playSound("click");
-});
-try {
-  const saved = localStorage.getItem("seekit-theme");
-  if (saved === "light") setTheme(true);
-} catch {}
-
 const input = document.getElementById("target");
 const inputClear = document.getElementById("inputClear");
 input.addEventListener("input", () => {
@@ -1832,25 +2038,38 @@ scrollTopBtn.addEventListener("click", () => {
   playSound("click");
 });
 
-document.getElementById("aboutLink").addEventListener("click", () => {
-  document.getElementById("aboutModal").classList.add("open");
+/* ============================================================
+   MODALES
+   ============================================================ */
+function openModal(id) {
+  document.getElementById(id).classList.add("open");
   document.body.classList.add("modal-open");
+}
+function closeModal(id) {
+  document.getElementById(id).classList.remove("open");
+  document.body.classList.remove("modal-open");
+}
+
+document.getElementById("settingsToggle").addEventListener("click", () => {
+  openModal("settingsModal");
+  playSound("click");
+});
+document.getElementById("aboutLink").addEventListener("click", () => {
+  openModal("aboutModal");
   playSound("click");
 });
 document.getElementById("aboutLink2").addEventListener("click", () => {
-  document.getElementById("aboutModal").classList.add("open");
-  document.body.classList.add("modal-open");
+  openModal("aboutModal");
   playSound("click");
 });
 document.getElementById("legalLink").addEventListener("click", () => {
-  document.getElementById("legalModal").classList.add("open");
-  document.body.classList.add("modal-open");
+  openModal("legalModal");
   playSound("click");
 });
+
 document.querySelectorAll(".modal-close").forEach(btn => {
   btn.addEventListener("click", () => {
-    document.getElementById(btn.getAttribute("data-close")).classList.remove("open");
-    document.body.classList.remove("modal-open");
+    closeModal(btn.getAttribute("data-close"));
     playSound("click");
   });
 });
@@ -1877,6 +2096,7 @@ function escapeHtml(s) {
 
 function validate(t) {
   t = (t || "").trim();
+  if (!prefs.strict) return t.length >= 2;
   if (t.length < 3) return false;
   return /^[a-zA-ZÀ-ÿ'\- ]{2,}$/.test(t);
 }
@@ -1978,6 +2198,31 @@ function exportJSON(item, idx) {
   URL.revokeObjectURL(url);
   toast("Fichier JSON exporté", "success");
   playSound("ding");
+}
+
+/* ============================================================
+   EFFET 3D SUR LES CARTES
+   ============================================================ */
+function attach3DTilt(card) {
+  if (!prefs.threeD) return;
+  const MAX_ROT = 6;
+  function handleMove(e) {
+    const rect = card.getBoundingClientRect();
+    const x = (e.clientX ?? e.touches?.[0]?.clientX ?? 0) - rect.left;
+    const y = (e.clientY ?? e.touches?.[0]?.clientY ?? 0) - rect.top;
+    const px = x / rect.width;
+    const py = y / rect.height;
+    const rotY = (px - 0.5) * MAX_ROT * 2;
+    const rotX = -(py - 0.5) * MAX_ROT * 2;
+    card.style.transform = `perspective(1000px) rotateX(${rotX}deg) rotateY(${rotY}deg) translateZ(8px) scale(1.008)`;
+  }
+  function handleLeave() {
+    card.style.transform = "perspective(1000px) rotateX(0) rotateY(0) translateZ(0) scale(1)";
+  }
+  card.addEventListener("mousemove", handleMove);
+  card.addEventListener("mouseleave", handleLeave);
+  card.addEventListener("touchmove", handleMove, { passive: true });
+  card.addEventListener("touchend", handleLeave);
 }
 
 function renderCard(item, idx) {
@@ -2129,6 +2374,8 @@ function bindCardActions(list) {
       exportJSON(currentItems[i], i);
     });
   });
+
+  list.querySelectorAll(".card").forEach(attach3DTilt);
 }
 
 function render(result) {
@@ -2145,7 +2392,13 @@ function render(result) {
     return;
   }
 
-  const arr = findArray(result.data) || [];
+  let arr = findArray(result.data) || [];
+
+  // Tri automatique si la préférence est activée
+  if (prefs.autoSort) {
+    arr = sortItems(arr, "confidence");
+  }
+
   currentItems = arr.map(it => typeof it === "string" ? { valeur: it } : it);
 
   const status = document.createElement("div");
