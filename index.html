@@ -354,12 +354,14 @@
   }
   .cursor {
     display:inline-block;
-    color:var(--green);
-    font-weight:400;
+    width:3px;
+    height:0.9em;
+    background:var(--green);
     margin-left:2px;
-    animation:blinkCursor 0.9s step-end infinite;
-    text-shadow:0 0 10px var(--green);
-    -webkit-text-fill-color:var(--green);
+    vertical-align:-0.05em;
+    border-radius:2px;
+    box-shadow:0 0 10px var(--green), 0 0 20px rgba(0,224,122,0.4);
+    animation:blinkCursor 1s step-end infinite;
   }
   @keyframes blinkCursor {
     0%, 50% { opacity:1; }
@@ -1551,7 +1553,7 @@
 
     <h1 class="hero-title">
       Retrouvez n'importe qui,<br>
-      à partir d'<span class="accent typewriter" id="typewriter"></span><span class="cursor">|</span>
+      à partir d'<span class="accent typewriter" id="typewriter"></span><span class="cursor"></span>
     </h1>
 
     <p class="hero-sub">
@@ -1818,7 +1820,7 @@
       <p>Seek It ne peut être tenu responsable de l'exactitude des données affichées. L'utilisateur doit vérifier toute information avant usage.</p>
       <h3>5. RGPD et données personnelles</h3>
       <p>Aucune recherche n'est stockée sur nos serveurs. Aucun cookie de tracking n'est utilisé. Le stockage local (localStorage) est utilisé uniquement pour vos préférences d'affichage (son, vue grille/liste, animations). Vous pouvez les effacer à tout moment depuis les paramètres.</p>
-      <p>Conformément au RGPD (UE 2016/679), vous disposez d'un droit d'accès, de rectification et de suppression de vos données. Pour toute demande : <a href="mailto:contact@seek-it.example">contact@seek-it.example</a>.</p>
+      <p>Conformément au RGPD (UE 2016/679), vous disposez d'un droit d'accès, de rectification et de suppression de vos données. Pour toute demande : https://discord.gg/j8CadY3TfK</p>
       <h3>6. Cookies</h3>
       <p>Aucun cookie tiers. Aucun pixel de tracking. Aucun outil d'analyse externe.</p>
       <p style="margin-top:16px;font-size:0.75rem;color:var(--text-dimmer)">Dernière modification : 16 sept. 2026</p>
