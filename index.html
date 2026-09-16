@@ -255,7 +255,6 @@
   .nav-btn:hover svg { color:var(--text); }
   .nav-btn.off svg { color:var(--text-dimmer); }
 
-  /* Bouton engrenage — rotation au survol */
   #settingsToggle:hover svg {
     transform:rotate(90deg);
   }
@@ -1560,7 +1559,7 @@
 
 <div class="toast-container" id="toastContainer"></div>
 
-<!-- MODALE PARAMÈTRES -->
+<!-- MODALE PARAMÈTRES (Apparence + Données uniquement) -->
 <div class="modal-overlay" id="settingsModal">
   <div class="modal">
     <button class="modal-close" data-close="settingsModal">
@@ -1598,27 +1597,6 @@
             <div class="settings-desc">Les cartes s'inclinent au survol</div>
           </div>
           <div class="toggle-switch active" id="toggle3D"></div>
-        </div>
-      </div>
-
-      <!-- Section Recherche -->
-      <div class="settings-section">
-        <div class="settings-label">Recherche</div>
-
-        <div class="settings-row">
-          <div class="settings-info">
-            <div class="settings-title">Tri automatique par fiabilité</div>
-            <div class="settings-desc">Trie les résultats dès l'affichage</div>
-          </div>
-          <div class="toggle-switch" id="toggleAutoSort"></div>
-        </div>
-
-        <div class="settings-row">
-          <div class="settings-info">
-            <div class="settings-title">Validation stricte</div>
-            <div class="settings-desc">Refuse les recherches trop courtes</div>
-          </div>
-          <div class="toggle-switch active" id="toggleStrict"></div>
         </div>
       </div>
 
@@ -1720,7 +1698,8 @@ function savePrefs() {
 loadPrefs();
 
 /* ============================================================
-   MATRIX — FONCTIONNE PENDANT LE SCROLL (iOS)
+   MATRIX — ANIMATION CONTINUE VIA requestAnimationFrame
+   (ne s'arrête pas au scroll)
    ============================================================ */
 (function matrixRain() {
   const canvas = document.getElementById("matrix");
@@ -1744,8 +1723,24 @@ loadPrefs();
     drops = new Array(columns).fill(0).map(() => Math.random() * -50);
   }
 
-  function draw() {
-    if (!prefs.matrix) return;
+  let lastFrame = 0;
+  const FRAME_INTERVAL = 55; // ms
+
+  function draw(now) {
+    if (!prefs.matrix) {
+      // Si désactivé, on efface et on attend
+      ctx.clearRect(0, 0, w, h);
+      requestAnimationFrame(draw);
+      return;
+    }
+
+    // Limiter le framerate pour garder le même effet visuel
+    if (now - lastFrame < FRAME_INTERVAL) {
+      requestAnimationFrame(draw);
+      return;
+    }
+    lastFrame = now;
+
     ctx.fillStyle = "rgba(5, 5, 5, 0.04)";
     ctx.fillRect(0, 0, w, h);
 
@@ -1771,23 +1766,15 @@ loadPrefs();
       }
       drops[i]++;
     }
-  }
 
-  function clearCanvas() {
-    ctx.clearRect(0, 0, w, h);
+    requestAnimationFrame(draw);
   }
 
   resize();
   window.addEventListener("resize", resize);
   window.addEventListener("orientationchange", () => setTimeout(resize, 200));
 
-  setInterval(() => {
-    if (prefs.matrix) {
-      draw();
-    } else {
-      clearCanvas();
-    }
-  }, 55);
+  requestAnimationFrame(draw);
 })();
 
 /* ============================================================
@@ -1812,7 +1799,6 @@ function setupToggle(id, prefKey, onChange) {
   const el = document.getElementById(id);
   if (!el) return;
 
-  // État initial
   if (prefs[prefKey]) el.classList.add("active");
   else el.classList.remove("active");
 
@@ -1833,10 +1819,7 @@ setupToggle("toggleMotion", "motion", (v) => {
   toast(v ? "Animations réduites" : "Animations normales", "success", 1500);
 });
 setupToggle("toggle3D", "threeD");
-setupToggle("toggleAutoSort", "autoSort");
-setupToggle("toggleStrict", "strict");
 
-// Applique la préférence au démarrage
 applyMotionPreference();
 
 /* ============================================================
@@ -2096,7 +2079,7 @@ function escapeHtml(s) {
 
 function validate(t) {
   t = (t || "").trim();
-  if (!prefs.strict) return t.length >= 2;
+  // La préférence "strict" n'est plus modifiable, on la garde à true par défaut
   if (t.length < 3) return false;
   return /^[a-zA-ZÀ-ÿ'\- ]{2,}$/.test(t);
 }
@@ -2394,10 +2377,8 @@ function render(result) {
 
   let arr = findArray(result.data) || [];
 
-  // Tri automatique si la préférence est activée
-  if (prefs.autoSort) {
-    arr = sortItems(arr, "confidence");
-  }
+  // Plus de tri automatique (préférence supprimée)
+  // if (prefs.autoSort) arr = sortItems(arr, "confidence");
 
   currentItems = arr.map(it => typeof it === "string" ? { valeur: it } : it);
 
