@@ -3,7 +3,8 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Seek It</title>
+<title>Seek It — Recherche par nom, email, téléphone ou pseudo</title>
+<meta name="description" content="Retrouvez n'importe qui à partir d'un nom, d'un email, d'un téléphone ou d'un pseudo. Recherche instantanée, anonyme, sans trace.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
@@ -11,7 +12,6 @@
   * { margin:0; padding:0; box-sizing:border-box; }
   :root {
     --bg:#050505;
-    --bg-2:#0a0a0a;
     --card:rgba(20,20,24,0.55);
     --card-solid:#0d0d0f;
     --card-hover:rgba(28,28,34,0.7);
@@ -20,7 +20,6 @@
     --text:#f5f5f7;
     --text-dim:#8a8a95;
     --text-dimmer:#4a4a55;
-    --accent:#fff;
     --green:#00e07a;
     --green-dim:rgba(0,224,122,0.12);
     --orange:#ffaa4d;
@@ -50,6 +49,12 @@
     position:relative;
   }
   body.modal-open { overflow:hidden; }
+
+  #particles {
+    position:fixed; inset:0;
+    z-index:0; pointer-events:none;
+    opacity:0.5;
+  }
 
   body::before {
     content:''; position:fixed; top:0; left:50%; transform:translateX(-50%);
@@ -157,14 +162,6 @@
     pointer-events:none;
   }
   nav.topbar:hover::after { left:200%; }
-  nav.topbar:hover {
-    border-color:var(--border-hover);
-    box-shadow:
-      0 12px 40px var(--glass-shadow),
-      0 1px 0 0 var(--glass-highlight) inset,
-      0 -1px 0 0 rgba(0,0,0,0.15) inset,
-      0 0 0 0.5px var(--glow) inset;
-  }
 
   .brand {
     display:flex; align-items:center; gap:10px;
@@ -236,9 +233,7 @@
   .nav-btn:hover svg { color:var(--text); }
   .nav-btn.off svg { color:var(--text-dimmer); }
 
-  #settingsToggle:hover svg {
-    transform:rotate(90deg);
-  }
+  #settingsToggle:hover svg { transform:rotate(90deg); }
 
   .nav-link {
     font-size:0.78rem; font-weight:500;
@@ -274,13 +269,9 @@
       0 8px 20px var(--glow),
       0 1px 0 0 var(--glass-highlight) inset;
   }
-  .nav-link:active { transform:translateY(0) scale(0.98); }
 
   main { position:relative; z-index:1; }
-
-  .container {
-    max-width:900px; margin:0 auto; padding:0 24px;
-  }
+  .container { max-width:900px; margin:0 auto; padding:0 24px; }
 
   section.hero {
     padding:20px 24px 60px;
@@ -416,6 +407,22 @@
     background:var(--card-hover);
   }
 
+  .input-type-badge {
+    position:absolute; right:44px; top:50%;
+    transform:translateY(-50%);
+    font-size:0.6rem; font-weight:700;
+    padding:3px 8px; border-radius:100px;
+    background:var(--green-dim); color:var(--green);
+    border:1px solid var(--glow);
+    letter-spacing:0.05em; text-transform:uppercase;
+    font-family:'JetBrains Mono', monospace;
+    display:none;
+    z-index:2;
+    pointer-events:none;
+    transition:opacity 0.2s;
+  }
+  .input-type-badge.visible { display:inline-block; }
+
   .input-clear {
     position:absolute; right:14px; top:50%;
     transform:translateY(-50%);
@@ -474,9 +481,6 @@
   }
   button.primary:active:not(:disabled) {
     transform:translateY(0) scale(0.99);
-    box-shadow:
-      0 2px 8px var(--glass-shadow),
-      0 1px 0 0 var(--btn-highlight) inset;
   }
   button.primary:disabled {
     background:var(--card);
@@ -495,6 +499,19 @@
   }
   button.primary.loading .spinner { display:inline-block; }
   @keyframes spin { to { transform:rotate(360deg); } }
+
+  .ripple {
+    position:absolute;
+    border-radius:50%;
+    background:rgba(255,255,255,0.4);
+    transform:scale(0);
+    animation:rippleAnim 0.6s ease-out;
+    pointer-events:none;
+    z-index:0;
+  }
+  @keyframes rippleAnim {
+    to { transform:scale(4); opacity:0; }
+  }
 
   .stats-row {
     display:grid; grid-template-columns:repeat(3, 1fr);
@@ -567,10 +584,7 @@
     margin-bottom:36px;
   }
 
-  .sources-grid {
-    display:flex; flex-wrap:wrap; gap:8px;
-    margin-bottom:20px;
-  }
+  .sources-grid { display:flex; flex-wrap:wrap; gap:8px; margin-bottom:20px; }
   .source-chip {
     padding:8px 14px;
     background:var(--glass-tint);
@@ -648,8 +662,6 @@
     border:1px solid var(--glow);
     position:relative;
     box-shadow:0 4px 12px var(--green-dim);
-    backdrop-filter:blur(10px);
-    -webkit-backdrop-filter:blur(10px);
   }
   .feature-icon svg { width:16px; height:16px; }
   .feature-title {
@@ -681,19 +693,13 @@
   }
   .footer-links a:hover { color:var(--text); }
   .credits {
-    font-size:0.72rem;
-    color:var(--text-dim);
-    letter-spacing:0.02em;
-    margin-bottom:8px;
+    font-size:0.72rem; color:var(--text-dim);
+    letter-spacing:0.02em; margin-bottom:8px;
   }
   .credits strong {
     color:var(--green);
     font-weight:700;
     text-shadow:0 0 12px var(--green-dim);
-    transition:text-shadow 0.3s;
-  }
-  .credits strong:hover {
-    text-shadow:0 0 20px var(--green);
   }
   .watermark {
     font-size:0.65rem; color:var(--text-dimmer);
@@ -718,8 +724,13 @@
     display:none; align-items:center; justify-content:space-between;
     gap:8px; margin-bottom:14px;
     animation:fadeUp 0.4s ease-out;
+    flex-wrap:wrap;
   }
   .toolbar.visible { display:flex; }
+  .toolbar-left {
+    display:flex; gap:8px; align-items:center;
+    flex:1; min-width:0;
+  }
   .sort-wrap { position:relative; flex:1; max-width:220px; }
   .sort-select {
     width:100%;
@@ -738,10 +749,7 @@
   }
   .sort-select:hover { border-color:var(--border-hover); }
   .sort-select:focus { border-color:var(--green); box-shadow:0 0 0 3px var(--glow), 0 1px 0 0 var(--glass-highlight) inset; }
-  .sort-select option {
-    background:var(--card-solid);
-    color:var(--text);
-  }
+  .sort-select option { background:var(--card-solid); color:var(--text); }
   .sort-wrap::after {
     content:''; position:absolute; right:12px; top:50%;
     transform:translateY(-50%) rotate(45deg);
@@ -750,6 +758,32 @@
     border-bottom:1.5px solid var(--text-dim);
     pointer-events:none; margin-top:-3px;
   }
+
+  .view-toggle {
+    display:flex; gap:2px;
+    background:var(--glass-tint);
+    border:1px solid var(--border);
+    border-radius:12px; padding:3px;
+    backdrop-filter:blur(20px) saturate(180%);
+    -webkit-backdrop-filter:blur(20px) saturate(180%);
+    box-shadow:0 1px 0 0 var(--glass-highlight) inset;
+  }
+  .view-btn {
+    width:30px; height:30px; border-radius:9px;
+    background:transparent; border:none;
+    display:flex; align-items:center; justify-content:center;
+    cursor:pointer;
+    transition:all 0.2s;
+    color:var(--text-dim);
+  }
+  .view-btn svg { width:14px; height:14px; }
+  .view-btn:hover { color:var(--text); background:rgba(255,255,255,0.05); }
+  .view-btn.active {
+    background:var(--green-dim);
+    color:var(--green);
+    box-shadow:0 0 0 1px var(--glow) inset;
+  }
+
   .clear-all-btn {
     background:var(--glass-tint);
     border:1px solid var(--border);
@@ -766,43 +800,59 @@
     position:relative;
     overflow:hidden;
   }
-  .clear-all-btn::before {
-    content:'';
-    position:absolute;
-    top:0; left:0; right:0;
-    height:50%;
-    background:linear-gradient(180deg, var(--glass-highlight) 0%, transparent 100%);
-    border-radius:12px 12px 0 0;
-    pointer-events:none;
-  }
   .clear-all-btn:hover {
     border-color:rgba(255,107,107,0.5); color:var(--red);
     background:rgba(255,107,107,0.08);
-    transform:translateY(-1px);
   }
   .clear-all-btn svg { width:12px; height:12px; position:relative; }
 
   .skeleton {
     background:var(--glass-tint);
     border:1px solid var(--border);
-    border-radius:14px; padding:16px 18px; margin-bottom:12px;
-    animation:fadeUp 0.3s ease-out;
+    border-radius:18px; padding:22px; margin-bottom:14px;
+    animation:skelPulse 2s ease-in-out infinite;
     backdrop-filter:blur(24px) saturate(200%);
     -webkit-backdrop-filter:blur(24px) saturate(200%);
     box-shadow:
       0 8px 24px var(--glass-shadow),
       0 1px 0 0 var(--glass-highlight) inset;
+    position:relative;
+    overflow:hidden;
+    display:flex;
+    gap:14px;
   }
+  .skeleton::before {
+    content:'';
+    position:absolute;
+    top:0; left:0; right:0;
+    height:50%;
+    background:linear-gradient(180deg, var(--glass-highlight) 0%, transparent 100%);
+    border-radius:18px 18px 0 0;
+    pointer-events:none;
+  }
+  @keyframes skelPulse {
+    0%,100% { opacity:1; }
+    50% { opacity:0.7; }
+  }
+  .skel-avatar {
+    width:48px; height:48px; border-radius:50%;
+    background:linear-gradient(90deg, var(--border) 0%, var(--border-hover) 50%, var(--border) 100%);
+    background-size:200% 100%;
+    animation:skelShimmer 1.8s linear infinite;
+    flex-shrink:0;
+  }
+  .skel-content { flex:1; min-width:0; }
   .skel-line {
     height:10px; border-radius:4px;
     background:linear-gradient(90deg, var(--border) 0%, var(--border-hover) 50%, var(--border) 100%);
     background-size:200% 100%;
-    animation:skelShimmer 1.5s linear infinite;
-    margin-bottom:8px;
+    animation:skelShimmer 1.8s linear infinite;
+    margin-bottom:9px;
   }
-  .skel-line.title { width:60%; height:14px; margin-bottom:12px; }
-  .skel-line.short { width:35%; }
-  .skel-line.medium { width:80%; }
+  .skel-line.title { width:55%; height:13px; margin-bottom:14px; }
+  .skel-line.short { width:30%; }
+  .skel-line.medium { width:75%; }
+  .skel-line.long { width:90%; }
   @keyframes skelShimmer {
     0% { background-position:200% 0; }
     100% { background-position:-200% 0; }
@@ -876,10 +926,25 @@
     flex-shrink:0; letter-spacing:-0.03em;
     box-shadow:0 4px 16px var(--glow), 0 1px 0 0 rgba(255,255,255,0.4) inset;
     transition:transform 0.4s cubic-bezier(0.22, 1, 0.36, 1);
+    position:relative;
   }
   .card:hover .card-avatar {
     transform:scale(1.08) rotate(-6deg);
     box-shadow:0 8px 24px var(--glow), 0 1px 0 0 rgba(255,255,255,0.5) inset;
+  }
+  .card-avatar .dup-badge {
+    position:absolute;
+    bottom:-4px; right:-4px;
+    min-width:18px; height:18px;
+    padding:0 5px;
+    border-radius:100px;
+    background:var(--orange);
+    color:#000;
+    font-size:0.55rem; font-weight:800;
+    display:flex; align-items:center; justify-content:center;
+    border:2px solid var(--card-solid);
+    font-family:'JetBrains Mono', monospace;
+    box-shadow:0 2px 8px var(--orange-dim);
   }
   .card-title-block { min-width:0; flex:1; }
   .card-title {
@@ -921,21 +986,17 @@
     font-weight:700; flex-shrink:0;
     font-family:'JetBrains Mono', monospace;
     border:1px solid var(--glow);
-    box-shadow:0 0 12px var(--green-dim), 0 1px 0 0 rgba(255,255,255,0.1) inset;
+    box-shadow:0 0 12px var(--green-dim);
     transition:transform 0.3s;
-    backdrop-filter:blur(10px);
-    -webkit-backdrop-filter:blur(10px);
   }
   .card:hover .score { transform:scale(1.06); }
   .score.mid {
     background:var(--orange-dim); color:var(--orange);
     border-color:var(--orange-dim);
-    box-shadow:0 0 12px var(--orange-dim), 0 1px 0 0 rgba(255,255,255,0.1) inset;
   }
   .score.low {
     background:rgba(255,107,107,0.12); color:var(--red);
     border-color:rgba(255,107,107,0.3);
-    box-shadow:0 0 12px rgba(255,107,107,0.2), 0 1px 0 0 rgba(255,255,255,0.1) inset;
   }
 
   .row {
@@ -969,10 +1030,7 @@
     color:var(--blue); text-decoration:none;
     transition:color 0.15s;
   }
-  .row-value a:hover {
-    text-decoration:underline;
-    filter:brightness(1.2);
-  }
+  .row-value a:hover { text-decoration:underline; filter:brightness(1.2); }
 
   .copy-btn {
     width:24px; height:24px; border-radius:8px;
@@ -992,6 +1050,37 @@
   .copy-btn.copied svg { color:var(--green); }
   .copy-btn.copied { border-color:var(--green); }
 
+  .dup-info {
+    font-size:0.65rem;
+    color:var(--orange);
+    background:var(--orange-dim);
+    padding:5px 10px;
+    border-radius:8px;
+    margin-top:10px;
+    border:1px solid rgba(255,170,77,0.25);
+    font-family:'JetBrains Mono', monospace;
+    display:flex; align-items:center; gap:6px;
+    position:relative; z-index:2;
+  }
+  .dup-info svg { width:11px; height:11px; flex-shrink:0; }
+
+  #resultsList.grid-view {
+    display:grid;
+    grid-template-columns:repeat(auto-fill, minmax(280px, 1fr));
+    gap:12px;
+  }
+  #resultsList.grid-view .card {
+    margin-bottom:0;
+    padding:18px;
+  }
+  #resultsList.grid-view .row {
+    flex-direction:column;
+    gap:2px;
+  }
+  #resultsList.grid-view .row-label { min-width:0; font-size:0.6rem; }
+  #resultsList.grid-view .copy-btn { opacity:0.6; }
+  #resultsList.grid-view .card:hover .copy-btn { opacity:1; }
+
   .err {
     background:rgba(255,107,107,0.08); color:var(--red);
     padding:14px 16px; border-radius:14px;
@@ -1001,7 +1090,6 @@
     animation:fadeUp 0.4s ease-out;
     backdrop-filter:blur(24px) saturate(180%);
     -webkit-backdrop-filter:blur(24px) saturate(180%);
-    box-shadow:0 1px 0 0 rgba(255,255,255,0.05) inset;
   }
 
   .raw-toggle {
@@ -1014,8 +1102,6 @@
   .raw-toggle:hover {
     color:var(--text);
     background:var(--glass-tint);
-    backdrop-filter:blur(20px);
-    -webkit-backdrop-filter:blur(20px);
   }
   .raw-toggle svg { width:12px; height:12px; transition:transform 0.25s; }
   .raw-toggle.open svg { transform:rotate(90deg); }
@@ -1065,8 +1151,7 @@
     transition:transform 0.4s cubic-bezier(0.22, 1, 0.36, 1);
     box-shadow:
       0 30px 90px rgba(0,0,0,0.5),
-      0 1px 0 0 var(--glass-highlight) inset,
-      0 -1px 0 0 rgba(0,0,0,0.15) inset;
+      0 1px 0 0 var(--glass-highlight) inset;
   }
   .modal::before {
     content:'';
@@ -1119,9 +1204,7 @@
   .modal-body ul { padding-left:18px; margin-bottom:12px; }
   .modal-body li { margin-bottom:4px; }
 
-  .settings-section {
-    margin-bottom:22px;
-  }
+  .settings-section { margin-bottom:22px; }
   .settings-section:last-child { margin-bottom:0; }
   .settings-label {
     font-size:0.65rem;
@@ -1140,10 +1223,7 @@
     border-bottom:1px solid var(--row-border);
   }
   .settings-row:last-child { border-bottom:none; }
-  .settings-info {
-    flex:1;
-    min-width:0;
-  }
+  .settings-info { flex:1; min-width:0; }
   .settings-title {
     font-size:0.82rem;
     font-weight:600;
@@ -1206,22 +1286,11 @@
     position:relative;
     overflow:hidden;
   }
-  .settings-btn::before {
-    content:'';
-    position:absolute;
-    top:0; left:0; right:0;
-    height:50%;
-    background:linear-gradient(180deg, var(--glass-highlight) 0%, transparent 100%);
-    border-radius:12px 12px 0 0;
-    pointer-events:none;
-  }
   .settings-btn:hover {
     border-color:var(--border-hover);
     color:var(--text);
     background:var(--card-hover);
-    transform:translateY(-1px);
   }
-  .settings-btn:active { transform:translateY(0) scale(0.98); }
   .settings-btn svg { width:14px; height:14px; position:relative; z-index:1; }
   .settings-btn span { position:relative; z-index:1; }
 
@@ -1258,19 +1327,7 @@
     position:relative;
     z-index:2;
   }
-  .toast::after {
-    content:'';
-    position:absolute;
-    top:0; left:0; right:0;
-    height:50%;
-    background:linear-gradient(180deg, var(--glass-highlight) 0%, transparent 100%);
-    border-radius:14px 14px 0 0;
-    pointer-events:none;
-    z-index:1;
-  }
-  .toast span, .toast { position:relative; z-index:2; }
-  .toast.success { border-color:var(--glow); box-shadow:0 12px 40px var(--glass-shadow), 0 0 20px var(--glow), 0 1px 0 0 var(--glass-highlight) inset; }
-  .toast.error { border-color:rgba(255,107,107,0.5); box-shadow:0 12px 40px var(--glass-shadow), 0 0 20px rgba(255,107,107,0.2), 0 1px 0 0 var(--glass-highlight) inset; }
+  .toast span { position:relative; z-index:2; }
   .toast.error::before { background:var(--red); box-shadow:0 0 8px var(--red); }
   .toast.leaving { animation:toastOut 0.3s ease-out forwards; }
   @keyframes toastIn {
@@ -1298,16 +1355,6 @@
     z-index:60;
     backdrop-filter:blur(24px) saturate(200%);
     -webkit-backdrop-filter:blur(24px) saturate(200%);
-    overflow:hidden;
-  }
-  .scroll-top::before {
-    content:'';
-    position:absolute;
-    top:0; left:0; right:0;
-    height:50%;
-    background:linear-gradient(180deg, var(--glass-highlight) 0%, transparent 100%);
-    border-radius:50% 50% 0 0;
-    pointer-events:none;
   }
   .scroll-top.visible {
     opacity:1; pointer-events:auto;
@@ -1315,18 +1362,102 @@
   }
   .scroll-top:hover {
     transform:translateY(-4px) scale(1.08);
-    box-shadow:
-      0 12px 32px var(--glow),
-      0 1px 0 0 var(--glass-highlight) inset;
+    box-shadow:0 12px 32px var(--glow);
     border-color:var(--green);
   }
-  .scroll-top svg { width:18px; height:18px; color:var(--text); position:relative; z-index:1; }
+  .scroll-top svg { width:18px; height:18px; }
+
+  .cookie-banner {
+    position:fixed; bottom:20px; left:50%;
+    transform:translateX(-50%) translateY(120%);
+    z-index:700;
+    max-width:600px; width:calc(100% - 32px);
+    background:var(--card-solid);
+    border:1px solid var(--border-hover);
+    border-radius:18px;
+    padding:18px 20px;
+    box-shadow:
+      0 20px 60px rgba(0,0,0,0.5),
+      0 1px 0 0 var(--glass-highlight) inset;
+    display:flex; flex-direction:column; gap:14px;
+    transition:transform 0.5s cubic-bezier(0.22, 1, 0.36, 1), opacity 0.4s;
+    opacity:0; pointer-events:none;
+    backdrop-filter:blur(28px) saturate(200%);
+    -webkit-backdrop-filter:blur(28px) saturate(200%);
+  }
+  .cookie-banner.visible {
+    transform:translateX(-50%) translateY(0);
+    opacity:1; pointer-events:auto;
+  }
+  .cookie-banner::before {
+    content:'';
+    position:absolute;
+    top:0; left:0; right:0;
+    height:50%;
+    background:linear-gradient(180deg, var(--glass-highlight) 0%, transparent 100%);
+    border-radius:18px 18px 0 0;
+    pointer-events:none;
+  }
+  .cookie-content {
+    display:flex; align-items:flex-start; gap:12px;
+    position:relative;
+  }
+  .cookie-icon {
+    width:36px; height:36px; border-radius:10px;
+    background:var(--green-dim); color:var(--green);
+    display:flex; align-items:center; justify-content:center;
+    flex-shrink:0;
+    border:1px solid var(--glow);
+  }
+  .cookie-icon svg { width:16px; height:16px; }
+  .cookie-text { flex:1; min-width:0; }
+  .cookie-title {
+    font-size:0.85rem; font-weight:700;
+    color:var(--text); margin-bottom:4px;
+  }
+  .cookie-desc {
+    font-size:0.72rem; color:var(--text-dim);
+    line-height:1.55;
+  }
+  .cookie-desc a { color:var(--blue); text-decoration:none; }
+  .cookie-desc a:hover { text-decoration:underline; }
+  .cookie-actions {
+    display:flex; gap:8px;
+    position:relative;
+  }
+  .cookie-btn {
+    flex:1;
+    padding:11px 14px;
+    border-radius:11px;
+    font-size:0.76rem; font-weight:600;
+    font-family:inherit;
+    cursor:pointer;
+    transition:all 0.2s cubic-bezier(0.22, 1, 0.36, 1);
+    border:1px solid var(--border);
+  }
+  .cookie-btn.accept {
+    background:var(--btn-bg);
+    color:var(--btn-text);
+    border-color:var(--btn-border);
+    box-shadow:0 4px 12px var(--glass-shadow);
+  }
+  .cookie-btn.accept:hover {
+    transform:translateY(-2px);
+    box-shadow:0 8px 20px var(--glow);
+  }
+  .cookie-btn.refuse {
+    background:var(--glass-tint);
+    color:var(--text-dim);
+  }
+  .cookie-btn.refuse:hover {
+    border-color:var(--border-hover);
+    color:var(--text);
+    background:var(--card-hover);
+  }
 
   ::-webkit-scrollbar { width:6px; height:6px; }
   ::-webkit-scrollbar-track { background:transparent; }
-  ::-webkit-scrollbar-thumb {
-    background:var(--border-hover); border-radius:3px;
-  }
+  ::-webkit-scrollbar-thumb { background:var(--border-hover); border-radius:3px; }
   ::selection { background:var(--glow); color:var(--text); }
 
   @media (max-width:640px) {
@@ -1341,10 +1472,14 @@
     .row { flex-direction:column; gap:2px; }
     .row-label { min-width:0; }
     .copy-btn { opacity:1; }
+    #resultsList.grid-view { grid-template-columns:1fr; }
+    .cookie-banner { bottom:12px; padding:16px; }
   }
 </style>
 </head>
 <body>
+
+<canvas id="particles"></canvas>
 
 <div class="page-loader" id="pageLoader">
   <div class="loader-logo">
@@ -1396,11 +1531,11 @@
 
     <h1 class="hero-title">
       Retrouvez n'importe qui,<br>
-      à partir d'<span class="accent">un prénom et un nom</span>
+      à partir d'<span class="accent">un nom, un email ou un numéro</span>
     </h1>
 
     <p class="hero-sub">
-      Accédez à des centaines de millions d'entrées issues de bases de données publiques — noms, prénoms, adresses, emails, numéros de téléphone. Recherche instantanée, sans trace.
+      Accédez à des centaines de millions d'entrées issues de bases de données publiques. Recherchez par nom complet, email, numéro de téléphone ou pseudo. Instantané, anonyme, sans trace.
     </p>
 
     <div class="search-container">
@@ -1409,7 +1544,8 @@
           <circle cx="11" cy="11" r="8"></circle>
           <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
         </svg>
-        <input id="target" placeholder="prénom nom..." autocomplete="off" spellcheck="false">
+        <input id="target" placeholder="nom, email, téléphone ou pseudo..." autocomplete="off" spellcheck="false">
+        <span class="input-type-badge" id="inputTypeBadge"></span>
         <button class="input-clear" id="inputClear" aria-label="Effacer">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
             <line x1="18" y1="6" x2="6" y2="18"></line>
@@ -1529,6 +1665,31 @@
 
 <div class="toast-container" id="toastContainer"></div>
 
+<div class="cookie-banner" id="cookieBanner">
+  <div class="cookie-content">
+    <div class="cookie-icon">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M12 2a10 10 0 1 0 10 10 4 4 0 0 1-5-5 4 4 0 0 1-5-5"></path>
+        <path d="M8.5 8.5v.01"></path>
+        <path d="M16 15.5v.01"></path>
+        <path d="M12 12v.01"></path>
+        <path d="M11 17v.01"></path>
+        <path d="M7 14v.01"></path>
+      </svg>
+    </div>
+    <div class="cookie-text">
+      <div class="cookie-title">Votre vie privée nous importe</div>
+      <div class="cookie-desc">
+        Seek It utilise uniquement un stockage local pour vos préférences (son, vue, animations). Aucun cookie de tracking, aucune donnée envoyée à des tiers. En continuant, vous acceptez notre <a id="cookieLegalLink">politique de confidentialité</a>.
+      </div>
+    </div>
+  </div>
+  <div class="cookie-actions">
+    <button class="cookie-btn refuse" id="cookieRefuse">Refuser</button>
+    <button class="cookie-btn accept" id="cookieAccept">Accepter</button>
+  </div>
+</div>
+
 <div class="modal-overlay" id="settingsModal">
   <div class="modal">
     <button class="modal-close" data-close="settingsModal">
@@ -1539,9 +1700,16 @@
     </button>
     <div class="modal-title">Paramètres</div>
     <div class="modal-body">
-
       <div class="settings-section">
         <div class="settings-label">Apparence</div>
+
+        <div class="settings-row">
+          <div class="settings-info">
+            <div class="settings-title">Effet de particules</div>
+            <div class="settings-desc">Points lumineux en arrière-plan</div>
+          </div>
+          <div class="toggle-switch active" id="toggleParticles"></div>
+        </div>
 
         <div class="settings-row">
           <div class="settings-info">
@@ -1571,7 +1739,6 @@
           <span>Vider le cache et les préférences</span>
         </button>
       </div>
-
     </div>
   </div>
 </div>
@@ -1587,19 +1754,26 @@
     <div class="modal-title">À propos de Seek It</div>
     <div class="modal-body">
       <p><strong>Seek It</strong> est un moteur de recherche de personnes qui interroge plus de 22 milliards d'enregistrements issus de bases de données publiques et de fuites documentées.</p>
+      <h3>Ce que tu peux rechercher</h3>
+      <ul>
+        <li>Nom complet (prénom + nom)</li>
+        <li>Adresse email</li>
+        <li>Numéro de téléphone</li>
+        <li>Pseudo / nom d'utilisateur</li>
+      </ul>
       <h3>Ce que tu peux trouver</h3>
       <ul>
-        <li>Nom complet et variantes</li>
+        <li>Identité complète</li>
         <li>Date et lieu de naissance</li>
         <li>Adresses (actuelles et passées)</li>
-        <li>Emails et téléphones</li>
-        <li>Pseudo et comptes associés</li>
+        <li>Emails et téléphones associés</li>
+        <li>Comptes sur les réseaux sociaux</li>
       </ul>
       <h3>Comment ça marche</h3>
-      <p>Tu saisis un prénom et un nom. Seek It interroge sa base et retourne les enregistrements correspondants, triés par fiabilité.</p>
+      <p>Tu saisis une information. Seek It détecte automatiquement son type (nom, email, téléphone, pseudo) et interroge sa base pour retourner les enregistrements correspondants.</p>
       <h3>Confidentialité</h3>
       <p>Aucune donnée n'est stockée sur nos serveurs. Les recherches sont anonymes et ne sont pas tracées.</p>
-      <p style="margin-top:16px;font-size:0.75rem;color:var(--text-dimmer)">Dernière modification : 15 Sept. 2026</p>
+      <p style="margin-top:16px;font-size:0.75rem;color:var(--text-dimmer)">Dernière modification : 16 Sept. 2026</p>
     </div>
   </div>
 </div>
@@ -1612,19 +1786,22 @@
         <line x1="6" y1="6" x2="18" y2="18"></line>
       </svg>
     </button>
-    <div class="modal-title">Mentions légales</div>
+    <div class="modal-title">Mentions légales & RGPD</div>
     <div class="modal-body">
       <h3>1. Objet</h3>
       <p>Seek It est un outil de recherche d'informations publiques. L'utilisateur est seul responsable de l'usage qu'il fait des données consultées.</p>
       <h3>2. Sources de données</h3>
       <p>Les données proviennent de bases publiques, de registres officiels et de fuites rendues publiques. Seek It n'effectue aucun piratage ni intrusion.</p>
-      <h3>3. Utilisation</h3>
+      <h3>3. Utilisation interdite</h3>
       <p>Toute utilisation à des fins de harcèlement, de doxxing, de chantage ou d'atteinte à la vie privée est strictement interdite.</p>
       <h3>4. Responsabilité</h3>
       <p>Seek It ne peut être tenu responsable de l'exactitude des données affichées. L'utilisateur doit vérifier toute information avant usage.</p>
-      <h3>5. RGPD / Vie privée</h3>
-      <p>Aucune recherche n'est stockée. Aucun cookie de tracking n'est utilisé.</p>
-      <p style="margin-top:16px;font-size:0.75rem;color:var(--text-dimmer)">Dernière modification : 15 sept. 2026</p>
+      <h3>5. RGPD et données personnelles</h3>
+      <p>Aucune recherche n'est stockée sur nos serveurs. Aucun cookie de tracking n'est utilisé. Le stockage local (localStorage) est utilisé uniquement pour vos préférences d'affichage (son, vue grille/liste, animations). Vous pouvez les effacer à tout moment depuis les paramètres.</p>
+      <p>Conformément au RGPD (UE 2016/679), vous disposez d'un droit d'accès, de rectification et de suppression de vos données. Pour toute demande : <a href="mailto:contact@seek-it.example">contact@seek-it.example</a>.</p>
+      <h3>6. Cookies</h3>
+      <p>Aucun cookie tiers. Aucun pixel de tracking. Aucun outil d'analyse externe.</p>
+      <p style="margin-top:16px;font-size:0.75rem;color:var(--text-dimmer)">Dernière modification : 16 sept. 2026</p>
     </div>
   </div>
 </div>
@@ -1633,10 +1810,10 @@
 const EP = "/api/search";
 
 const prefs = {
+  particles: true,
   motion: false,
   threeD: true,
-  autoSort: false,
-  strict: true
+  view: "list"
 };
 
 function loadPrefs() {
@@ -1650,22 +1827,93 @@ function savePrefs() {
 }
 loadPrefs();
 
+(function particlesEffect() {
+  const canvas = document.getElementById("particles");
+  if (!canvas) return;
+  const ctx = canvas.getContext("2d", { alpha: true });
+
+  let w, h, particles = [], dpr;
+  const COUNT = 40;
+
+  function resize() {
+    dpr = Math.min(window.devicePixelRatio || 1, 2);
+    w = window.innerWidth;
+    h = window.innerHeight;
+    canvas.width = w * dpr;
+    canvas.height = h * dpr;
+    canvas.style.width = w + "px";
+    canvas.style.height = h + "px";
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    particles = [];
+    for (let i = 0; i < COUNT; i++) {
+      particles.push({
+        x: Math.random() * w,
+        y: Math.random() * h,
+        vx: (Math.random() - 0.5) * 0.25,
+        vy: (Math.random() - 0.5) * 0.25,
+        r: Math.random() * 1.6 + 0.4,
+        a: Math.random() * 0.4 + 0.15
+      });
+    }
+  }
+
+  function draw() {
+    if (!prefs.particles) {
+      ctx.clearRect(0, 0, w, h);
+      requestAnimationFrame(draw);
+      return;
+    }
+    ctx.clearRect(0, 0, w, h);
+    for (let i = 0; i < particles.length; i++) {
+      const p = particles[i];
+      p.x += p.vx;
+      p.y += p.vy;
+      if (p.x < 0) p.x = w;
+      if (p.x > w) p.x = 0;
+      if (p.y < 0) p.y = h;
+      if (p.y > h) p.y = 0;
+
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+      ctx.fillStyle = `rgba(0, 224, 122, ${p.a})`;
+      ctx.fill();
+
+      for (let j = i + 1; j < particles.length; j++) {
+        const q = particles[j];
+        const dx = p.x - q.x;
+        const dy = p.y - q.y;
+        const dist = Math.sqrt(dx * dx + dy * dy);
+        if (dist < 130) {
+          ctx.beginPath();
+          ctx.moveTo(p.x, p.y);
+          ctx.lineTo(q.x, q.y);
+          ctx.strokeStyle = `rgba(0, 224, 122, ${(1 - dist / 130) * 0.08})`;
+          ctx.lineWidth = 0.5;
+          ctx.stroke();
+        }
+      }
+    }
+    requestAnimationFrame(draw);
+  }
+
+  resize();
+  window.addEventListener("resize", resize);
+  requestAnimationFrame(draw);
+})();
+
 function applyMotionPreference() {
-  document.documentElement.style.setProperty(
-    "--motion-multiplier",
-    prefs.motion ? "0.01" : "1"
-  );
   if (prefs.motion) {
     document.body.classList.add("reduced-motion");
+    document.body.style.setProperty("--motion-multiplier", "0.01");
   } else {
     document.body.classList.remove("reduced-motion");
+    document.body.style.setProperty("--motion-multiplier", "1");
   }
 }
 
 function setupToggle(id, prefKey, onChange) {
   const el = document.getElementById(id);
   if (!el) return;
-
   if (prefs[prefKey]) el.classList.add("active");
   else el.classList.remove("active");
 
@@ -1678,6 +1926,9 @@ function setupToggle(id, prefKey, onChange) {
   });
 }
 
+setupToggle("toggleParticles", "particles", (v) => {
+  toast(v ? "Particules activées" : "Particules désactivées", "success", 1500);
+});
 setupToggle("toggleMotion", "motion", (v) => {
   applyMotionPreference();
   toast(v ? "Animations réduites" : "Animations normales", "success", 1500);
@@ -1690,15 +1941,46 @@ document.getElementById("clearCacheBtn").addEventListener("click", () => {
   try {
     localStorage.removeItem("seekit-prefs");
     localStorage.removeItem("seekit-sound");
+    localStorage.removeItem("seekit-cookies");
   } catch {}
   toast("Cache vidé — rechargement…", "success", 1500);
   setTimeout(() => location.reload(), 800);
 });
 
+(function cookieManager() {
+  const banner = document.getElementById("cookieBanner");
+  const accept = document.getElementById("cookieAccept");
+  const refuse = document.getElementById("cookieRefuse");
+  const legalLink = document.getElementById("cookieLegalLink");
+  if (!banner) return;
+
+  let choice = null;
+  try { choice = localStorage.getItem("seekit-cookies"); } catch {}
+
+  if (!choice) {
+    setTimeout(() => banner.classList.add("visible"), 2600);
+  }
+
+  function dismiss(value) {
+    try { localStorage.setItem("seekit-cookies", value); } catch {}
+    banner.classList.remove("visible");
+    setTimeout(() => banner.remove(), 600);
+    toast(value === "accepted" ? "Merci, préférences enregistrées" : "Refus enregistré", "success", 1500);
+  }
+
+  accept.addEventListener("click", () => dismiss("accepted"));
+  refuse.addEventListener("click", () => dismiss("refused"));
+  if (legalLink) {
+    legalLink.addEventListener("click", (e) => {
+      e.preventDefault();
+      openModal("legalModal");
+    });
+  }
+})();
+
 (function initLoader() {
   const loader = document.getElementById("pageLoader");
   if (!loader) return;
-
   let done = false;
   function hideLoader() {
     if (done) return;
@@ -1706,17 +1988,13 @@ document.getElementById("clearCacheBtn").addEventListener("click", () => {
     loader.classList.add("hidden");
     try { animateCounter(); } catch (e) {}
     try { playSound("loader"); } catch (e) {}
-    setTimeout(() => {
-      if (loader.parentNode) loader.remove();
-    }, 800);
+    setTimeout(() => { if (loader.parentNode) loader.remove(); }, 800);
   }
-
   if (document.readyState === "loading") {
     document.addEventListener("DOMContentLoaded", () => setTimeout(hideLoader, 1600));
   } else {
     setTimeout(hideLoader, 1600);
   }
-
   setTimeout(hideLoader, 3500);
 })();
 
@@ -1820,8 +2098,7 @@ function playSound(type) {
         g.gain.setValueAtTime(0, ctx.currentTime + i * 0.08);
         g.gain.linearRampToValueAtTime(0.06, ctx.currentTime + i * 0.08 + 0.02);
         g.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + i * 0.08 + 0.3);
-        o.connect(g);
-        g.connect(ctx.destination);
+        o.connect(g); g.connect(ctx.destination);
         o.start(ctx.currentTime + i * 0.08);
         o.stop(ctx.currentTime + i * 0.08 + 0.35);
       });
@@ -1832,10 +2109,8 @@ function playSound(type) {
       o.frequency.exponentialRampToValueAtTime(1320, ctx.currentTime + 0.1);
       g.gain.setValueAtTime(0.08, ctx.currentTime);
       g.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.3);
-      o.connect(g);
-      g.connect(ctx.destination);
-      o.start();
-      o.stop(ctx.currentTime + 0.3);
+      o.connect(g); g.connect(ctx.destination);
+      o.start(); o.stop(ctx.currentTime + 0.3);
     } else if (type === "error") {
       const o = ctx.createOscillator();
       const g = ctx.createGain();
@@ -1843,10 +2118,8 @@ function playSound(type) {
       o.frequency.exponentialRampToValueAtTime(140, ctx.currentTime + 0.25);
       g.gain.setValueAtTime(0.07, ctx.currentTime);
       g.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.3);
-      o.connect(g);
-      g.connect(ctx.destination);
-      o.start();
-      o.stop(ctx.currentTime + 0.3);
+      o.connect(g); g.connect(ctx.destination);
+      o.start(); o.stop(ctx.currentTime + 0.3);
     } else if (type === "click") {
       const o = ctx.createOscillator();
       const g = ctx.createGain();
@@ -1854,10 +2127,8 @@ function playSound(type) {
       o.frequency.exponentialRampToValueAtTime(600, ctx.currentTime + 0.06);
       g.gain.setValueAtTime(0.03, ctx.currentTime);
       g.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.08);
-      o.connect(g);
-      g.connect(ctx.destination);
-      o.start();
-      o.stop(ctx.currentTime + 0.09);
+      o.connect(g); g.connect(ctx.destination);
+      o.start(); o.stop(ctx.currentTime + 0.09);
     } else if (type === "whoosh") {
       const o = ctx.createOscillator();
       const g = ctx.createGain();
@@ -1866,24 +2137,71 @@ function playSound(type) {
       o.frequency.exponentialRampToValueAtTime(680, ctx.currentTime + 0.35);
       g.gain.setValueAtTime(0.04, ctx.currentTime);
       g.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.4);
-      o.connect(g);
-      g.connect(ctx.destination);
-      o.start();
-      o.stop(ctx.currentTime + 0.4);
+      o.connect(g); g.connect(ctx.destination);
+      o.start(); o.stop(ctx.currentTime + 0.4);
     }
   } catch {}
 }
 
 document.addEventListener("click", () => { ensureAudio(); }, { once: true });
 
+function attachRipple(el) {
+  el.addEventListener("click", (e) => {
+    if (prefs.motion) return;
+    const rect = el.getBoundingClientRect();
+    const size = Math.max(rect.width, rect.height);
+    const x = (e.clientX ?? rect.left + rect.width / 2) - rect.left - size / 2;
+    const y = (e.clientY ?? rect.top + rect.height / 2) - rect.top - size / 2;
+    const ripple = document.createElement("span");
+    ripple.className = "ripple";
+    ripple.style.width = ripple.style.height = size + "px";
+    ripple.style.left = x + "px";
+    ripple.style.top = y + "px";
+    el.appendChild(ripple);
+    setTimeout(() => ripple.remove(), 600);
+  });
+}
+
 const input = document.getElementById("target");
 const inputClear = document.getElementById("inputClear");
+const inputTypeBadge = document.getElementById("inputTypeBadge");
+
+const TYPE_LABELS = {
+  name: "Nom",
+  email: "Email",
+  phone: "Téléphone",
+  username: "Pseudo"
+};
+
+function detectType(value) {
+  const v = (value || "").trim();
+  if (!v) return null;
+  if (/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v)) return "email";
+  if (/^(\+?\d[\d\s.\-()]{6,}\d)$/.test(v)) return "phone";
+  if (/^@[\w.\-]{2,}$/.test(v)) return "username";
+  if (/^[a-zA-ZÀ-ÿ'\- ]{2,}$/.test(v) && v.includes(" ")) return "name";
+  if (/^[\w.\-]{3,}$/.test(v) && !v.includes(" ")) return "username";
+  return null;
+}
+
+function updateInputBadge() {
+  const type = detectType(input.value);
+  if (type) {
+    inputTypeBadge.textContent = TYPE_LABELS[type];
+    inputTypeBadge.classList.add("visible");
+  } else {
+    inputTypeBadge.classList.remove("visible");
+  }
+}
+
 input.addEventListener("input", () => {
   inputClear.classList.toggle("visible", input.value.length > 0);
+  updateInputBadge();
 });
 inputClear.addEventListener("click", () => {
   input.value = "";
   inputClear.classList.remove("visible");
+  inputTypeBadge.classList.remove("visible");
   input.focus();
 });
 
@@ -1950,9 +2268,15 @@ function escapeHtml(s) {
 }
 
 function validate(t) {
-  t = (t || "").trim();
-  if (t.length < 3) return false;
-  return /^[a-zA-ZÀ-ÿ'\- ]{2,}$/.test(t);
+  const v = (t || "").trim();
+  if (v.length < 3) return false;
+  const type = detectType(v);
+  if (!type) return false;
+  if (type === "email") return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v);
+  if (type === "phone") return /^(\+?\d[\d\s.\-()]{6,}\d)$/.test(v);
+  if (type === "username") return v.length >= 3;
+  if (type === "name") return /^[a-zA-ZÀ-ÿ'\- ]{2,}$/.test(v);
+  return false;
 }
 
 const LABELS = {
@@ -1976,11 +2300,24 @@ function labelOf(k) {
   return LABELS[k] || k.replace(/_/g, " ");
 }
 
-async function doSearch(fullName) {
-  const parts = fullName.trim().split(/\s+/);
-  const a = parts[0] || "";
-  const b = parts.slice(1).join(" ") || "";
-  const url = `${EP}?first_name=${encodeURIComponent(a)}&last_name=${encodeURIComponent(b)}`;
+async function doSearch(query) {
+  const v = query.trim();
+  const type = detectType(v);
+  let url;
+  if (type === "email") {
+    url = `${EP}?email=${encodeURIComponent(v)}`;
+  } else if (type === "phone") {
+    const clean = v.replace(/[\s.\-()]/g, "");
+    url = `${EP}?phone=${encodeURIComponent(clean)}`;
+  } else if (type === "username") {
+    const clean = v.replace(/^@/, "");
+    url = `${EP}?username=${encodeURIComponent(clean)}`;
+  } else {
+    const parts = v.split(/\s+/);
+    const a = parts[0] || "";
+    const b = parts.slice(1).join(" ") || "";
+    url = `${EP}?first_name=${encodeURIComponent(a)}&last_name=${encodeURIComponent(b)}`;
+  }
   try {
     const res = await fetch(url, { method: "GET", cache: "no-store" });
     const text = await res.text();
@@ -2055,7 +2392,7 @@ function exportJSON(item, idx) {
 }
 
 function attach3DTilt(card) {
-  if (!prefs.threeD) return;
+  if (!prefs.threeD || prefs.motion) return;
   const MAX_ROT = 6;
   function handleMove(e) {
     const rect = card.getBoundingClientRect();
@@ -2076,16 +2413,53 @@ function attach3DTilt(card) {
   card.addEventListener("touchend", handleLeave);
 }
 
-function renderCard(item, idx) {
+function groupDuplicates(items) {
+  const groups = [];
+  const used = new Set();
+  const keysOf = (it) => {
+    const keys = [];
+    if (it.email) keys.push("em:" + String(it.email).toLowerCase());
+    if (it.telephone) keys.push("tel:" + String(it.telephone).replace(/\D/g, ""));
+    if (it.phone) keys.push("tel:" + String(it.phone).replace(/\D/g, ""));
+    const p = (it.prenom || it.first_name || "").toString().toLowerCase();
+    const n = (it.nom_famille || it.last_name || "").toString().toLowerCase();
+    if (p && n) keys.push("nom:" + p + "|" + n);
+    return keys;
+  };
+
+  items.forEach((item, idx) => {
+    if (used.has(idx)) return;
+    const group = [item];
+    used.add(idx);
+    const myKeys = keysOf(item);
+    items.forEach((other, jdx) => {
+      if (jdx === idx || used.has(jdx)) return;
+      const otherKeys = keysOf(other);
+      const shared = myKeys.some(k => otherKeys.includes(k));
+      if (shared) {
+        group.push(other);
+        used.add(jdx);
+      }
+    });
+    groups.push(group);
+  });
+  return groups;
+}
+
+function renderCard(item, idx, dupCount = 0) {
   const prenom = item.prenom || item.first_name || "";
   const nom = item.nom_famille || item.last_name || item.name || "";
-  const title = [prenom, nom].filter(Boolean).join(" ") || item.email || `Résultat ${idx + 1}`;
-  const sub = item.email && (prenom || nom) ? item.email : "";
-  const initials = ((prenom[0] || "") + (nom[0] || "")).toUpperCase() || "?";
+  const title = [prenom, nom].filter(Boolean).join(" ") || item.email || item.nom_utilisateur || `Résultat ${idx + 1}`;
+  const sub = item.email && (prenom || nom) ? item.email : (item.telephone && (prenom || nom) ? item.telephone : "");
+  const initials = ((prenom[0] || "") + (nom[0] || "")).toUpperCase() || (item.email ? item.email[0].toUpperCase() : "?");
 
   const conf = item._confidence ?? item.confidence ?? null;
   const scoreHtml = conf != null
     ? `<div class="score ${scoreClass(conf)}">${escapeHtml(conf)}%</div>`
+    : "";
+
+  const dupBadge = dupCount > 1
+    ? `<span class="dup-badge" title="${dupCount} entrées similaires">${dupCount}</span>`
     : "";
 
   const keys = Object.keys(item).filter(k =>
@@ -2125,11 +2499,24 @@ function renderCard(item, idx) {
       </div>`;
   }).join("");
 
+  const dupInfo = dupCount > 1
+    ? `<div class="dup-info">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+          <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+        </svg>
+        ${dupCount} entrées similaires regroupées
+      </div>`
+    : "";
+
   return `
-    <div class="card" style="animation-delay:${idx * 0.06}s" data-idx="${idx}">
+    <div class="card" style="animation-delay:${idx * 0.05}s" data-idx="${idx}">
       <div class="card-header">
         <div class="card-header-left">
-          <div class="card-avatar">${escapeHtml(initials)}</div>
+          <div class="card-avatar">
+            ${escapeHtml(initials)}
+            ${dupBadge}
+          </div>
           <div class="card-title-block">
             <div class="card-title">${escapeHtml(title)}</div>
             ${sub ? `<div class="card-sub">${escapeHtml(sub)}</div>` : ""}
@@ -2147,6 +2534,7 @@ function renderCard(item, idx) {
         </div>
       </div>
       ${rows}
+      ${dupInfo}
     </div>
   `;
 }
@@ -2161,12 +2549,15 @@ function renderSkeletons(n = 3) {
   for (let i = 0; i < n; i++) {
     const sk = document.createElement("div");
     sk.className = "skeleton";
-    sk.style.animationDelay = (i * 0.1) + "s";
+    sk.style.animationDelay = (i * 0.15) + "s";
     sk.innerHTML = `
-      <div class="skel-line title"></div>
-      <div class="skel-line medium"></div>
-      <div class="skel-line short"></div>
-      <div class="skel-line medium"></div>
+      <div class="skel-avatar"></div>
+      <div class="skel-content">
+        <div class="skel-line title"></div>
+        <div class="skel-line long"></div>
+        <div class="skel-line medium"></div>
+        <div class="skel-line short"></div>
+      </div>
     `;
     out.appendChild(sk);
   }
@@ -2204,6 +2595,7 @@ function sortItems(items, mode) {
 
 function bindCardActions(list) {
   list.querySelectorAll(".copy-btn").forEach(btn => {
+    attachRipple(btn);
     btn.addEventListener("click", async (e) => {
       e.stopPropagation();
       const val = btn.getAttribute("data-copy");
@@ -2220,6 +2612,7 @@ function bindCardActions(list) {
   });
 
   list.querySelectorAll(".export-btn").forEach(btn => {
+    attachRipple(btn);
     btn.addEventListener("click", (e) => {
       e.stopPropagation();
       const i = Number(btn.getAttribute("data-idx"));
@@ -2228,6 +2621,17 @@ function bindCardActions(list) {
   });
 
   list.querySelectorAll(".card").forEach(attach3DTilt);
+}
+
+function applyView(view) {
+  const list = document.getElementById("resultsList");
+  if (!list) return;
+  if (view === "grid") list.classList.add("grid-view");
+  else list.classList.remove("grid-view");
+
+  document.querySelectorAll(".view-btn").forEach(b => {
+    b.classList.toggle("active", b.getAttribute("data-view") === view);
+  });
 }
 
 function render(result) {
@@ -2260,17 +2664,41 @@ function render(result) {
     out.appendChild(none);
     playSound("error");
   } else {
+    const groups = groupDuplicates(currentItems);
+
     const toolbar = document.createElement("div");
     toolbar.className = "toolbar visible";
     toolbar.innerHTML = `
-      <div class="sort-wrap">
-        <select class="sort-select" id="sortSelect">
-          <option value="default">Tri par défaut</option>
-          <option value="confidence">Fiabilité (élevée → basse)</option>
-          <option value="age">Âge (jeune → vieux)</option>
-          <option value="ville">Ville (A → Z)</option>
-          <option value="alpha">Alphabétique (A → Z)</option>
-        </select>
+      <div class="toolbar-left">
+        <div class="sort-wrap">
+          <select class="sort-select" id="sortSelect">
+            <option value="default">Tri par défaut</option>
+            <option value="confidence">Fiabilité (élevée → basse)</option>
+            <option value="age">Âge (jeune → vieux)</option>
+            <option value="ville">Ville (A → Z)</option>
+            <option value="alpha">Alphabétique (A → Z)</option>
+          </select>
+        </div>
+        <div class="view-toggle">
+          <button class="view-btn ${prefs.view === "list" ? "active" : ""}" data-view="list" aria-label="Vue liste">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <line x1="8" y1="6" x2="21" y2="6"></line>
+              <line x1="8" y1="12" x2="21" y2="12"></line>
+              <line x1="8" y1="18" x2="21" y2="18"></line>
+              <line x1="3" y1="6" x2="3.01" y2="6"></line>
+              <line x1="3" y1="12" x2="3.01" y2="12"></line>
+              <line x1="3" y1="18" x2="3.01" y2="18"></line>
+            </svg>
+          </button>
+          <button class="view-btn ${prefs.view === "grid" ? "active" : ""}" data-view="grid" aria-label="Vue grille">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="3" y="3" width="7" height="7"></rect>
+              <rect x="14" y="3" width="7" height="7"></rect>
+              <rect x="14" y="14" width="7" height="7"></rect>
+              <rect x="3" y="14" width="7" height="7"></rect>
+            </svg>
+          </button>
+        </div>
       </div>
       <button class="clear-all-btn" id="clearAll">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -2284,27 +2712,44 @@ function render(result) {
 
     const list = document.createElement("div");
     list.id = "resultsList";
-    currentItems.forEach((item, i) => {
-      list.insertAdjacentHTML("beforeend", renderCard(item, i));
-    });
-    out.appendChild(list);
+    if (prefs.view === "grid") list.classList.add("grid-view");
 
+    groups.forEach((group, i) => {
+      const main = group[0];
+      list.insertAdjacentHTML("beforeend", renderCard(main, i, group.length));
+    });
+
+    out.appendChild(list);
     bindCardActions(list);
+
     document.getElementById("sortSelect").addEventListener("change", (e) => {
       const sorted = sortItems(currentItems, e.target.value);
+      const reGrouped = groupDuplicates(sorted);
       list.innerHTML = "";
-      sorted.forEach((item, i) => {
-        list.insertAdjacentHTML("beforeend", renderCard(item, i));
+      reGrouped.forEach((group, i) => {
+        list.insertAdjacentHTML("beforeend", renderCard(group[0], i, group.length));
       });
-      currentItems = sorted;
       bindCardActions(list);
       playSound("click");
     });
+
+    document.querySelectorAll(".view-btn").forEach(btn => {
+      attachRipple(btn);
+      btn.addEventListener("click", () => {
+        const view = btn.getAttribute("data-view");
+        prefs.view = view;
+        savePrefs();
+        applyView(view);
+        playSound("click");
+      });
+    });
+
     document.getElementById("clearAll").addEventListener("click", () => {
       out.innerHTML = "";
       currentItems = [];
       input.value = "";
       inputClear.classList.remove("visible");
+      inputTypeBadge.classList.remove("visible");
       toast("Résultats effacés", "success", 1500);
       playSound("whoosh");
     });
@@ -2342,8 +2787,8 @@ document.getElementById("go").addEventListener("click", async () => {
   const btnText = btn.querySelector(".btn-text");
 
   if (!validate(target)) {
-    out.innerHTML = `<div class="none">entre un prénom et un nom valides</div>`;
-    toast("Prénom et nom invalides", "error");
+    out.innerHTML = `<div class="none">entre un nom, un email, un téléphone ou un pseudo valide</div>`;
+    toast("Entrée invalide", "error");
     playSound("error");
     return;
   }
@@ -2370,9 +2815,13 @@ document.getElementById("go").addEventListener("click", async () => {
   }
 });
 
+attachRipple(document.getElementById("go"));
+
 input.addEventListener("keydown", e => {
   if (e.key === "Enter") document.getElementById("go").click();
 });
+
+document.querySelectorAll(".nav-btn, .nav-link, .icon-btn").forEach(attachRipple);
 </script>
 </body>
 </html>
