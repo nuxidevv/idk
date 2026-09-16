@@ -347,6 +347,29 @@
     50% { filter:drop-shadow(0 0 20px rgba(0,224,122,0.7)); }
   }
 
+  .typewriter {
+    min-width:1ch;
+    display:inline-block;
+    vertical-align:baseline;
+  }
+  .cursor {
+    display:inline-block;
+    color:var(--green);
+    font-weight:400;
+    margin-left:2px;
+    animation:blinkCursor 0.9s step-end infinite;
+    text-shadow:0 0 10px var(--green);
+    -webkit-text-fill-color:var(--green);
+  }
+  @keyframes blinkCursor {
+    0%, 50% { opacity:1; }
+    51%, 100% { opacity:0; }
+  }
+  .reduced-motion .cursor {
+    animation:none;
+    opacity:1;
+  }
+
   .hero-sub {
     font-size:0.95rem; color:var(--text-dim);
     max-width:600px; margin:0 auto 40px;
@@ -775,8 +798,10 @@
     cursor:pointer;
     transition:all 0.2s;
     color:var(--text-dim);
+    position:relative;
+    overflow:hidden;
   }
-  .view-btn svg { width:14px; height:14px; }
+  .view-btn svg { width:14px; height:14px; position:relative; z-index:1; }
   .view-btn:hover { color:var(--text); background:rgba(255,255,255,0.05); }
   .view-btn.active {
     background:var(--green-dim);
@@ -968,6 +993,8 @@
     backdrop-filter:blur(20px) saturate(180%);
     -webkit-backdrop-filter:blur(20px) saturate(180%);
     box-shadow:0 1px 0 0 var(--glass-highlight) inset;
+    position:relative;
+    overflow:hidden;
   }
   .icon-btn:hover {
     border-color:var(--border-hover);
@@ -977,7 +1004,7 @@
       0 4px 12px var(--glow),
       0 1px 0 0 var(--glass-highlight) inset;
   }
-  .icon-btn svg { width:13px; height:13px; color:var(--text-dim); }
+  .icon-btn svg { width:13px; height:13px; color:var(--text-dim); position:relative; z-index:1; }
   .icon-btn:hover svg { color:var(--text); }
 
   .score {
@@ -1042,10 +1069,12 @@
     backdrop-filter:blur(20px) saturate(180%);
     -webkit-backdrop-filter:blur(20px) saturate(180%);
     box-shadow:0 1px 0 0 var(--glass-highlight) inset;
+    position:relative;
+    overflow:hidden;
   }
   .card:hover .copy-btn { opacity:1; }
   .copy-btn:hover { border-color:var(--green); transform:scale(1.1); box-shadow:0 4px 12px var(--glow); }
-  .copy-btn svg { width:11px; height:11px; color:var(--text-dim); }
+  .copy-btn svg { width:11px; height:11px; color:var(--text-dim); position:relative; z-index:1; }
   .copy-btn:hover svg { color:var(--green); }
   .copy-btn.copied svg { color:var(--green); }
   .copy-btn.copied { border-color:var(--green); }
@@ -1389,15 +1418,6 @@
     transform:translateX(-50%) translateY(0);
     opacity:1; pointer-events:auto;
   }
-  .cookie-banner::before {
-    content:'';
-    position:absolute;
-    top:0; left:0; right:0;
-    height:50%;
-    background:linear-gradient(180deg, var(--glass-highlight) 0%, transparent 100%);
-    border-radius:18px 18px 0 0;
-    pointer-events:none;
-  }
   .cookie-content {
     display:flex; align-items:flex-start; gap:12px;
     position:relative;
@@ -1531,7 +1551,7 @@
 
     <h1 class="hero-title">
       Retrouvez n'importe qui,<br>
-      à partir d'<span class="accent">un nom, un email ou un numéro</span>
+      à partir d'<span class="accent typewriter" id="typewriter"></span><span class="cursor">|</span>
     </h1>
 
     <p class="hero-sub">
@@ -2623,17 +2643,6 @@ function bindCardActions(list) {
   list.querySelectorAll(".card").forEach(attach3DTilt);
 }
 
-function applyView(view) {
-  const list = document.getElementById("resultsList");
-  if (!list) return;
-  if (view === "grid") list.classList.add("grid-view");
-  else list.classList.remove("grid-view");
-
-  document.querySelectorAll(".view-btn").forEach(b => {
-    b.classList.toggle("active", b.getAttribute("data-view") === view);
-  });
-}
-
 function render(result) {
   const out = document.getElementById("out");
   out.innerHTML = "";
@@ -2739,7 +2748,11 @@ function render(result) {
         const view = btn.getAttribute("data-view");
         prefs.view = view;
         savePrefs();
-        applyView(view);
+        if (view === "grid") list.classList.add("grid-view");
+        else list.classList.remove("grid-view");
+        document.querySelectorAll(".view-btn").forEach(b => {
+          b.classList.toggle("active", b.getAttribute("data-view") === view);
+        });
         playSound("click");
       });
     });
@@ -2822,6 +2835,48 @@ input.addEventListener("keydown", e => {
 });
 
 document.querySelectorAll(".nav-btn, .nav-link, .icon-btn").forEach(attachRipple);
+
+(function typewriterEffect() {
+  const el = document.getElementById("typewriter");
+  if (!el) return;
+
+  const words = ["un Prénom", "un Nom", "un Email", "un Numéro"];
+  let wordIndex = 0;
+  let charIndex = 0;
+  let isDeleting = false;
+  let timeoutId = null;
+
+  function tick() {
+    const current = words[wordIndex];
+
+    if (!isDeleting) {
+      charIndex++;
+      el.textContent = current.slice(0, charIndex);
+      if (charIndex >= current.length) {
+        isDeleting = true;
+        timeoutId = setTimeout(tick, 1600);
+        return;
+      }
+      timeoutId = setTimeout(tick, 90);
+    } else {
+      charIndex--;
+      el.textContent = current.slice(0, charIndex);
+      if (charIndex <= 0) {
+        isDeleting = false;
+        wordIndex = (wordIndex + 1) % words.length;
+        timeoutId = setTimeout(tick, 400);
+        return;
+      }
+      timeoutId = setTimeout(tick, 40);
+    }
+  }
+
+  timeoutId = setTimeout(tick, 800);
+
+  window.addEventListener("beforeunload", () => {
+    if (timeoutId) clearTimeout(timeoutId);
+  });
+})();
 </script>
 </body>
 </html>
