@@ -496,165 +496,6 @@
   button.primary.loading .spinner { display:inline-block; }
   @keyframes spin { to { transform:rotate(360deg); } }
 
-  .filters-panel {
-    max-width:640px;
-    margin:14px auto 0;
-    background:var(--glass-tint);
-    border:1px solid var(--border);
-    border-radius:16px;
-    backdrop-filter:blur(24px) saturate(200%);
-    -webkit-backdrop-filter:blur(24px) saturate(200%);
-    box-shadow:
-      0 8px 24px var(--glass-shadow),
-      0 1px 0 0 var(--glass-highlight) inset;
-    overflow:hidden;
-    animation:fadeUp 0.8s ease-out 0.45s backwards;
-  }
-  .filters-header {
-    display:flex; align-items:center; justify-content:space-between;
-    padding:14px 18px;
-    cursor:pointer;
-    user-select:none;
-    transition:background 0.2s;
-  }
-  .filters-header:hover { background:rgba(255,255,255,0.03); }
-  .filters-header-left {
-    display:flex; align-items:center; gap:10px;
-    font-size:0.82rem; font-weight:600; color:var(--text);
-  }
-  .filters-header-left svg { width:14px; height:14px; color:var(--green); }
-  .filters-count {
-    font-size:0.65rem; font-weight:700;
-    background:var(--green-dim); color:var(--green);
-    padding:3px 9px; border-radius:100px;
-    border:1px solid var(--glow);
-    font-family:'JetBrains Mono', monospace;
-    display:none;
-  }
-  .filters-count.visible { display:inline-block; }
-  .filters-chevron {
-    width:14px; height:14px; color:var(--text-dim);
-    transition:transform 0.3s cubic-bezier(0.22, 1, 0.36, 1);
-  }
-  .filters-panel.open .filters-chevron { transform:rotate(180deg); }
-  .filters-body {
-    display:none;
-    padding:0 18px 18px;
-    border-top:1px solid var(--row-border);
-  }
-  .filters-panel.open .filters-body { display:block; }
-
-  .filters-grid {
-    display:grid;
-    grid-template-columns:repeat(2, 1fr);
-    gap:10px;
-    margin-top:14px;
-  }
-  .filter-group { display:flex; flex-direction:column; gap:5px; }
-  .filter-group.full { grid-column:1 / -1; }
-  .filter-label {
-    font-size:0.62rem; font-weight:700;
-    color:var(--text-dim); letter-spacing:0.08em;
-    text-transform:uppercase;
-  }
-  .filter-input, .filter-select {
-    background:var(--input-bg);
-    border:1px solid var(--border);
-    color:var(--text);
-    padding:10px 12px;
-    border-radius:10px;
-    font-size:0.78rem; font-family:inherit;
-    outline:none;
-    transition:all 0.2s;
-    width:100%;
-    backdrop-filter:blur(20px) saturate(180%);
-    -webkit-backdrop-filter:blur(20px) saturate(180%);
-    box-shadow:0 1px 0 0 var(--glass-highlight) inset;
-  }
-  .filter-input::placeholder { color:var(--text-dimmer); }
-  .filter-input:focus, .filter-select:focus {
-    border-color:var(--green);
-    box-shadow:0 0 0 3px var(--glow), 0 1px 0 0 var(--glass-highlight) inset;
-  }
-  .filter-select {
-    appearance:none; -webkit-appearance:none;
-    cursor:pointer;
-    padding-right:28px;
-  }
-  .filter-select option { background:var(--card-solid); color:var(--text); }
-  .filter-select-wrap { position:relative; }
-  .filter-select-wrap::after {
-    content:''; position:absolute; right:11px; top:50%;
-    transform:translateY(-50%) rotate(45deg);
-    width:5px; height:5px;
-    border-right:1.5px solid var(--text-dim);
-    border-bottom:1.5px solid var(--text-dim);
-    pointer-events:none; margin-top:-3px;
-  }
-  .filter-range {
-    display:flex; align-items:center; gap:8px;
-  }
-  .filter-range .filter-input { flex:1; }
-  .filter-range span { color:var(--text-dimmer); font-size:0.7rem; }
-
-  .filters-actions {
-    display:flex; gap:8px;
-    margin-top:14px;
-  }
-  .filter-btn {
-    flex:1;
-    padding:10px 14px;
-    border-radius:10px;
-    font-size:0.75rem; font-weight:600;
-    font-family:inherit;
-    cursor:pointer;
-    transition:all 0.2s cubic-bezier(0.22, 1, 0.36, 1);
-    display:flex; align-items:center; justify-content:center;
-    gap:6px;
-    position:relative;
-    overflow:hidden;
-  }
-  .filter-btn.primary-filter {
-    background:var(--btn-bg);
-    color:var(--btn-text);
-    border:1px solid var(--btn-border);
-    box-shadow:0 4px 12px var(--glass-shadow), 0 1px 0 0 var(--btn-highlight) inset;
-  }
-  .filter-btn.primary-filter:hover { transform:translateY(-2px); box-shadow:0 8px 20px var(--glow), 0 1px 0 0 var(--btn-highlight) inset; }
-  .filter-btn.secondary-filter {
-    background:var(--glass-tint);
-    color:var(--text-dim);
-    border:1px solid var(--border);
-    box-shadow:0 1px 0 0 var(--glass-highlight) inset;
-  }
-  .filter-btn.secondary-filter:hover {
-    border-color:var(--border-hover);
-    color:var(--text);
-    background:var(--card-hover);
-  }
-  .filter-btn svg { width:12px; height:12px; }
-
-  .active-filters {
-    display:flex; flex-wrap:wrap; gap:6px;
-    margin-top:12px;
-  }
-  .active-filter-chip {
-    display:inline-flex; align-items:center; gap:6px;
-    padding:5px 10px;
-    background:var(--green-dim);
-    border:1px solid var(--glow);
-    color:var(--green);
-    border-radius:100px;
-    font-size:0.68rem; font-weight:600;
-  }
-  .active-filter-chip button {
-    background:none; border:none; cursor:pointer;
-    color:inherit; padding:0; display:flex;
-    opacity:0.7; transition:opacity 0.15s;
-  }
-  .active-filter-chip button:hover { opacity:1; }
-  .active-filter-chip svg { width:10px; height:10px; }
-
   .stats-row {
     display:grid; grid-template-columns:repeat(3, 1fr);
     gap:12px; margin-top:40px;
@@ -1500,7 +1341,6 @@
     .row { flex-direction:column; gap:2px; }
     .row-label { min-width:0; }
     .copy-btn { opacity:1; }
-    .filters-grid { grid-template-columns:1fr; }
   }
 </style>
 </head>
@@ -1582,81 +1422,6 @@
         <span class="spinner"></span>
         <span class="btn-text">Rechercher</span>
       </button>
-    </div>
-
-    <div class="filters-panel" id="filtersPanel">
-      <div class="filters-header" id="filtersHeader">
-        <div class="filters-header-left">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"></polygon>
-          </svg>
-          <span>Filtres avancés</span>
-          <span class="filters-count" id="filtersCount">0</span>
-        </div>
-        <svg class="filters-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-          <polyline points="6 9 12 15 18 9"></polyline>
-        </svg>
-      </div>
-      <div class="filters-body">
-        <div class="filters-grid">
-          <div class="filter-group">
-            <label class="filter-label">Ville</label>
-            <input class="filter-input" id="filterVille" placeholder="Paris..." autocomplete="off">
-          </div>
-          <div class="filter-group">
-            <label class="filter-label">Département</label>
-            <input class="filter-input" id="filterDepartement" placeholder="75, 13..." autocomplete="off">
-          </div>
-          <div class="filter-group">
-            <label class="filter-label">Code postal</label>
-            <input class="filter-input" id="filterCodePostal" placeholder="75001..." autocomplete="off">
-          </div>
-          <div class="filter-group">
-            <label class="filter-label">Pays</label>
-            <input class="filter-input" id="filterPays" placeholder="France..." autocomplete="off">
-          </div>
-          <div class="filter-group full">
-            <label class="filter-label">Âge (année de naissance)</label>
-            <div class="filter-range">
-              <input class="filter-input" id="filterAgeMin" placeholder="Min (ex: 1980)" autocomplete="off" inputmode="numeric">
-              <span>→</span>
-              <input class="filter-input" id="filterAgeMax" placeholder="Max (ex: 2005)" autocomplete="off" inputmode="numeric">
-            </div>
-          </div>
-          <div class="filter-group">
-            <label class="filter-label">Source</label>
-            <input class="filter-input" id="filterSource" placeholder="Ex: Facebook..." autocomplete="off">
-          </div>
-          <div class="filter-group">
-            <label class="filter-label">Fiabilité min.</label>
-            <div class="filter-select-wrap">
-              <select class="filter-select" id="filterConfidence">
-                <option value="">Toutes</option>
-                <option value="30">≥ 30%</option>
-                <option value="50">≥ 50%</option>
-                <option value="70">≥ 70%</option>
-                <option value="90">≥ 90%</option>
-              </select>
-            </div>
-          </div>
-        </div>
-        <div class="active-filters" id="activeFilters"></div>
-        <div class="filters-actions">
-          <button class="filter-btn primary-filter" id="applyFilters">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-              <polyline points="20 6 9 17 4 12"></polyline>
-            </svg>
-            Appliquer
-          </button>
-          <button class="filter-btn secondary-filter" id="resetFilters">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-              <line x1="18" y1="6" x2="6" y2="18"></line>
-              <line x1="6" y1="6" x2="18" y2="18"></line>
-            </svg>
-            Réinitialiser
-          </button>
-        </div>
-      </div>
     </div>
 
     <div class="stats-row">
@@ -1930,24 +1695,30 @@ document.getElementById("clearCacheBtn").addEventListener("click", () => {
   setTimeout(() => location.reload(), 800);
 });
 
-function hideLoader() {
+(function initLoader() {
   const loader = document.getElementById("pageLoader");
-  if (!loader || loader.classList.contains("hidden")) return;
-  loader.classList.add("hidden");
-  animateCounter();
-  playSound("loader");
-  setTimeout(() => {
-    if (loader && loader.parentNode) loader.remove();
-  }, 800);
-}
+  if (!loader) return;
 
-if (document.readyState === "complete") {
-  setTimeout(hideLoader, 1600);
-} else {
-  window.addEventListener("load", () => setTimeout(hideLoader, 1600));
-}
+  let done = false;
+  function hideLoader() {
+    if (done) return;
+    done = true;
+    loader.classList.add("hidden");
+    try { animateCounter(); } catch (e) {}
+    try { playSound("loader"); } catch (e) {}
+    setTimeout(() => {
+      if (loader.parentNode) loader.remove();
+    }, 800);
+  }
 
-setTimeout(hideLoader, 4000);
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", () => setTimeout(hideLoader, 1600));
+  } else {
+    setTimeout(hideLoader, 1600);
+  }
+
+  setTimeout(hideLoader, 3500);
+})();
 
 function animateCounter() {
   const el = document.getElementById("counter");
@@ -2402,8 +2173,6 @@ function renderSkeletons(n = 3) {
 }
 
 let currentItems = [];
-let rawItems = [];
-let currentFilters = {};
 
 function sortItems(items, mode) {
   const arr = [...items];
@@ -2461,237 +2230,6 @@ function bindCardActions(list) {
   list.querySelectorAll(".card").forEach(attach3DTilt);
 }
 
-const filtersPanel = document.getElementById("filtersPanel");
-const filtersHeader = document.getElementById("filtersHeader");
-const filtersCount = document.getElementById("filtersCount");
-const activeFiltersEl = document.getElementById("activeFilters");
-
-const FILTER_IDS = {
-  ville: "filterVille",
-  departement: "filterDepartement",
-  code_postal: "filterCodePostal",
-  pays: "filterPays",
-  ageMin: "filterAgeMin",
-  ageMax: "filterAgeMax",
-  source: "filterSource",
-  confidence: "filterConfidence"
-};
-
-const FILTER_LABELS = {
-  ville: "Ville",
-  departement: "Dép.",
-  code_postal: "CP",
-  pays: "Pays",
-  ageMin: "Année ≥",
-  ageMax: "Année ≤",
-  source: "Source",
-  confidence: "Fiabilité ≥"
-};
-
-function readFilters() {
-  const f = {};
-  Object.keys(FILTER_IDS).forEach(k => {
-    const el = document.getElementById(FILTER_IDS[k]);
-    if (!el) return;
-    const v = (el.value || "").trim();
-    if (v !== "") f[k] = v;
-  });
-  return f;
-}
-
-function updateFiltersCount() {
-  const n = Object.keys(currentFilters).length;
-  if (n > 0) {
-    filtersCount.textContent = n;
-    filtersCount.classList.add("visible");
-  } else {
-    filtersCount.classList.remove("visible");
-  }
-}
-
-function renderActiveChips() {
-  activeFiltersEl.innerHTML = "";
-  Object.entries(currentFilters).forEach(([k, v]) => {
-    const chip = document.createElement("div");
-    chip.className = "active-filter-chip";
-    chip.innerHTML = `${escapeHtml(FILTER_LABELS[k] || k)}: ${escapeHtml(v)} <button data-key="${k}" aria-label="Retirer"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg></button>`;
-    activeFiltersEl.appendChild(chip);
-  });
-  activeFiltersEl.querySelectorAll("button").forEach(btn => {
-    btn.addEventListener("click", () => {
-      const k = btn.getAttribute("data-key");
-      const el = document.getElementById(FILTER_IDS[k]);
-      if (el) el.value = "";
-      delete currentFilters[k];
-      updateFiltersCount();
-      renderActiveChips();
-      playSound("click");
-      reapplyFilters();
-    });
-  });
-}
-
-function applyFiltersToItems(items, filters) {
-  if (!filters || Object.keys(filters).length === 0) return items;
-  return items.filter(item => {
-    if (filters.ville) {
-      const v = String(item.ville || "").toLowerCase();
-      if (!v.includes(filters.ville.toLowerCase())) return false;
-    }
-    if (filters.departement) {
-      const d = String(item.departement || "").toLowerCase();
-      if (!d.includes(filters.departement.toLowerCase())) return false;
-    }
-    if (filters.code_postal) {
-      const cp = String(item.code_postal || "");
-      if (!cp.startsWith(filters.code_postal)) return false;
-    }
-    if (filters.pays) {
-      const p = String(item.pays || "").toLowerCase();
-      if (!p.includes(filters.pays.toLowerCase())) return false;
-    }
-    if (filters.ageMin) {
-      const year = parseInt(item.annee_naissance || (item.date_naissance || "").slice(0, 4), 10);
-      const min = parseInt(filters.ageMin, 10);
-      if (isNaN(year) || isNaN(min) || year < min) return false;
-    }
-    if (filters.ageMax) {
-      const year = parseInt(item.annee_naissance || (item.date_naissance || "").slice(0, 4), 10);
-      const max = parseInt(filters.ageMax, 10);
-      if (isNaN(year) || isNaN(max) || year > max) return false;
-    }
-    if (filters.source) {
-      const s = String(item._source_db || item.source || "").toLowerCase();
-      if (!s.includes(filters.source.toLowerCase())) return false;
-    }
-    if (filters.confidence) {
-      const c = Number(item._confidence ?? item.confidence ?? -1);
-      const min = Number(filters.confidence);
-      if (isNaN(c) || c < min) return false;
-    }
-    return true;
-  });
-}
-
-function reapplyFilters() {
-  const out = document.getElementById("out");
-  if (rawItems.length === 0) return;
-
-  const filtered = applyFiltersToItems(rawItems, currentFilters);
-
-  const oldToolbar = out.querySelector(".toolbar");
-  const oldList = document.getElementById("resultsList");
-  const oldStatus = out.querySelector(".status");
-  const oldRaw = out.querySelector(".raw");
-  const oldNone = out.querySelector(".none");
-
-  if (oldList) oldList.remove();
-  if (oldNone) oldNone.remove();
-
-  if (oldStatus) {
-    oldStatus.textContent = `${filtered.length} résultat(s) trouvé(s)${filtered.length !== rawItems.length ? " (filtrés)" : ""}`;
-  }
-
-  if (filtered.length === 0) {
-    if (oldToolbar) oldToolbar.remove();
-    const none = document.createElement("div");
-    none.className = "none";
-    none.textContent = "aucun résultat";
-    if (oldRaw) out.insertBefore(none, oldRaw);
-    else out.appendChild(none);
-    playSound("error");
-    return;
-  }
-
-  let toolbar = oldToolbar;
-  if (!toolbar) {
-    toolbar = document.createElement("div");
-    toolbar.className = "toolbar visible";
-    toolbar.innerHTML = `
-      <div class="sort-wrap">
-        <select class="sort-select" id="sortSelect">
-          <option value="default">Tri par défaut</option>
-          <option value="confidence">Fiabilité (élevée → basse)</option>
-          <option value="age">Âge (jeune → vieux)</option>
-          <option value="ville">Ville (A → Z)</option>
-          <option value="alpha">Alphabétique (A → Z)</option>
-        </select>
-      </div>
-      <button class="clear-all-btn" id="clearAll">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <polyline points="3 6 5 6 21 6"></polyline>
-          <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
-        </svg>
-        Effacer tout
-      </button>
-    `;
-    if (oldRaw) out.insertBefore(toolbar, oldRaw);
-    else out.appendChild(toolbar);
-    document.getElementById("sortSelect").addEventListener("change", (e) => {
-      const sorted = sortItems(currentItems, e.target.value);
-      const listEl = document.getElementById("resultsList");
-      listEl.innerHTML = "";
-      sorted.forEach((item, i) => listEl.insertAdjacentHTML("beforeend", renderCard(item, i)));
-      currentItems = sorted;
-      bindCardActions(listEl);
-      playSound("click");
-    });
-    document.getElementById("clearAll").addEventListener("click", () => {
-      out.innerHTML = "";
-      currentItems = [];
-      rawItems = [];
-      input.value = "";
-      inputClear.classList.remove("visible");
-      toast("Résultats effacés", "success", 1500);
-      playSound("whoosh");
-    });
-  }
-
-  const list = document.createElement("div");
-  list.id = "resultsList";
-  filtered.forEach((item, i) => {
-);
-    list.insertAdjacentHTML("beforeend", renderCard(item, i));
-  });
-  currentItems = filtered;
-  if (oldRaw) out.insertBefore(list, oldRaw);
-  else out.appendChild(list);
-  bindCardActions(list);
-}
-
-filtersHeader.addEventListener("click", () => {
-  filtersPanel.classList.toggle("open");
-  playSound("click");
-});
-
-document.getElementById("applyFilters").addEventListener("click", () => {
-  currentFilters = readFilters();
-  updateFiltersCount();
-  renderActiveChips();
-  playSound("click");
-  if (rawItems.length === 0) {
-    toast("Lance d'abord une recherche", "error");
-    return;
-  }
-  reapplyFilters();
-  toast(`${Object.keys(currentFilters).length} filtre(s) appliqué(s)`, "success", 1500);
-});
-
-document.getElementById("resetFilters").addEventListener("click", () => {
-  Object.values(FILTER_IDS).forEach(id => {
-    const el = document.getElementById(id);
-    if (el) el.value = "";
-  });
-  currentFilters = {};
-  updateFiltersCount();
-  renderActiveChips();
-  playSound("click");
-  if (rawItems.length > 0) {
-    reapplyFilters();
-    toast("Filtres réinitialisés", "success", 1500);
-  }
-});
-
 function render(result) {
   const out = document.getElementById("out");
   out.innerHTML = "";
@@ -2708,13 +2246,7 @@ function render(result) {
 
   let arr = findArray(result.data) || [];
 
-  rawItems = [];
-  currentFilters = {};
-  updateFiltersCount();
-  renderActiveChips();
-
-  rawItems = arr.map(it => typeof it === "string" ? { valeur: it } : it);
-  currentItems = [...rawItems];
+  currentItems = arr.map(it => typeof it === "string" ? { valeur: it } : it);
 
   const status = document.createElement("div");
   status.className = "status";
@@ -2765,12 +2297,12 @@ function render(result) {
         list.insertAdjacentHTML("beforeend", renderCard(item, i));
       });
       currentItems = sorted;
-      bindCardActions(list      playSound("click");
+      bindCardActions(list);
+      playSound("click");
     });
     document.getElementById("clearAll").addEventListener("click", () => {
       out.innerHTML = "";
       currentItems = [];
-      rawItems = [];
       input.value = "";
       inputClear.classList.remove("visible");
       toast("Résultats effacés", "success", 1500);
