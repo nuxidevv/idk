@@ -3,8 +3,8 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Seek It — Searcher Top #1 FR</title>
-<meta name="description" content="Retrouvez n'importe qui à partir d'un nom, d'un email, d'un téléphone ou d'un pseudo. Recherche instantanée, anonyme, sans trace.">
+<title>Seek It — Recherche par Prénom Nom</title>
+<meta name="description" content="Retrouvez n'importe qui à partir d'un prénom et d'un nom. Recherche instantanée, anonyme, sans trace.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
@@ -347,31 +347,6 @@
     50% { filter:drop-shadow(0 0 20px rgba(0,224,122,0.7)); }
   }
 
-  .typewriter {
-    min-width:1ch;
-    display:inline-block;
-    vertical-align:baseline;
-  }
-  .cursor {
-    display:inline-block;
-    width:3px;
-    height:0.9em;
-    background:var(--green);
-    margin-left:2px;
-    vertical-align:-0.05em;
-    border-radius:2px;
-    box-shadow:0 0 10px var(--green), 0 0 20px rgba(0,224,122,0.4);
-    animation:blinkCursor 1s step-end infinite;
-  }
-  @keyframes blinkCursor {
-    0%, 50% { opacity:1; }
-    51%, 100% { opacity:0; }
-  }
-  .reduced-motion .cursor {
-    animation:none;
-    opacity:1;
-  }
-
   .hero-sub {
     font-size:0.95rem; color:var(--text-dim);
     max-width:600px; margin:0 auto 40px;
@@ -431,22 +406,6 @@
       0 1px 0 0 var(--glass-highlight) inset;
     background:var(--card-hover);
   }
-
-  .input-type-badge {
-    position:absolute; right:44px; top:50%;
-    transform:translateY(-50%);
-    font-size:0.6rem; font-weight:700;
-    padding:3px 8px; border-radius:100px;
-    background:var(--green-dim); color:var(--green);
-    border:1px solid var(--glow);
-    letter-spacing:0.05em; text-transform:uppercase;
-    font-family:'JetBrains Mono', monospace;
-    display:none;
-    z-index:2;
-    pointer-events:none;
-    transition:opacity 0.2s;
-  }
-  .input-type-badge.visible { display:inline-block; }
 
   .input-clear {
     position:absolute; right:14px; top:50%;
@@ -1553,11 +1512,11 @@
 
     <h1 class="hero-title">
       Retrouvez n'importe qui,<br>
-      à partir d'<span class="accent typewriter" id="typewriter"></span><span class="cursor"></span>
+      à partir d'<span class="accent">un Prénom Nom</span>
     </h1>
 
     <p class="hero-sub">
-      Accédez à des centaines de millions d'entrées issues de bases de données publiques. Recherchez par nom complet, email, numéro de téléphone ou pseudo. Instantané, anonyme, sans trace.
+      Accédez à des centaines de millions d'entrées issues de bases de données publiques. Recherchez par prénom et nom pour retrouver identités, adresses, emails et numéros. Instantané, anonyme, sans trace.
     </p>
 
     <div class="search-container">
@@ -1566,8 +1525,7 @@
           <circle cx="11" cy="11" r="8"></circle>
           <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
         </svg>
-        <input id="target" placeholder="nom, email, téléphone ou pseudo..." autocomplete="off" spellcheck="false">
-        <span class="input-type-badge" id="inputTypeBadge"></span>
+        <input id="target" placeholder="prénom nom..." autocomplete="off" spellcheck="false">
         <button class="input-clear" id="inputClear" aria-label="Effacer">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
             <line x1="18" y1="6" x2="6" y2="18"></line>
@@ -1776,13 +1734,8 @@
     <div class="modal-title">À propos de Seek It</div>
     <div class="modal-body">
       <p><strong>Seek It</strong> est un moteur de recherche de personnes qui interroge plus de 22 milliards d'enregistrements issus de bases de données publiques et de fuites documentées.</p>
-      <h3>Ce que tu peux rechercher</h3>
-      <ul>
-        <li>Nom complet (prénom + nom)</li>
-        <li>Adresse email</li>
-        <li>Numéro de téléphone</li>
-        <li>Pseudo / nom d'utilisateur</li>
-      </ul>
+      <h3>Comment rechercher</h3>
+      <p>Il suffit de saisir un <strong>prénom</strong> et un <strong>nom</strong>, séparés par un espace. Seek It interroge sa base et retourne les enregistrements correspondants.</p>
       <h3>Ce que tu peux trouver</h3>
       <ul>
         <li>Identité complète</li>
@@ -1791,8 +1744,6 @@
         <li>Emails et téléphones associés</li>
         <li>Comptes sur les réseaux sociaux</li>
       </ul>
-      <h3>Comment ça marche</h3>
-      <p>Tu saisis une information. Seek It détecte automatiquement son type (nom, email, téléphone, pseudo) et interroge sa base pour retourner les enregistrements correspondants.</p>
       <h3>Confidentialité</h3>
       <p>Aucune donnée n'est stockée sur nos serveurs. Les recherches sont anonymes et ne sont pas tracées.</p>
       <p style="margin-top:16px;font-size:0.75rem;color:var(--text-dimmer)">Dernière modification : 16 Sept. 2026</p>
@@ -1820,7 +1771,7 @@
       <p>Seek It ne peut être tenu responsable de l'exactitude des données affichées. L'utilisateur doit vérifier toute information avant usage.</p>
       <h3>5. RGPD et données personnelles</h3>
       <p>Aucune recherche n'est stockée sur nos serveurs. Aucun cookie de tracking n'est utilisé. Le stockage local (localStorage) est utilisé uniquement pour vos préférences d'affichage (son, vue grille/liste, animations). Vous pouvez les effacer à tout moment depuis les paramètres.</p>
-      <p>Conformément au RGPD (UE 2016/679), vous disposez d'un droit d'accès, de rectification et de suppression de vos données. Pour toute demande : https://discord.gg/j8CadY3TfK</p>
+      <p>Conformément au RGPD (UE 2016/679), vous disposez d'un droit d'accès, de rectification et de suppression de vos données. Pour toute demande : <a href="mailto:contact@seek-it.example">contact@seek-it.example</a>.</p>
       <h3>6. Cookies</h3>
       <p>Aucun cookie tiers. Aucun pixel de tracking. Aucun outil d'analyse externe.</p>
       <p style="margin-top:16px;font-size:0.75rem;color:var(--text-dimmer)">Dernière modification : 16 sept. 2026</p>
@@ -2186,44 +2137,13 @@ function attachRipple(el) {
 
 const input = document.getElementById("target");
 const inputClear = document.getElementById("inputClear");
-const inputTypeBadge = document.getElementById("inputTypeBadge");
-
-const TYPE_LABELS = {
-  name: "Nom",
-  email: "Email",
-  phone: "Téléphone",
-  username: "Pseudo"
-};
-
-function detectType(value) {
-  const v = (value || "").trim();
-  if (!v) return null;
-  if (/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v)) return "email";
-  if (/^(\+?\d[\d\s.\-()]{6,}\d)$/.test(v)) return "phone";
-  if (/^@[\w.\-]{2,}$/.test(v)) return "username";
-  if (/^[a-zA-ZÀ-ÿ'\- ]{2,}$/.test(v) && v.includes(" ")) return "name";
-  if (/^[\w.\-]{3,}$/.test(v) && !v.includes(" ")) return "username";
-  return null;
-}
-
-function updateInputBadge() {
-  const type = detectType(input.value);
-  if (type) {
-    inputTypeBadge.textContent = TYPE_LABELS[type];
-    inputTypeBadge.classList.add("visible");
-  } else {
-    inputTypeBadge.classList.remove("visible");
-  }
-}
 
 input.addEventListener("input", () => {
   inputClear.classList.toggle("visible", input.value.length > 0);
-  updateInputBadge();
 });
 inputClear.addEventListener("click", () => {
   input.value = "";
   inputClear.classList.remove("visible");
-  inputTypeBadge.classList.remove("visible");
   input.focus();
 });
 
@@ -2292,13 +2212,7 @@ function escapeHtml(s) {
 function validate(t) {
   const v = (t || "").trim();
   if (v.length < 3) return false;
-  const type = detectType(v);
-  if (!type) return false;
-  if (type === "email") return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v);
-  if (type === "phone") return /^(\+?\d[\d\s.\-()]{6,}\d)$/.test(v);
-  if (type === "username") return v.length >= 3;
-  if (type === "name") return /^[a-zA-ZÀ-ÿ'\- ]{2,}$/.test(v);
-  return false;
+  return /^[a-zA-ZÀ-ÿ'\- ]{2,}$/.test(v);
 }
 
 const LABELS = {
@@ -2322,24 +2236,11 @@ function labelOf(k) {
   return LABELS[k] || k.replace(/_/g, " ");
 }
 
-async function doSearch(query) {
-  const v = query.trim();
-  const type = detectType(v);
-  let url;
-  if (type === "email") {
-    url = `${EP}?email=${encodeURIComponent(v)}`;
-  } else if (type === "phone") {
-    const clean = v.replace(/[\s.\-()]/g, "");
-    url = `${EP}?phone=${encodeURIComponent(clean)}`;
-  } else if (type === "username") {
-    const clean = v.replace(/^@/, "");
-    url = `${EP}?username=${encodeURIComponent(clean)}`;
-  } else {
-    const parts = v.split(/\s+/);
-    const a = parts[0] || "";
-    const b = parts.slice(1).join(" ") || "";
-    url = `${EP}?first_name=${encodeURIComponent(a)}&last_name=${encodeURIComponent(b)}`;
-  }
+async function doSearch(fullName) {
+  const parts = fullName.trim().split(/\s+/);
+  const a = parts[0] || "";
+  const b = parts.slice(1).join(" ") || "";
+  const url = `${EP}?first_name=${encodeURIComponent(a)}&last_name=${encodeURIComponent(b)}`;
   try {
     const res = await fetch(url, { method: "GET", cache: "no-store" });
     const text = await res.text();
@@ -2764,7 +2665,6 @@ function render(result) {
       currentItems = [];
       input.value = "";
       inputClear.classList.remove("visible");
-      inputTypeBadge.classList.remove("visible");
       toast("Résultats effacés", "success", 1500);
       playSound("whoosh");
     });
@@ -2802,8 +2702,8 @@ document.getElementById("go").addEventListener("click", async () => {
   const btnText = btn.querySelector(".btn-text");
 
   if (!validate(target)) {
-    out.innerHTML = `<div class="none">entre un nom, un email, un téléphone ou un pseudo valide</div>`;
-    toast("Entrée invalide", "error");
+    out.innerHTML = `<div class="none">entre un prénom et un nom valides</div>`;
+    toast("Prénom et nom invalides", "error");
     playSound("error");
     return;
   }
@@ -2837,48 +2737,6 @@ input.addEventListener("keydown", e => {
 });
 
 document.querySelectorAll(".nav-btn, .nav-link, .icon-btn").forEach(attachRipple);
-
-(function typewriterEffect() {
-  const el = document.getElementById("typewriter");
-  if (!el) return;
-
-  const words = ["un Prénom", "un Nom", "un Email", "un Numéro"];
-  let wordIndex = 0;
-  let charIndex = 0;
-  let isDeleting = false;
-  let timeoutId = null;
-
-  function tick() {
-    const current = words[wordIndex];
-
-    if (!isDeleting) {
-      charIndex++;
-      el.textContent = current.slice(0, charIndex);
-      if (charIndex >= current.length) {
-        isDeleting = true;
-        timeoutId = setTimeout(tick, 1600);
-        return;
-      }
-      timeoutId = setTimeout(tick, 90);
-    } else {
-      charIndex--;
-      el.textContent = current.slice(0, charIndex);
-      if (charIndex <= 0) {
-        isDeleting = false;
-        wordIndex = (wordIndex + 1) % words.length;
-        timeoutId = setTimeout(tick, 400);
-        return;
-      }
-      timeoutId = setTimeout(tick, 40);
-    }
-  }
-
-  timeoutId = setTimeout(tick, 800);
-
-  window.addEventListener("beforeunload", () => {
-    if (timeoutId) clearTimeout(timeoutId);
-  });
-})();
 </script>
 </body>
 </html>
