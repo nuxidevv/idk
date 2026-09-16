@@ -84,169 +84,31 @@
   }
 
   /* ============================================================
-     FOND 3D — GRILLE PERSPECTIVE + PARTICULES PROFONDEUR
+     EFFET MATRIX — CANVAS EN FOND
      ============================================================ */
-  .bg-3d {
-    position:fixed; inset:0;
-    pointer-events:none;
+  #matrix {
+    position:fixed;
+    top:0; left:0;
+    width:100%;
+    height:100%;
     z-index:0;
-    overflow:hidden;
-    perspective:800px;
-    perspective-origin:50% 50%;
-    opacity:0.55;
-    mix-blend-mode:screen;
+    pointer-events:none;
+    opacity:0.28;
   }
-  body.light .bg-3d {
-    opacity:0.35;
-    mix-blend-mode:multiply;
+  body.light #matrix {
+    opacity:0.12;
   }
 
-  .grid-3d {
-    position:absolute;
-    bottom:-50%;
-    left:-50%;
-    width:200%;
-    height:200%;
-    background-image:
-      linear-gradient(rgba(0,224,122,0.35) 1px, transparent 1px),
-      linear-gradient(90deg, rgba(0,224,122,0.35) 1px, transparent 1px);
-    background-size:60px 60px;
-    transform:rotateX(72deg);
-    transform-origin:center bottom;
-    animation:grid3DMove 6s linear infinite;
-    mask-image:radial-gradient(ellipse at 50% 100%, black 0%, transparent 70%);
-    -webkit-mask-image:radial-gradient(ellipse at 50% 100%, black 0%, transparent 70%);
-  }
-
-  @keyframes grid3DMove {
-    0% { background-position:0 0; }
-    100% { background-position:0 60px; }
-  }
-
-  .horizon {
-    position:absolute;
-    top:50%;
-    left:0; right:0;
-    height:1px;
-    background:linear-gradient(90deg, transparent 0%, var(--green) 50%, transparent 100%);
-    box-shadow:
-      0 0 20px var(--green),
-      0 0 60px var(--green);
-    opacity:0.8;
-    animation:horizonPulse 4s ease-in-out infinite;
-  }
-
-  @keyframes horizonPulse {
-    0%,100% { opacity:0.6; transform:scaleX(1); }
-    50% { opacity:1; transform:scaleX(1.05); }
-  }
-
-  .sun-halo {
-    position:absolute;
-    top:0;
-    left:50%;
-    transform:translateX(-50%) translateY(-30%);
-    width:70vmin;
-    height:70vmin;
-    border-radius:50%;
-    background:
-      radial-gradient(circle, rgba(0,224,122,0.35) 0%, rgba(0,224,122,0.1) 40%, transparent 70%);
-    filter:blur(20px);
-    animation:sunHalo 8s ease-in-out infinite;
-  }
-
-  @keyframes sunHalo {
-    0%,100% { transform:translateX(-50%) translateY(-30%) scale(1); opacity:0.9; }
-    50% { transform:translateX(-50%) translateY(-32%) scale(1.08); opacity:1; }
-  }
-
-  .particles {
+  /* Léger voile par-dessus la matrix pour ne pas gêner la lecture */
+  .matrix-overlay {
     position:fixed;
     inset:0;
-    pointer-events:none;
-    z-index:1;
-    overflow:hidden;
-    transform-style:preserve-3d;
-    perspective:1000px;
-  }
-  .particle {
-    position:absolute;
-    width:2px;
-    height:2px;
-    border-radius:50%;
-    background:var(--green);
-    box-shadow:
-      0 0 6px var(--green),
-      0 0 12px var(--green);
-    opacity:0;
-    will-change:transform, opacity;
-    animation:particleFloat linear infinite;
-  }
-  .particle.big {
-    width:4px;
-    height:4px;
-    box-shadow:
-      0 0 10px var(--green),
-      0 0 24px var(--green);
-  }
-  .particle.blue {
-    background:var(--blue);
-    box-shadow:
-      0 0 6px var(--blue),
-      0 0 12px var(--blue);
-  }
-
-  @keyframes particleFloat {
-    0% {
-      transform:translate3d(0, 100vh, -200px) scale(0);
-      opacity:0;
-    }
-    10% {
-      opacity:0.9;
-    }
-    90% {
-      opacity:0.9;
-    }
-    100% {
-      transform:translate3d(var(--drift, 0), -10vh, 200px) scale(1);
-      opacity:0;
-    }
-  }
-
-  .aurora {
-    position:fixed;
-    inset:0;
-    pointer-events:none;
     z-index:0;
-    overflow:hidden;
+    pointer-events:none;
+    background:radial-gradient(ellipse at center, transparent 0%, rgba(5,5,5,0.6) 90%);
   }
-  .aurora::before,
-  .aurora::after {
-    content:'';
-    position:absolute;
-    width:80vmax;
-    height:80vmax;
-    border-radius:50%;
-    filter:blur(100px);
-    opacity:0.3;
-    animation:auroraMove 25s ease-in-out infinite;
-  }
-  .aurora::before {
-    top:-20vmax;
-    left:-20vmax;
-    background:radial-gradient(circle, rgba(0,224,122,0.4) 0%, transparent 60%);
-  }
-  .aurora::after {
-    bottom:-20vmax;
-    right:-20vmax;
-    background:radial-gradient(circle, rgba(77,163,255,0.35) 0%, transparent 60%);
-    animation-delay:-12s;
-  }
-
-  @keyframes auroraMove {
-    0%,100% { transform:translate(0,0) scale(1); }
-    33% { transform:translate(10vmax, -5vmax) scale(1.15); }
-    66% { transform:translate(-8vmax, 8vmax) scale(0.95); }
+  body.light .matrix-overlay {
+    background:radial-gradient(ellipse at center, transparent 0%, rgba(250,250,251,0.6) 90%);
   }
 
   .page-loader {
@@ -547,9 +409,7 @@
     margin-bottom:12px;
     transition:transform 0.3s cubic-bezier(0.22, 1, 0.36, 1);
   }
-  .input-wrap:focus-within {
-    transform:scale(1.01);
-  }
+  .input-wrap:focus-within { transform:scale(1.01); }
   .input-wrap .input-icon {
     position:absolute; left:16px; top:50%;
     transform:translateY(-50%);
@@ -1390,10 +1250,7 @@
     body { padding-top:70px; }
     section.hero { padding:20px 20px 40px; }
     .stats-row { grid-template-columns:1fr; }
-    nav.topbar {
-      top:10px;
-      padding:8px 14px;
-    }
+    nav.topbar { top:10px; padding:8px 14px; }
     .brand-mark { width:26px; height:26px; }
     .brand-mark svg { width:13px; height:13px; }
     .nav-btn { width:30px; height:30px; }
@@ -1406,13 +1263,8 @@
 </head>
 <body>
 
-<div class="aurora"></div>
-<div class="bg-3d">
-  <div class="sun-halo"></div>
-  <div class="horizon"></div>
-  <div class="grid-3d"></div>
-</div>
-<div class="particles" id="particles"></div>
+<canvas id="matrix"></canvas>
+<div class="matrix-overlay"></div>
 
 <div class="page-loader" id="pageLoader">
   <div class="loader-logo">
@@ -1652,49 +1504,77 @@
 <script>
 const EP = "/api/search";
 
-(function spawnParticles() {
-  const container = document.getElementById("particles");
-  if (!container) return;
-  const count = 60;
-  for (let i = 0; i < count; i++) {
-    const p = document.createElement("div");
-    p.className = "particle";
+/* ============================================================
+   EFFET MATRIX DISCRET
+   ============================================================ */
+(function matrixRain() {
+  const canvas = document.getElementById("matrix");
+  if (!canvas) return;
+  const ctx = canvas.getContext("2d");
 
-    const rand = Math.random();
-    if (rand > 0.88) {
-      p.classList.add("big");
-    } else if (rand > 0.72) {
-      p.classList.add("blue");
-    }
+  let w, h, columns, drops;
+  const font = 16;
+  const chars = "アカサタナハマヤラワイキシチニヒミリウクスツヌフムユルエケセテネヘメレオコソトノホモヨロ0123456789ABCDEF".split("");
+  let rafId = null;
+  let lastTime = 0;
+  const interval = 55; // ms — plus haut = plus lent
 
-    p.style.left = Math.random() * 100 + "%";
-    p.style.animationDuration = (10 + Math.random() * 20) + "s";
-    p.style.animationDelay = (Math.random() * 20) + "s";
-
-    const drift = (Math.random() - 0.5) * 200;
-    p.style.setProperty("--drift", drift + "px");
-
-    const size = 1 + Math.random() * 2.5;
-    if (!p.classList.contains("big")) {
-      p.style.width = size + "px";
-      p.style.height = size + "px";
-    }
-
-    container.appendChild(p);
+  function resize() {
+    w = canvas.width = window.innerWidth;
+    h = canvas.height = window.innerHeight;
+    columns = Math.floor(w / font);
+    drops = new Array(columns).fill(0).map(() => Math.random() * -50);
   }
-})();
 
-let lastScrollY = 0;
-window.addEventListener("scroll", () => {
-  const y = window.scrollY;
-  const delta = y - lastScrollY;
-  lastScrollY = y;
-  document.querySelectorAll(".particle").forEach((p, i) => {
-    const speed = 0.3 + (i % 5) * 0.1;
-    const current = parseFloat(p.style.marginTop) || 0;
-    p.style.marginTop = (current - delta * speed * 0.2) + "px";
+  function draw() {
+    ctx.fillStyle = "rgba(5, 5, 5, 0.08)";
+    ctx.fillRect(0, 0, w, h);
+
+    ctx.font = font + "px 'JetBrains Mono', monospace";
+    ctx.textBaseline = "top";
+
+    for (let i = 0; i < drops.length; i++) {
+      const char = chars[Math.floor(Math.random() * chars.length)];
+      const x = i * font;
+      const y = drops[i] * font;
+
+      // Tête de colonne plus lumineuse
+      ctx.fillStyle = "rgba(0, 224, 122, 0.9)";
+      ctx.fillText(char, x, y);
+
+      // Traînée plus sombre (juste derrière)
+      if (drops[i] > 1) {
+        ctx.fillStyle = "rgba(0, 224, 122, 0.35)";
+        const prevChar = chars[Math.floor(Math.random() * chars.length)];
+        ctx.fillText(prevChar, x, y - font);
+      }
+
+      // Reset quand ça sort de l'écran
+      if (y > h && Math.random() > 0.975) {
+        drops[i] = 0;
+      }
+      drops[i]++;
+    }
+  }
+
+  function loop(t) {
+    rafId = requestAnimationFrame(loop);
+    if (t - lastTime < interval) return;
+    lastTime = t;
+    draw();
+  }
+
+  resize();
+  window.addEventListener("resize", resize);
+  rafId = requestAnimationFrame(loop);
+
+  // Adapte la couleur en mode clair
+  const observer = new MutationObserver(() => {
+    const light = document.body.classList.contains("light");
+    canvas.style.opacity = light ? "0.12" : "0.28";
   });
-}, { passive: true });
+  observer.observe(document.body, { attributes: true, attributeFilter: ["class"] });
+})();
 
 window.addEventListener("load", () => {
   setTimeout(() => {
