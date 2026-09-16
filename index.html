@@ -1930,13 +1930,24 @@ document.getElementById("clearCacheBtn").addEventListener("click", () => {
   setTimeout(() => location.reload(), 800);
 });
 
-window.addEventListener("load", () => {
+function hideLoader() {
+  const loader = document.getElementById("pageLoader");
+  if (!loader || loader.classList.contains("hidden")) return;
+  loader.classList.add("hidden");
+  animateCounter();
+  playSound("loader");
   setTimeout(() => {
-    document.getElementById("pageLoader").classList.add("hidden");
-    animateCounter();
-    playSound("loader");
-  }, 1600);
-});
+    if (loader && loader.parentNode) loader.remove();
+  }, 800);
+}
+
+if (document.readyState === "complete") {
+  setTimeout(hideLoader, 1600);
+} else {
+  window.addEventListener("load", () => setTimeout(hideLoader, 1600));
+}
+
+setTimeout(hideLoader, 4000);
 
 function animateCounter() {
   const el = document.getElementById("counter");
