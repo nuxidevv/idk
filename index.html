@@ -61,7 +61,7 @@
     min-height:100vh; overflow-x:hidden;
     transition:background 0.4s, color 0.4s;
     -webkit-font-smoothing:antialiased;
-    perspective:1400px;
+    padding-top:80px;
   }
   body.modal-open { overflow:hidden; }
 
@@ -134,12 +134,11 @@
     display:flex; align-items:center; justify-content:center;
     animation:loaderPulse 1.5s ease-in-out infinite;
     box-shadow:0 0 60px rgba(0,224,122,0.3);
-    transform-style:preserve-3d;
   }
   .loader-logo svg { width:32px; height:32px; color:#000; }
   @keyframes loaderPulse {
-    0%,100% { transform:scale(1) rotateY(0deg); box-shadow:0 0 60px rgba(0,224,122,0.3); }
-    50% { transform:scale(1.05) rotateY(180deg); box-shadow:0 0 80px rgba(0,224,122,0.5); }
+    0%,100% { transform:scale(1); box-shadow:0 0 60px rgba(0,224,122,0.3); }
+    50% { transform:scale(1.05); box-shadow:0 0 80px rgba(0,224,122,0.5); }
   }
   .loader-text {
     font-size:1.5rem; font-weight:800; letter-spacing:-0.03em;
@@ -173,10 +172,11 @@
      NAVBAR FLOTTANTE — LIQUID GLASS
      ============================================================ */
   nav.topbar {
-    position:sticky;
+    position:fixed;
     top:14px;
+    left:50%;
+    transform:translateX(-50%);
     z-index:50;
-    margin:14px auto 0;
     max-width:calc(1400px - 32px);
     width:calc(100% - 32px);
     padding:10px 18px;
@@ -200,7 +200,6 @@
     overflow:hidden;
   }
 
-  /* Reflet brillant en haut de la nav */
   nav.topbar::before {
     content:'';
     position:absolute;
@@ -212,7 +211,6 @@
     opacity:0.7;
   }
 
-  /* Éclat lumineux qui traverse au survol */
   nav.topbar::after {
     content:'';
     position:absolute;
@@ -345,10 +343,9 @@
   }
 
   section.hero {
-    padding:70px 24px 60px;
+    padding:20px 24px 60px;
     text-align:center;
     position:relative;
-    transform-style:preserve-3d;
   }
 
   .badges-row {
@@ -398,7 +395,6 @@
     line-height:1.1; margin-bottom:20px;
     color:var(--text);
     animation:fadeUp 0.8s ease-out 0.2s backwards;
-    transform-style:preserve-3d;
   }
   h1.hero-title .accent {
     background:linear-gradient(135deg, var(--green) 0%, var(--blue) 100%);
@@ -424,17 +420,15 @@
   .search-container {
     max-width:640px; margin:0 auto;
     animation:fadeUp 0.8s ease-out 0.4s backwards;
-    transform-style:preserve-3d;
   }
 
   .input-wrap {
     position:relative;
     margin-bottom:12px;
-    transform-style:preserve-3d;
     transition:transform 0.3s cubic-bezier(0.22, 1, 0.36, 1);
   }
   .input-wrap:focus-within {
-    transform:translateZ(12px) scale(1.01);
+    transform:scale(1.01);
   }
   .input-wrap .input-icon {
     position:absolute; left:16px; top:50%;
@@ -514,7 +508,6 @@
       0 4px 20px rgba(0,0,0,0.2),
       0 1px 0 0 rgba(255,255,255,0.6) inset,
       0 -1px 0 0 rgba(0,0,0,0.05) inset;
-    transform-style:preserve-3d;
   }
   button.primary::before {
     content:'';
@@ -559,7 +552,6 @@
     gap:12px; margin-top:40px;
     max-width:640px; margin-left:auto; margin-right:auto;
     animation:fadeUp 0.8s ease-out 0.5s backwards;
-    perspective:1000px;
   }
   .stat {
     background:var(--card);
@@ -567,7 +559,6 @@
     border-radius:16px; padding:20px 12px;
     text-align:center;
     transition:all 0.4s cubic-bezier(0.22, 1, 0.36, 1);
-    transform-style:preserve-3d;
     backdrop-filter:blur(20px) saturate(180%);
     -webkit-backdrop-filter:blur(20px) saturate(180%);
     box-shadow:
@@ -587,7 +578,7 @@
   }
   .stat:hover {
     border-color:var(--border-hover);
-    transform:translateY(-4px) rotateX(6deg) rotateY(-6deg) translateZ(20px);
+    transform:translateY(-4px);
     box-shadow:
       0 20px 40px rgba(0,224,122,0.15),
       0 1px 0 0 var(--glass-highlight) inset;
@@ -656,14 +647,12 @@
   .cards-grid {
     display:grid; grid-template-columns:repeat(auto-fit, minmax(220px, 1fr));
     gap:12px;
-    perspective:1000px;
   }
   .feature-card {
     background:var(--card);
     border:1px solid var(--border);
     border-radius:18px; padding:22px;
     transition:all 0.4s cubic-bezier(0.22, 1, 0.36, 1);
-    transform-style:preserve-3d;
     backdrop-filter:blur(20px) saturate(180%);
     -webkit-backdrop-filter:blur(20px) saturate(180%);
     box-shadow:
@@ -683,7 +672,7 @@
   }
   .feature-card:hover {
     border-color:var(--border-hover);
-    transform:translateY(-4px) rotateX(8deg) rotateY(-8deg) translateZ(30px);
+    transform:translateY(-4px);
     box-shadow:
       0 24px 48px rgba(0,0,0,0.3),
       0 1px 0 0 var(--glass-highlight) inset;
@@ -695,12 +684,8 @@
     display:flex; align-items:center; justify-content:center;
     margin-bottom:14px;
     border:1px solid rgba(0,224,122,0.2);
-    transition:transform 0.4s cubic-bezier(0.22, 1, 0.36, 1);
     position:relative;
     box-shadow:0 4px 12px rgba(0,224,122,0.15);
-  }
-  .feature-card:hover .feature-icon {
-    transform:translateZ(40px) scale(1.15) rotate(5deg);
   }
   .feature-icon svg { width:16px; height:16px; }
   .feature-title {
@@ -844,8 +829,6 @@
     transition:all 0.4s cubic-bezier(0.22, 1, 0.36, 1);
     animation:cardIn 0.6s cubic-bezier(0.22, 1, 0.36, 1) backwards;
     position:relative; overflow:hidden;
-    transform-style:preserve-3d;
-    will-change:transform;
     backdrop-filter:blur(20px) saturate(180%);
     -webkit-backdrop-filter:blur(20px) saturate(180%);
     box-shadow:
@@ -863,8 +846,8 @@
     z-index:1;
   }
   @keyframes cardIn {
-    from { opacity:0; transform:translateY(20px) rotateX(-8deg); filter:blur(8px); }
-    to { opacity:1; transform:translateY(0) rotateX(0); filter:blur(0); }
+    from { opacity:0; transform:translateY(20px); filter:blur(8px); }
+    to { opacity:1; transform:translateY(0); filter:blur(0); }
   }
   .card::before {
     content:''; position:absolute; top:0; left:0;
@@ -1061,7 +1044,7 @@
     pointer-events:auto;
   }
   .modal {
-    background:var(--card);
+    background:var(--card-solid);
     border:1px solid var(--border-hover);
     border-radius:20px; max-width:540px; width:100%;
     max-height:80vh; overflow:auto; padding:28px;
@@ -1071,8 +1054,6 @@
     box-shadow:
       0 30px 90px rgba(0,0,0,0.7),
       0 1px 0 0 var(--glass-highlight) inset;
-    backdrop-filter:blur(30px) saturate(180%);
-    -webkit-backdrop-filter:blur(30px) saturate(180%);
   }
   .modal-overlay.open .modal { transform:scale(1) translateY(0); }
   .modal-close {
@@ -1117,7 +1098,7 @@
     z-index:600; pointer-events:none;
   }
   .toast {
-    background:var(--card);
+    background:var(--card-solid);
     border:1px solid var(--border-hover);
     color:var(--text); padding:12px 20px;
     border-radius:14px; font-size:0.78rem; font-weight:500;
@@ -1127,8 +1108,6 @@
     animation:toastIn 0.4s cubic-bezier(0.22, 1, 0.36, 1);
     display:flex; align-items:center; gap:8px;
     max-width:90vw;
-    backdrop-filter:blur(30px) saturate(180%);
-    -webkit-backdrop-filter:blur(30px) saturate(180%);
   }
   .toast.success { border-color:rgba(0,224,122,0.4); box-shadow:0 12px 40px rgba(0,0,0,0.5), 0 0 20px rgba(0,224,122,0.15); }
   .toast.error { border-color:rgba(255,107,107,0.4); box-shadow:0 12px 40px rgba(0,0,0,0.5), 0 0 20px rgba(255,107,107,0.15); }
@@ -1167,7 +1146,7 @@
     transform:translateY(0) scale(1);
   }
   .scroll-top:hover {
-    transform:translateY(-4px) scale(1.08) rotateY(180deg);
+    transform:translateY(-4px) scale(1.08);
     box-shadow:
       0 12px 32px rgba(0,224,122,0.5),
       0 1px 0 0 rgba(255,255,255,0.6) inset;
@@ -1182,11 +1161,11 @@
   ::selection { background:rgba(0,224,122,0.3); color:var(--text); }
 
   @media (max-width:640px) {
-    section.hero { padding:40px 20px 40px; }
+    body { padding-top:70px; }
+    section.hero { padding:20px 20px 40px; }
     .stats-row { grid-template-columns:1fr; }
     nav.topbar {
       top:10px;
-      margin:10px auto 0;
       padding:8px 14px;
     }
     .brand-mark { width:26px; height:26px; }
@@ -1809,27 +1788,6 @@ function exportJSON(item, idx) {
   playSound("ding");
 }
 
-function attach3DTilt(card) {
-  const MAX_ROT = 6;
-  function handleMove(e) {
-    const rect = card.getBoundingClientRect();
-    const x = (e.clientX ?? e.touches?.[0]?.clientX ?? 0) - rect.left;
-    const y = (e.clientY ?? e.touches?.[0]?.clientY ?? 0) - rect.top;
-    const px = x / rect.width;
-    const py = y / rect.height;
-    const rotY = (px - 0.5) * MAX_ROT * 2;
-    const rotX = -(py - 0.5) * MAX_ROT * 2;
-    card.style.transform = `perspective(1000px) rotateX(${rotX}deg) rotateY(${rotY}deg) translateZ(8px) scale(1.008)`;
-  }
-  function handleLeave() {
-    card.style.transform = "perspective(1000px) rotateX(0) rotateY(0) translateZ(0) scale(1)";
-  }
-  card.addEventListener("mousemove", handleMove);
-  card.addEventListener("mouseleave", handleLeave);
-  card.addEventListener("touchmove", handleMove, { passive: true });
-  card.addEventListener("touchend", handleLeave);
-}
-
 function renderCard(item, idx) {
   const prenom = item.prenom || item.first_name || "";
   const nom = item.nom_famille || item.last_name || item.name || "";
@@ -1934,14 +1892,13 @@ function sortItems(items, mode) {
       return arr.sort((a, b) => {
         const ca = Number(a._confidence ?? a.confidence ?? -1);
         const cb = Number(b._confidence ?? b.confidence ?? -1);
-        return (isNaN(cb) ? => -1 : cb) - (isNaN(ca) ? {
- -1 : ca);
+        return (isNaN(cb) ? -1 : cb) - (isNaN(ca) ? -1 : ca);
       });
-         case "age":
+    case "age":
       return arr.sort((a, b) => {
         const da = new Date(a.date_naissance || a.annee_naissance || "9999").getTime();
-        const db = new Date(b.date_naissance || b.annee_naissance || "999 e9").getTime();
-       .stop return (isNaN(db) ? InfinityProp : db) - (isNaN(da) ? Infinity : da);
+        const db = new Date(b.date_naissance || b.annee_naissance || "9999").getTime();
+        return (isNaN(db) ? Infinity : db) - (isNaN(da) ? Infinity : da);
       });
     case "ville":
       return arr.sort((a, b) => String(a.ville || "").localeCompare(String(b.ville || ""), "fr"));
@@ -1974,13 +1931,12 @@ function bindCardActions(list) {
   });
 
   list.querySelectorAll(".export-btn").forEach(btn => {
-    btn.addEventListener("click", (e)agation();
+    btn.addEventListener("click", (e) => {
+      e.stopPropagation();
       const i = Number(btn.getAttribute("data-idx"));
       exportJSON(currentItems[i], i);
     });
   });
-
-  list.querySelectorAll(".card").forEach(attach3DTilt);
 }
 
 function render(result) {
