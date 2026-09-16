@@ -83,46 +83,170 @@
     background:radial-gradient(ellipse at top, rgba(0,180,100,0.08) 0%, transparent 60%);
   }
 
-  body::after {
-    content:''; position:fixed; inset:0;
+  /* ============================================================
+     FOND 3D — GRILLE PERSPECTIVE + PARTICULES PROFONDEUR
+     ============================================================ */
+  .bg-3d {
+    position:fixed; inset:0;
+    pointer-events:none;
+    z-index:0;
+    overflow:hidden;
+    perspective:800px;
+    perspective-origin:50% 50%;
+    opacity:0.55;
+    mix-blend-mode:screen;
+  }
+  body.light .bg-3d {
+    opacity:0.35;
+    mix-blend-mode:multiply;
+  }
+
+  .grid-3d {
+    position:absolute;
+    bottom:-50%;
+    left:-50%;
+    width:200%;
+    height:200%;
     background-image:
-      linear-gradient(rgba(0,224,122,0.03) 1px, transparent 1px),
-      linear-gradient(90deg, rgba(0,224,122,0.03) 1px, transparent 1px);
+      linear-gradient(rgba(0,224,122,0.35) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(0,224,122,0.35) 1px, transparent 1px);
     background-size:60px 60px;
-    pointer-events:none; z-index:0;
-    mask-image:radial-gradient(ellipse at center, black 20%, transparent 70%);
-    -webkit-mask-image:radial-gradient(ellipse at center, black 20%, transparent 70%);
-    animation:gridMove 40s linear infinite;
+    transform:rotateX(72deg);
+    transform-origin:center bottom;
+    animation:grid3DMove 6s linear infinite;
+    mask-image:radial-gradient(ellipse at 50% 100%, black 0%, transparent 70%);
+    -webkit-mask-image:radial-gradient(ellipse at 50% 100%, black 0%, transparent 70%);
   }
-  @keyframes gridMove {
-    from { background-position:0 0; }
-    to { background-position:60px 60px; }
+
+  @keyframes grid3DMove {
+    0% { background-position:0 0; }
+    100% { background-position:0 60px; }
   }
-  body.light::after {
-    background-image:
-      linear-gradient(rgba(0,150,90,0.04) 1px, transparent 1px),
-      linear-gradient(90deg, rgba(0,150,90,0.04) 1px, transparent 1px);
+
+  .horizon {
+    position:absolute;
+    top:50%;
+    left:0; right:0;
+    height:1px;
+    background:linear-gradient(90deg, transparent 0%, var(--green) 50%, transparent 100%);
+    box-shadow:
+      0 0 20px var(--green),
+      0 0 60px var(--green);
+    opacity:0.8;
+    animation:horizonPulse 4s ease-in-out infinite;
+  }
+
+  @keyframes horizonPulse {
+    0%,100% { opacity:0.6; transform:scaleX(1); }
+    50% { opacity:1; transform:scaleX(1.05); }
+  }
+
+  .sun-halo {
+    position:absolute;
+    top:0;
+    left:50%;
+    transform:translateX(-50%) translateY(-30%);
+    width:70vmin;
+    height:70vmin;
+    border-radius:50%;
+    background:
+      radial-gradient(circle, rgba(0,224,122,0.35) 0%, rgba(0,224,122,0.1) 40%, transparent 70%);
+    filter:blur(20px);
+    animation:sunHalo 8s ease-in-out infinite;
+  }
+
+  @keyframes sunHalo {
+    0%,100% { transform:translateX(-50%) translateY(-30%) scale(1); opacity:0.9; }
+    50% { transform:translateX(-50%) translateY(-32%) scale(1.08); opacity:1; }
   }
 
   .particles {
-    position:fixed; inset:0;
-    pointer-events:none; z-index:0;
+    position:fixed;
+    inset:0;
+    pointer-events:none;
+    z-index:1;
     overflow:hidden;
+    transform-style:preserve-3d;
+    perspective:1000px;
   }
   .particle {
     position:absolute;
-    width:2px; height:2px;
-    background:var(--green);
+    width:2px;
+    height:2px;
     border-radius:50%;
-    box-shadow:0 0 6px var(--green);
+    background:var(--green);
+    box-shadow:
+      0 0 6px var(--green),
+      0 0 12px var(--green);
     opacity:0;
+    will-change:transform, opacity;
     animation:particleFloat linear infinite;
   }
+  .particle.big {
+    width:4px;
+    height:4px;
+    box-shadow:
+      0 0 10px var(--green),
+      0 0 24px var(--green);
+  }
+  .particle.blue {
+    background:var(--blue);
+    box-shadow:
+      0 0 6px var(--blue),
+      0 0 12px var(--blue);
+  }
+
   @keyframes particleFloat {
-    0% { transform:translateY(100vh) scale(0); opacity:0; }
-    10% { opacity:0.6; }
-    90% { opacity:0.6; }
-    100% { transform:translateY(-10vh) scale(1); opacity:0; }
+    0% {
+      transform:translate3d(0, 100vh, -200px) scale(0);
+      opacity:0;
+    }
+    10% {
+      opacity:0.9;
+    }
+    90% {
+      opacity:0.9;
+    }
+    100% {
+      transform:translate3d(var(--drift, 0), -10vh, 200px) scale(1);
+      opacity:0;
+    }
+  }
+
+  .aurora {
+    position:fixed;
+    inset:0;
+    pointer-events:none;
+    z-index:0;
+    overflow:hidden;
+  }
+  .aurora::before,
+  .aurora::after {
+    content:'';
+    position:absolute;
+    width:80vmax;
+    height:80vmax;
+    border-radius:50%;
+    filter:blur(100px);
+    opacity:0.3;
+    animation:auroraMove 25s ease-in-out infinite;
+  }
+  .aurora::before {
+    top:-20vmax;
+    left:-20vmax;
+    background:radial-gradient(circle, rgba(0,224,122,0.4) 0%, transparent 60%);
+  }
+  .aurora::after {
+    bottom:-20vmax;
+    right:-20vmax;
+    background:radial-gradient(circle, rgba(77,163,255,0.35) 0%, transparent 60%);
+    animation-delay:-12s;
+  }
+
+  @keyframes auroraMove {
+    0%,100% { transform:translate(0,0) scale(1); }
+    33% { transform:translate(10vmax, -5vmax) scale(1.15); }
+    66% { transform:translate(-8vmax, 8vmax) scale(0.95); }
   }
 
   .page-loader {
@@ -171,9 +295,6 @@
   }
   .progress-bar.active { opacity:1; }
 
-  /* ============================================================
-     NAVBAR — LIQUID GLASS
-     ============================================================ */
   nav.topbar {
     position:fixed;
     top:14px;
@@ -187,22 +308,18 @@
     align-items:center;
     justify-content:space-between;
     border-radius:100px;
-
     background:var(--glass-tint);
     backdrop-filter:blur(28px) saturate(200%);
     -webkit-backdrop-filter:blur(28px) saturate(200%);
-
     border:1px solid var(--border);
     box-shadow:
       0 8px 32px var(--glass-shadow),
       0 1px 0 0 var(--glass-highlight) inset,
       0 -1px 0 0 rgba(0,0,0,0.15) inset,
       0 0 0 0.5px rgba(255,255,255,0.04) inset;
-
     transition:all 0.4s cubic-bezier(0.22, 1, 0.36, 1);
     overflow:hidden;
   }
-
   nav.topbar::before {
     content:'';
     position:absolute;
@@ -213,7 +330,6 @@
     pointer-events:none;
     opacity:0.8;
   }
-
   nav.topbar::after {
     content:'';
     position:absolute;
@@ -223,9 +339,7 @@
     transition:left 0.8s cubic-bezier(0.22, 1, 0.36, 1);
     pointer-events:none;
   }
-
   nav.topbar:hover::after { left:200%; }
-
   nav.topbar:hover {
     border-color:var(--border-hover);
     box-shadow:
@@ -250,9 +364,7 @@
     box-shadow:0 4px 16px rgba(255,255,255,0.15), 0 0 0 1px rgba(255,255,255,0.05) inset;
     transition:transform 0.5s cubic-bezier(0.22, 1, 0.36, 1);
   }
-  .brand:hover .brand-mark {
-    transform:rotateY(180deg) scale(1.05);
-  }
+  .brand:hover .brand-mark { transform:rotateY(180deg) scale(1.05); }
   .brand-mark::after {
     content:''; position:absolute; inset:0;
     background:linear-gradient(135deg, transparent 40%, rgba(255,255,255,0.5) 50%, transparent 60%);
@@ -266,9 +378,6 @@
 
   .nav-actions { display:flex; gap:8px; align-items:center; position:relative; z-index:2; }
 
-  /* ============================================================
-     BOUTONS GLASS
-     ============================================================ */
   .nav-btn {
     width:34px; height:34px; border-radius:12px;
     background:var(--glass-tint);
@@ -359,9 +468,6 @@
     animation:fadeUp 0.8s ease-out 0.1s backwards;
   }
 
-  /* ============================================================
-     BADGES GLASS
-     ============================================================ */
   .badge {
     display:inline-flex; align-items:center; gap:6px;
     padding:7px 14px; border-radius:100px;
@@ -458,9 +564,6 @@
     transform:translateY(-50%) scale(1.15) rotate(15deg);
   }
 
-  /* ============================================================
-     INPUT GLASS
-     ============================================================ */
   input#target {
     background:var(--input-bg);
     border:1px solid var(--border);
@@ -511,9 +614,6 @@
   .input-clear.visible { display:flex; }
   .input-clear svg { width:10px; height:10px; color:var(--text-dim); }
 
-  /* ============================================================
-     BOUTON PRINCIPAL GLASS
-     ============================================================ */
   button.primary {
     width:100%;
     background:linear-gradient(180deg, rgba(255,255,255,0.95) 0%, rgba(220,220,220,0.9) 100%);
@@ -571,9 +671,6 @@
   button.primary.loading .spinner { display:inline-block; }
   @keyframes spin { to { transform:rotate(360deg); } }
 
-  /* ============================================================
-     STATS GLASS
-     ============================================================ */
   .stats-row {
     display:grid; grid-template-columns:repeat(3, 1fr);
     gap:12px; margin-top:40px;
@@ -645,9 +742,6 @@
     margin-bottom:36px;
   }
 
-  /* ============================================================
-     CHIPS GLASS
-     ============================================================ */
   .sources-grid {
     display:flex; flex-wrap:wrap; gap:8px;
     margin-bottom:20px;
@@ -687,9 +781,6 @@
       0 1px 0 0 var(--glass-highlight) inset;
   }
 
-  /* ============================================================
-     FEATURE CARDS GLASS
-     ============================================================ */
   .cards-grid {
     display:grid; grid-template-columns:repeat(auto-fit, minmax(220px, 1fr));
     gap:12px;
@@ -798,9 +889,6 @@
     animation:fadeUp 0.4s ease-out;
   }
 
-  /* ============================================================
-     TOOLBAR GLASS
-     ============================================================ */
   .toolbar {
     display:none; align-items:center; justify-content:space-between;
     gap:8px; margin-bottom:14px;
@@ -865,9 +953,6 @@
   }
   .clear-all-btn svg { width:12px; height:12px; position:relative; }
 
-  /* ============================================================
-     SKELETON GLASS
-     ============================================================ */
   .skeleton {
     background:var(--glass-tint);
     border:1px solid var(--border);
@@ -894,9 +979,6 @@
     100% { background-position:-200% 0; }
   }
 
-  /* ============================================================
-     CARTE RÉSULTAT — LIQUID GLASS COMPLET
-     ============================================================ */
   .card {
     background:var(--glass-tint);
     border:1px solid var(--border);
@@ -1039,12 +1121,8 @@
     padding-left:8px;
     padding-right:8px;
   }
-  .row:hover {
-    background:rgba(255,255,255,0.02);
-  }
-  body.light .row:hover {
-    background:rgba(0,0,0,0.02);
-  }
+  .row:hover { background:rgba(255,255,255,0.02); }
+  body.light .row:hover { background:rgba(0,0,0,0.02); }
   .row-label {
     color:var(--text-dim); min-width:110px; flex-shrink:0;
     font-size:0.68rem; padding-top:2px;
@@ -1134,9 +1212,6 @@
     to { opacity:1; transform:translateY(0); }
   }
 
-  /* ============================================================
-     MODALE — LIQUID GLASS RENFORCÉ
-     ============================================================ */
   .modal-overlay {
     position:fixed; inset:0;
     background:rgba(0,0,0,0.7);
@@ -1148,10 +1223,7 @@
     opacity:0; pointer-events:none;
     transition:opacity 0.3s;
   }
-  .modal-overlay.open {
-    opacity:1;
-    pointer-events:auto;
-  }
+  .modal-overlay.open { opacity:1; pointer-events:auto; }
   .modal {
     background:var(--card-solid);
     border:1px solid var(--border-hover);
@@ -1164,7 +1236,6 @@
       0 30px 90px rgba(0,0,0,0.7),
       0 1px 0 0 var(--glass-highlight) inset,
       0 -1px 0 0 rgba(0,0,0,0.15) inset;
-    overflow:hidden;
   }
   .modal::before {
     content:'';
@@ -1217,9 +1288,6 @@
   .modal-body ul { padding-left:18px; margin-bottom:12px; }
   .modal-body li { margin-bottom:4px; }
 
-  /* ============================================================
-     TOASTS — LIQUID GLASS
-     ============================================================ */
   .toast-container {
     position:fixed; bottom:24px; left:50%;
     transform:translateX(-50%);
@@ -1257,15 +1325,10 @@
     pointer-events:none;
     z-index:1;
   }
-  .toast span, .toast {
-    position:relative;
-    z-index:2;
-  }
+  .toast span, .toast { position:relative; z-index:2; }
   .toast.success { border-color:rgba(0,224,122,0.5); box-shadow:0 12px 40px rgba(0,0,0,0.5), 0 0 20px rgba(0,224,122,0.2), 0 1px 0 0 var(--glass-highlight) inset; }
   .toast.error { border-color:rgba(255,107,107,0.5); box-shadow:0 12px 40px rgba(0,0,0,0.5), 0 0 20px rgba(255,107,107,0.2), 0 1px 0 0 var(--glass-highlight) inset; }
-  .toast.error::before {
-    background:var(--red); box-shadow:0 0 8px var(--red);
-  }
+  .toast.error::before { background:var(--red); box-shadow:0 0 8px var(--red); }
   .toast.leaving { animation:toastOut 0.3s ease-out forwards; }
   @keyframes toastIn {
     from { opacity:0; transform:translateY(20px) scale(0.95); }
@@ -1275,9 +1338,6 @@
     to { opacity:0; transform:translateY(20px) scale(0.95); }
   }
 
-  /* ============================================================
-     SCROLL TOP — LIQUID GLASS
-     ============================================================ */
   .scroll-top {
     position:fixed; bottom:24px; right:24px;
     width:46px; height:46px; border-radius:50%;
@@ -1295,7 +1355,6 @@
     z-index:60;
     backdrop-filter:blur(24px) saturate(200%);
     -webkit-backdrop-filter:blur(24px) saturate(200%);
-    position:fixed;
     overflow:hidden;
   }
   .scroll-top::before {
@@ -1347,6 +1406,12 @@
 </head>
 <body>
 
+<div class="aurora"></div>
+<div class="bg-3d">
+  <div class="sun-halo"></div>
+  <div class="horizon"></div>
+  <div class="grid-3d"></div>
+</div>
 <div class="particles" id="particles"></div>
 
 <div class="page-loader" id="pageLoader">
@@ -1590,19 +1655,46 @@ const EP = "/api/search";
 (function spawnParticles() {
   const container = document.getElementById("particles");
   if (!container) return;
-  const count = 24;
+  const count = 60;
   for (let i = 0; i < count; i++) {
     const p = document.createElement("div");
     p.className = "particle";
+
+    const rand = Math.random();
+    if (rand > 0.88) {
+      p.classList.add("big");
+    } else if (rand > 0.72) {
+      p.classList.add("blue");
+    }
+
     p.style.left = Math.random() * 100 + "%";
-    p.style.animationDuration = (12 + Math.random() * 16) + "s";
-    p.style.animationDelay = (Math.random() * 12) + "s";
-    const size = 1 + Math.random() * 2;
-    p.style.width = size + "px";
-    p.style.height = size + "px";
+    p.style.animationDuration = (10 + Math.random() * 20) + "s";
+    p.style.animationDelay = (Math.random() * 20) + "s";
+
+    const drift = (Math.random() - 0.5) * 200;
+    p.style.setProperty("--drift", drift + "px");
+
+    const size = 1 + Math.random() * 2.5;
+    if (!p.classList.contains("big")) {
+      p.style.width = size + "px";
+      p.style.height = size + "px";
+    }
+
     container.appendChild(p);
   }
 })();
+
+let lastScrollY = 0;
+window.addEventListener("scroll", () => {
+  const y = window.scrollY;
+  const delta = y - lastScrollY;
+  lastScrollY = y;
+  document.querySelectorAll(".particle").forEach((p, i) => {
+    const speed = 0.3 + (i % 5) * 0.1;
+    const current = parseFloat(p.style.marginTop) || 0;
+    p.style.marginTop = (current - delta * speed * 0.2) + "px";
+  });
+}, { passive: true });
 
 window.addEventListener("load", () => {
   setTimeout(() => {
