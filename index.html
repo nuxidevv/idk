@@ -1666,7 +1666,7 @@
 
     <h1 class="hero-title">
       Retrouvez n'importe qui,<br>
-      à partir d'un <span class="accent typewriter" id="typewriter"></span><span class="cursor"></span>
+      à partir <span class="accent typewriter" id="typewriter"></span><span class="cursor"></span>
     </h1>
 
     <p class="hero-sub">
@@ -3114,7 +3114,16 @@ document.querySelectorAll(".nav-btn, .nav-link, .icon-btn").forEach(attachRipple
   const el = document.getElementById("typewriter");
   if (!el) return;
 
-  const words = ["Prénom", "Nom", "Email", "Numéro", "Ville", "IBAN"];
+  // Chaque mot avec son article contracté (d'un / d'une)
+  const words = [
+    { prefix: "d'un ", word: "Prénom" },
+    { prefix: "d'un ", word: "Nom" },
+    { prefix: "d'un ", word: "Email" },
+    { prefix: "d'un ", word: "Numéro" },
+    { prefix: "d'une ", word: "Ville" },
+    { prefix: "d'un ", word: "IBAN" }
+  ];
+
   let wordIndex = 0;
   let charIndex = 0;
   let isDeleting = false;
@@ -3122,26 +3131,27 @@ document.querySelectorAll(".nav-btn, .nav-link, .icon-btn").forEach(attachRipple
 
   function tick() {
     const current = words[wordIndex];
+    const fullText = current.prefix + current.word;
 
     if (!isDeleting) {
       charIndex++;
-      el.textContent = current.slice(0, charIndex);
-      if (charIndex >= current.length) {
+      el.textContent = fullText.slice(0, charIndex);
+      if (charIndex >= fullText.length) {
         isDeleting = true;
         timeoutId = setTimeout(tick, 1600);
         return;
       }
-      timeoutId = setTimeout(tick, 90);
+      timeoutId = setTimeout(tick, 70);
     } else {
       charIndex--;
-      el.textContent = current.slice(0, charIndex);
+      el.textContent = fullText.slice(0, charIndex);
       if (charIndex <= 0) {
         isDeleting = false;
         wordIndex = (wordIndex + 1) % words.length;
         timeoutId = setTimeout(tick, 400);
         return;
       }
-      timeoutId = setTimeout(tick, 40);
+      timeoutId = setTimeout(tick, 35);
     }
   }
 
