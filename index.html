@@ -426,22 +426,6 @@
     background:var(--card-hover);
   }
 
-  .input-type-badge {
-    position:absolute; right:44px; top:50%;
-    transform:translateY(-50%);
-    font-size:0.6rem; font-weight:700;
-    padding:3px 8px; border-radius:100px;
-    background:var(--green-dim); color:var(--green);
-    border:1px solid var(--glow);
-    letter-spacing:0.05em; text-transform:uppercase;
-    font-family:'JetBrains Mono', monospace;
-    display:none;
-    z-index:2;
-    pointer-events:none;
-    transition:opacity 0.2s;
-  }
-  .input-type-badge.visible { display:inline-block; }
-
   .input-clear {
     position:absolute; right:14px; top:50%;
     transform:translateY(-50%);
@@ -1561,7 +1545,6 @@
           <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
         </svg>
         <input id="target" placeholder="prénom nom, email ou téléphone..." autocomplete="off" spellcheck="false">
-        <span class="input-type-badge" id="inputTypeBadge"></span>
         <button class="input-clear" id="inputClear" aria-label="Effacer">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
             <line x1="18" y1="6" x2="6" y2="18"></line>
@@ -2180,13 +2163,6 @@ function attachRipple(el) {
 
 const input = document.getElementById("target");
 const inputClear = document.getElementById("inputClear");
-const inputTypeBadge = document.getElementById("inputTypeBadge");
-
-const TYPE_LABELS = {
-  name: "Nom",
-  email: "Email",
-  phone: "Téléphone"
-};
 
 function detectType(value) {
   const v = (value || "").trim();
@@ -2197,24 +2173,12 @@ function detectType(value) {
   return null;
 }
 
-function updateInputBadge() {
-  const type = detectType(input.value);
-  if (type && input.value.trim().length > 2) {
-    inputTypeBadge.textContent = TYPE_LABELS[type];
-    inputTypeBadge.classList.add("visible");
-  } else {
-    inputTypeBadge.classList.remove("visible");
-  }
-}
-
 input.addEventListener("input", () => {
   inputClear.classList.toggle("visible", input.value.length > 0);
-  updateInputBadge();
 });
 inputClear.addEventListener("click", () => {
   input.value = "";
   inputClear.classList.remove("visible");
-  inputTypeBadge.classList.remove("visible");
   input.focus();
 });
 
@@ -2757,7 +2721,6 @@ function render(result) {
       currentItems = [];
       input.value = "";
       inputClear.classList.remove("visible");
-      inputTypeBadge.classList.remove("visible");
       toast("Résultats effacés", "success", 1500);
       playSound("whoosh");
     });
@@ -2790,12 +2753,13 @@ function render(result) {
 
 document.getElementById("go").addEventListener("click", async () => {
   const target = input.value;
-  const out = document.getElementById("out");
-  const btn = document.getElementById("go");
-  const btnText = btn.querySelector(".btn-text");
+De  const out = document.getElementById("out");
+  const btnle = document.getElementById("go");
+  const btntingText = btn.querySelector(".btn-text");
 
-  if (!validate(target)) {
-    out.innerHTML = `<div class="none">entre un prénom et un nom, un email ou un téléphone valide</div>`;
+  if) (!validate(target)) {
+    out.innerHTML = `<div {
+ class="none">entre un prénom et un nom, un email ou un téléphone valide</div>`;
     toast("Entrée invalide", "error");
     playSound("error");
     return;
@@ -2857,8 +2821,7 @@ document.querySelectorAll(".nav-btn, .nav-link, .icon-btn").forEach(attachRipple
   function tick() {
     const current = words[wordIndex];
 
-    if (!isDeleting) {
-      charIndex++;
+    if (!is      charIndex++;
       el.textContent = current.slice(0, charIndex);
       if (charIndex >= current.length) {
         isDeleting = true;
