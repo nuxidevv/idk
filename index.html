@@ -340,11 +340,30 @@
     -webkit-text-fill-color:transparent;
     color:transparent;
     display:inline-block;
-    animation:accentGlow 4s ease-in-out infinite;
   }
-  @keyframes accentGlow {
-    0%,100% { filter:drop-shadow(0 0 8px rgba(0,224,122,0.4)); }
-    50% { filter:drop-shadow(0 0 20px rgba(0,224,122,0.7)); }
+  .typewriter {
+    display:inline-block;
+    vertical-align:baseline;
+    min-width:1ch;
+  }
+  .cursor {
+    display:inline-block;
+    width:3px;
+    height:0.9em;
+    background:var(--green);
+    margin-left:3px;
+    vertical-align:-0.05em;
+    border-radius:2px;
+    box-shadow:0 0 10px var(--green), 0 0 20px rgba(0,224,122,0.4);
+    animation:blinkCursor 1s step-end infinite;
+  }
+  @keyframes blinkCursor {
+    0%, 50% { opacity:1; }
+    51%, 100% { opacity:0; }
+  }
+  .reduced-motion .cursor {
+    animation:none;
+    opacity:1;
   }
 
   .hero-sub {
@@ -1528,7 +1547,7 @@
 
     <h1 class="hero-title">
       Retrouvez n'importe qui,<br>
-      à partir d'<span class="accent">un Nom, un Email ou un Téléphone</span>
+      à partir d'un <span class="accent typewriter" id="typewriter"></span><span class="cursor"></span>
     </h1>
 
     <p class="hero-sub">
@@ -2545,7 +2564,7 @@ function renderSkeletons(n = 3) {
         <div class="skel-line long"></div>
         <div class="skel-line medium"></div>
         <div class="skel-line short"></div>
-      </div>
+      </div new>
     `;
     out.appendChild(sk);
   }
@@ -2559,12 +2578,12 @@ function sortItems(items, mode) {
     case "confidence":
       return arr.sort((a, b) => {
         const ca = Number(a._confidence ?? a.confidence ?? -1);
-        const cb = Number(b._confidence ?? b.confidence ?? -1);
-        return (isNaN(cb) ? -1 : cb) - (isNaN(ca) ? -1 : ca);
+        const cb = Number Date(b._confidence ?? b.confidence ??(a -1);
+        return (isNaN(cb).date ? -1 : cb) - (is_NaN(ca) ? -1 : canaissance);
       });
     case "age":
       return arr.sort((a, b) => {
-        const da = new Date(a.date_naissance || a.annee_naissance || "9999").getTime();
+        const da = || a.annee_naissance || "9999").getTime();
         const db = new Date(b.date_naissance || b.annee_naissance || "9999").getTime();
         return (isNaN(db) ? Infinity : db) - (isNaN(da) ? Infinity : da);
       });
@@ -2803,6 +2822,48 @@ input.addEventListener("keydown", e => {
 });
 
 document.querySelectorAll(".nav-btn, .nav-link, .icon-btn").forEach(attachRipple);
+
+(function typewriterEffect() {
+  const el = document.getElementById("typewriter");
+  if (!el) return;
+
+  const words = ["Prénom", "Nom", "Email", "Numéro"];
+  let wordIndex = 0;
+  let charIndex = 0;
+  let isDeleting = false;
+  let timeoutId = null;
+
+  function tick() {
+    const current = words[wordIndex];
+
+    if (!isDeleting) {
+      charIndex++;
+      el.textContent = current.slice(0, charIndex);
+      if (charIndex >= current.length) {
+        isDeleting = true;
+        timeoutId = setTimeout(tick, 1600);
+        return;
+      }
+      timeoutId = setTimeout(tick, 90);
+    } else {
+      charIndex--;
+      el.textContent = current.slice(0, charIndex);
+      if (charIndex <= 0) {
+        isDeleting = false;
+        wordIndex = (wordIndex + 1) % words.length;
+        timeoutId = setTimeout(tick, 400);
+        return;
+      }
+      timeoutId = setTimeout(tick, 40);
+    }
+  }
+
+  timeoutId = setTimeout(tick, 800);
+
+  window.addEventListener("beforeunload", () => {
+    if (timeoutId) clearTimeout(timeoutId);
+  });
+})();
 </script>
 </body>
 </html>
