@@ -345,6 +345,14 @@
     display:inline-block;
     vertical-align:baseline;
     min-width:1ch;
+    color:var(--text);
+  }
+  .typewriter .grad {
+    background:linear-gradient(135deg, var(--green) 0%, var(--blue) 100%);
+    -webkit-background-clip:text;
+    background-clip:text;
+    -webkit-text-fill-color:transparent;
+    color:transparent;
   }
   .cursor {
     display:inline-block;
@@ -1666,7 +1674,7 @@
 
     <h1 class="hero-title">
       Retrouvez n'importe qui,<br>
-      à partir <span class="accent typewriter" id="typewriter"></span><span class="cursor"></span>
+      à partir <span class="typewriter" id="typewriter"></span><span class="cursor"></span>
     </h1>
 
     <p class="hero-sub">
@@ -3129,13 +3137,31 @@ document.querySelectorAll(".nav-btn, .nav-link, .icon-btn").forEach(attachRipple
   let isDeleting = false;
   let timeoutId = null;
 
+  function render() {
+    const current = words[wordIndex];
+    const fullPrefix = current.prefix;
+    const fullWord = current.word;
+    const fullText = fullPrefix + fullWord;
+
+    // Préfixe toujours en blanc, mot en dégradé (le dégradé s'applique à ce qui est déjà tapé du mot)
+    const prefixShown = fullPrefix.slice(0, Math.min(charIndex, fullPrefix.length));
+    const wordShown = charIndex > fullPrefix.length
+      ? fullWord.slice(0, charIndex - fullPrefix.length)
+      : "";
+
+    // Astuce : on garde le préfixe en blanc, et le mot dans un span dégradé
+    el.innerHTML =
+      `<span style="color:var(--text)">${prefixShown}</span>` +
+      (wordShown ? `<span class="grad">${wordShown}</span>` : "");
+  }
+
   function tick() {
     const current = words[wordIndex];
     const fullText = current.prefix + current.word;
 
     if (!isDeleting) {
       charIndex++;
-      el.textContent = fullText.slice(0, charIndex);
+      render();
       if (charIndex >= fullText.length) {
         isDeleting = true;
         timeoutId = setTimeout(tick, 1600);
@@ -3144,7 +3170,7 @@ document.querySelectorAll(".nav-btn, .nav-link, .icon-btn").forEach(attachRipple
       timeoutId = setTimeout(tick, 70);
     } else {
       charIndex--;
-      el.textContent = fullText.slice(0, charIndex);
+      render();
       if (charIndex <= 0) {
         isDeleting = false;
         wordIndex = (wordIndex + 1) % words.length;
