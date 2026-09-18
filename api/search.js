@@ -71,106 +71,57 @@ function emptyResponse(a, b) {
   };
 }
 
-async function tryBrixhub(payload) {
-  const KEY = process.env.BRIXHUB_KEY || "";
-  const headers = {
-    "Accept": "application/json",
-    "X-API-Key": KEY
-  };
-  const r = await httpsPost("https://api.brixhub.to/api/v1/search", headers, payload);
-  let parsed = null;
-  try { parsed = JSON.parse(r.body); } catch { parsed = r.body; }
-  return { ok: r.status >= 200 && r.status < 300, status: r.status, error: r.error || null, data: parsed };
-}
-
-function countResults(data) {
-  if (!data || typeof data !== "object") return 0;
-  for (const k of ["results","data","items","records","hits","matches","persons","people"]) {
-    if (Array.isArray(data[k])) return data[k].length;
-  }
-  if (Array.isArray(data)) return data.length;
-  if (data.meta && typeof data.meta.total === "number") return data.meta.total;
-  return 0;
-}
-
 export default async function handler(req, res) {
   res.setHeader("Access-Control-Allow-Origin", "*");
   res.setHeader("Access-Control-Allow-Methods", "GET, OPTIONS");
   res.setHeader("Access-Control-Allow-Headers", "Content-Type");
   if (req.method === "OPTIONS") return res.status(200).end();
 
-  const { first_name = "", last_name = "" } = req.query;
+  const {
+    first_name = "",
+    last_name = "",
+    email = "",
+    telephone = ""
+  } = req.query;
 
-  const a = String(first_name).trim();
-  const b = String(last_name).trim();
+  const isEmailSearch = String(email).trim().length > 0;
+  const isPhoneSearch = String(telephone).trim().length > 0;
 
-  const fullQuery = [a, b].filter(Boolean).join(" ").trim();
-
-  if (fullQuery.length < 2) {
-    return res.status(200).json(emptyResponse(a, b));
-  }
-
-  if (isBlocked(fullQuery)) {
-    return res.status(200).json(emptyResponse(a, b));
-  }
-
-  const hasA = a.length > 0;
-  const hasB = b.length > 0;
-
-  let firstResult = null;
-  let secondResult = null;
-
-  if (hasA && hasB) {
-    firstResult = await tryBrixhub({ prenom: a, nom_famille: b });
-
-    if (firstResult.ok && countResults(firstResult.data) > 0) {
-      return res.status(200).json({
-        ok: firstResult.ok,
-        status: firstResult.status,
-        error: firstResult.error || null,
-        data: firstResult.data
-      });
+  if (!isEmailSearch && !isPhoneSearch) {
+    if (isBlocked(`${first_name} ${last_name}`)) {
+      return res.status(200).json(emptyResponse(first_name, last_name));
     }
-
-    secondResult = await tryBrixhub({ prenom: b, nom_famille: a });
-
-    if (secondResult.ok && countResults(secondResult.data) > 0) {
-      return res.status(200).json({
-        ok: secondResult.ok,
-        status: secondResult.status,
-        error: secondResult.error || null,
-        data: secondResult.data
-      });
-    }
-
-    const fallback = secondResult || firstResult;
-    return res.status(200).json({
-      ok: fallback.ok,
-      status: fallback.status,
-      error: fallback.error || null,
-      data: fallback.data
-    });
   }
 
-  if (hasA) {
-    firstResult = await tryBrixhub({ prenom: a });
-    return res.status(200).json({
-      ok: firstResult.ok,
-      status: firstResult.status,
-      error: firstResult.error || null,
-      data: firstResult.data
-    });
+  const KEY = process.env.BRIXHUB_KEY || "";
+
+  const headers = {
+    "Accept": "application/json",
+    "X-API-Key": KEY
+  };
+
+  let payload = {};
+
+  if (isEmailSearch) {
+    payload = { email: String(email).trim() };
+  } else if (isPhoneSearch) {
+    payload = { telephone: String(telephone).trim() };
+  } else {
+    payload = {
+      prenom: first_name,
+      nom_famille: last_name
+    };
   }
 
-  if (hasB) {
-    firstResult = await tryBrixhub({ prenom: b });
-    return res.status(200).json({
-      ok: firstResult.ok,
-      status: firstResult.status,
-      error: firstResult.error || null,
-      data: firstResult.data
-    });
-  }
+  const r = await httpsPost("https://api.brixhub.to/api/v1/search", headers, payload);
 
-  return res.status(200).json(emptyResponse(a, b));
+  let parsed = null;
+  try { parsed = JSON.parse(r.body); } catch { parsed = r.body; }
+
+  return res.status(200).json({
+    ok: r.status >= 200 && r.status < 300,
+    status: r.status,
+    error: r.error || null,
+    data: parsed
+  });
 }
