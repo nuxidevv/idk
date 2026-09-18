@@ -102,6 +102,17 @@ function respond(res, result) {
   });
 }
 
+function mergeFilters(payload, filters) {
+  const merged = { ...payload };
+  Object.keys(filters).forEach(k => {
+    const v = filters[k];
+    if (v != null && String(v).trim() !== "") {
+      merged[k] = String(v).trim();
+    }
+  });
+  return merged;
+}
+
 export default async function handler(req, res) {
   res.setHeader("Access-Control-Allow-Origin", "*");
   res.setHeader("Access-Control-Allow-Methods", "GET, OPTIONS");
@@ -112,20 +123,47 @@ export default async function handler(req, res) {
     first_name = "",
     last_name = "",
     email = "",
-    telephone = ""
+    telephone = "",
+    ville = "",
+    code_postal = "",
+    departement = "",
+    pays = "",
+    adresse = "",
+    adresse_ip = "",
+    discord_id = "",
+    iban = "",
+    bic = "",
+    annee_naissance = "",
+    genre = "",
+    _confidence = ""
   } = req.query;
+
+  const filters = {
+    ville,
+    code_postal,
+    departement,
+    pays,
+    adresse,
+    adresse_ip,
+    discord_id,
+    iban,
+    bic,
+    annee_naissance,
+    genre,
+    _confidence
+  };
 
   const isEmailSearch = String(email).trim().length > 0;
   const isPhoneSearch = String(telephone).trim().length > 0;
 
   if (isEmailSearch) {
-    const r = await tryBrixhub({ email: String(email).trim() });
+    const r = await tryBrixhub(mergeFilters({ email: String(email).trim() }, filters));
     return respond(res, r);
   }
 
   if (isPhoneSearch) {
     const cleanPhone = String(telephone).replace(/[\s.\-()]/g, "").trim();
-    const r = await tryBrixhub({ telephone: cleanPhone });
+    const r = await tryBrixhub(mergeFilters({ telephone: cleanPhone }, filters));
     return respond(res, r);
   }
 
@@ -133,12 +171,13 @@ export default async function handler(req, res) {
   const b = String(last_name).trim();
 
   const fullQuery = [a, b].filter(Boolean).join(" ").trim();
+  const hasFilters = Object.values(filters).some(v => String(v).trim() !== "");
 
-  if (fullQuery.length < 2) {
+  if (fullQuery.length < 2 && !hasFilters) {
     return res.status(200).json(emptyResponse(a, b));
   }
 
-  if (isBlocked(fullQuery)) {
+  if (fullQuery.length >= 2 && isBlocked(fullQuery)) {
     return res.status(200).json(emptyResponse(a, b));
   }
 
@@ -146,13 +185,13 @@ export default async function handler(req, res) {
   const hasB = b.length > 0;
 
   if (hasA && hasB) {
-    const firstResult = await tryBrixhub({ prenom: a, nom_famille: b });
+    const firstResult = await tryBrixhub(mergeFilters({ prenom: a, nom_famille: b }, filters));
 
     if (firstResult.ok && countResults(firstResult.data) > 0) {
       return respond(res, firstResult);
     }
 
-    const secondResult = await tryBrixhub({ prenom: b, nom_famille: a });
+    const secondResult = await tryBrixhub(mergeFilters({ prenom: b, nom_famille: a }, filters));
 
     if (secondResult.ok && countResults(secondResult.data) > 0) {
       return respond(res, secondResult);
@@ -162,12 +201,17 @@ export default async function handler(req, res) {
   }
 
   if (hasA) {
-    const r = await tryBrixhub({ prenom: a });
+    const r = await tryBrixhub(mergeFilters({ prenom: a }, filters));
     return respond(res, r);
   }
 
   if (hasB) {
-    const r = await tryBrixhub({ prenom: b });
+    const r = await tryBrixhub(mergeFilters({ prenom: b }, filters));
+    return respond(res, r);
+  }
+
+  if (hasFilters) {
+    const r = await tryBrixhub(mergeFilters({}, filters));
     return respond(res, r);
   }
 
