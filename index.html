@@ -1267,38 +1267,6 @@
     -webkit-backdrop-filter:blur(24px) saturate(180%);
   }
 
-  .raw-toggle {
-    display:flex; align-items:center; justify-content:center; gap:6px;
-    font-size:0.72rem; color:var(--text-dim); cursor:pointer;
-    padding:12px; margin-top:14px; user-select:none;
-    border-radius:12px;
-    transition:all 0.2s;
-  }
-  .raw-toggle:hover {
-    color:var(--text);
-    background:var(--glass-tint);
-  }
-  .raw-toggle svg { width:12px; height:12px; transition:transform 0.25s; }
-  .raw-toggle.open svg { transform:rotate(90deg); }
-
-  .raw {
-    background:var(--glass-tint);
-    border:1px solid var(--border);
-    border-radius:14px; padding:14px; margin-top:10px;
-    font-size:0.65rem; color:var(--text-dim);
-    max-height:400px; overflow:auto;
-    white-space:pre-wrap; word-break:break-word;
-    font-family:'JetBrains Mono', monospace; line-height:1.6;
-    display:none;
-    animation:fadeUp 0.3s ease-out;
-    backdrop-filter:blur(24px) saturate(180%);
-    -webkit-backdrop-filter:blur(24px) saturate(180%);
-    box-shadow:
-      0 8px 24px var(--glass-shadow),
-      0 1px 0 0 var(--glass-highlight) inset;
-  }
-  .raw.open { display:block; }
-
   @keyframes fadeUp {
     from { opacity:0; transform:translateY(12px); }
     to { opacity:1; transform:translateY(0); }
@@ -1702,7 +1670,7 @@
     </h1>
 
     <p class="hero-sub">
-      Accédez à des centaines de millions d'entrées issues de bases de données publiques. Recherche par nom, email, téléphone, puis affinez avec des critères précis (ville, IBAN, IP, Discord…).
+      Accédez à des centaines de millions d'entrées issues de bases de données publiques. Recherche par nom, email, téléphone, puis affinez avec des critères précis (ville, IBAN, IP…).
     </p>
 
     <div class="search-container">
@@ -1763,13 +1731,9 @@
 
           <div class="filters-section-label">Technique</div>
           <div class="filters-grid">
-            <div class="filter-group">
+            <div class="filter-group full">
               <label class="filter-label">Adresse IP</label>
               <input class="filter-input" id="f_adresse_ip" placeholder="192.168.1.1" autocomplete="off">
-            </div>
-            <div class="filter-group">
-              <label class="filter-label">Discord ID</label>
-              <input class="filter-input" id="f_discord_id" placeholder="123456789012345678" autocomplete="off">
             </div>
           </div>
 
@@ -1861,7 +1825,6 @@
         <span class="source-chip">Domaines</span>
         <span class="source-chip">Registres publics</span>
         <span class="source-chip">IBAN</span>
-        <span class="source-chip">Discord</span>
       </div>
     </div>
   </section>
@@ -2023,7 +1986,7 @@
         <li><strong>Email</strong> : adresse email complète</li>
         <li><strong>Téléphone</strong> : numéro (avec ou sans indicatif)</li>
       </ul>
-      <p>Utilise le bouton <strong>Filtres avancés</strong> pour affiner par ville, code postal, département, pays, adresse, adresse IP, Discord ID, IBAN, BIC, année de naissance, genre ou fiabilité minimale.</p>
+      <p>Utilise le bouton <strong>Filtres avancés</strong> pour affiner par ville, code postal, département, pays, adresse, adresse IP, IBAN, BIC, année de naissance, genre ou fiabilité minimale.</p>
       <h3>Confidentialité</h3>
       <p>Aucune donnée n'est stockée sur nos serveurs. Les recherches sont anonymes et ne sont pas tracées.</p>
       <p style="margin-top:16px;font-size:0.75rem;color:var(--text-dimmer)">Dernière modification : 18 Sept. 2026</p>
@@ -2076,7 +2039,6 @@ const FILTER_IDS = {
   pays: "f_pays",
   adresse: "f_adresse",
   adresse_ip: "f_adresse_ip",
-  discord_id: "f_discord_id",
   iban: "f_iban",
   bic: "f_bic",
   annee_naissance: "f_annee_naissance",
@@ -2608,15 +2570,14 @@ const LABELS = {
   nom_famille: "Nom", nom_utilisateur: "Pseudo", pays: "Pays",
   prenom: "Prénom", ville: "Ville", telephone: "Téléphone",
   phone: "Téléphone", genre: "Genre", sexe: "Sexe",
-  adresse_ip: "Adresse IP", discord_id: "Discord ID",
-  iban: "IBAN", bic: "BIC"
+  adresse_ip: "Adresse IP", iban: "IBAN", bic: "BIC"
 };
 
 const ORDER = [
   "prenom","nom_famille","date_naissance","annee_naissance","lieu_naissance",
   "adresse","code_postal","ville","departement","pays",
   "email","telephone","phone","nom_utilisateur",
-  "adresse_ip","discord_id","iban","bic",
+  "adresse_ip","iban","bic",
   "_source_db","_confidence","genre","sexe"
 ];
 
@@ -2811,7 +2772,7 @@ function renderCard(item, idx, dupCount = 0) {
     ...keys.filter(k => !ORDER.includes(k))
   ];
 
-  const monoKeys = ["email","telephone","phone","nom_utilisateur","code_postal","date_naissance","iban","bic","adresse_ip","discord_id"];
+  const monoKeys = ["email","telephone","phone","nom_utilisateur","code_postal","date_naissance","iban","bic","adresse_ip"];
 
   const rows = sorted.map(k => {
     let v = item[k];
@@ -2971,7 +2932,7 @@ function render(result) {
   if (!result.ok || !result.data) {
     const err = document.createElement("div");
     err.className = "err";
-    err.textContent = `Échec (HTTP ${result.status})${result.error ? " — " + result.error : ""}\n\n${JSON.stringify(result.data, null, 2)}`;
+    err.textContent = `Échec (HTTP ${result.status})${result.error ? " — " + result.error : ""}`;
     out.appendChild(err);
     toast("Erreur : " + (result.error || "HTTP " + result.status), "error");
     playSound("error");
@@ -3091,26 +3052,6 @@ function render(result) {
     playSound("ding");
   }
 
-  const toggle = document.createElement("div");
-  toggle.className = "raw-toggle";
-  toggle.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg> Afficher la réponse brute`;
-  out.appendChild(toggle);
-
-  const raw = document.createElement("div");
-  raw.className = "raw";
-  try { raw.textContent = JSON.stringify(result.data, null, 2); }
-  catch { raw.textContent = String(result.data); }
-  out.appendChild(raw);
-
-  toggle.addEventListener("click", () => {
-    raw.classList.toggle("open");
-    toggle.classList.toggle("open");
-    toggle.innerHTML = toggle.classList.contains("open")
-      ? `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg> Masquer la réponse brute`
-      : `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg> Afficher la réponse brute`;
-    playSound("click");
-  });
-
   out.scrollIntoView({ behavior: "smooth", block: "start" });
 }
 
@@ -3173,7 +3114,7 @@ document.querySelectorAll(".nav-btn, .nav-link, .icon-btn").forEach(attachRipple
   const el = document.getElementById("typewriter");
   if (!el) return;
 
-  const words = ["Prénom", "Nom", "Email", "Numéro", "Ville", "IBAN", "Discord"];
+  const words = ["Prénom", "Nom", "Email", "Numéro", "Ville", "IBAN"];
   let wordIndex = 0;
   let charIndex = 0;
   let isDeleting = false;
