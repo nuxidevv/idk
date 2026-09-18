@@ -58,7 +58,7 @@ function httpsPost(url, headers, bodyObj) {
   });
 }
 
-function emptyResponse(a, b) {
+function emptyResponse(meta = {}) {
   return {
     data: [],
     message: "ok",
@@ -66,7 +66,7 @@ function emptyResponse(a, b) {
       total: 0,
       page: 1,
       per_page: 10,
-      query: { prenom: a, nom_famille: b }
+      query: meta
     }
   };
 }
@@ -77,10 +77,23 @@ export default async function handler(req, res) {
   res.setHeader("Access-Control-Allow-Headers", "Content-Type");
   if (req.method === "OPTIONS") return res.status(200).end();
 
-  const { first_name = "", last_name = "" } = req.query;
+  const {
+    first_name = "",
+    last_name = "",
+    email = "",
+    telephone = ""
+  } = req.query;
 
-  if (isBlocked(`${first_name} ${last_name}`)) {
-    return res.status(200).json(emptyResponse(first_name, last_name));
+  const isEmailSearch = String(email).trim().length > 0;
+  const isPhoneSearch = String(telephone).trim().length > 0;
+
+  if (!isEmailSearch && !isPhoneSearch) {
+    if (isBlocked(`${first_name} ${last_name}`)) {
+      return res.status(200).json(emptyResponse({
+        prenom: first_name,
+        nom_famille: last_name
+      }));
+    }
   }
 
   const KEY = process.env.BRIXHUB_KEY || "";
@@ -90,10 +103,20 @@ export default async function handler(req, res) {
     "X-API-Key": KEY
   };
 
-  const r = await httpsPost("https://api.brixhub.to/api/v1/search", headers, {
-    prenom: first_name,
-    nom_famille: last_name
-  });
+  let payload = {};
+
+  if (isEmailSearch) {
+    payload = { email: String(email).trim() };
+  } else if (isPhoneSearch) {
+    payload = { telephone: String(telephone).trim() };
+  } else {
+    payload = {
+      prenom: first_name,
+      nom_famille: last_name
+    };
+  }
+
+  const r = await httpsPost("https://api.brixhub.to/api/v1/search", headers, payload);
 
   let parsed = null;
   try { parsed = JSON.parse(r.body); } catch { parsed = r.body; }
