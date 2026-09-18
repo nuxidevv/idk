@@ -77,54 +77,73 @@ export default async function handler(req, res) {
   res.setHeader("Access-Control-Allow-Headers", "Content-Type");
   if (req.method === "OPTIONS") return res.status(200).end();
 
-  const {
-    first_name = "",
-    last_name = "",
-    email = "",
-    telephone = ""
-  } = req.query;
+  try {
+    const {
+      first_name = "",
+      last_name = "",
+      email = "",
+      telephone = ""
+    } = req.query;
 
-  const isEmailSearch = String(email).trim().length > 0;
-  const isPhoneSearch = String(telephone).trim().length > 0;
+    const isEmailSearch = String(email).trim().length > 0;
+    const isPhoneSearch = String(telephone).trim().length > 0;
 
-  if (!isEmailSearch && !isPhoneSearch) {
-    if (isBlocked(`${first_name} ${last_name}`)) {
-      return res.status(200).json(emptyResponse({
+    if (!isEmailSearch && !isPhoneSearch) {
+      if (isBlocked(`${first_name} ${last_name}`)) {
+        return res.status(200).json(emptyResponse({
+          prenom: first_name,
+          nom_famille: last_name
+        }));
+      }
+    }
+
+    const KEY = process.env.BRIXHUB_KEY || "";
+
+    const headers = {
+      "Accept": "application/json",
+      "X-API-Key": KEY
+    };
+
+    let payload = {};
+
+    if (isEmailSearch) {
+      payload = { email: String(email).trim() };
+    } else if (isPhoneSearch) {
+      payload = { telephone: String(telephone).trim() };
+    } else {
+      payload = {
         prenom: first_name,
         nom_famille: last_name
-      }));
+      };
     }
+
+    let r;
+    try {
+      r = await httpsPost("https://api.brixhub.to/api/v1/search", headers, payload);
+    } catch (e) {
+      return res.status(200).json({
+        ok: false,
+        status: 0,
+        error: "fetch error: " + (e && e.message ? e.message : "unknown"),
+        data: null
+      });
+    }
+
+    let parsed = null;
+    try { parsed = JSON.parse(r.body); } catch { parsed = r.body; }
+
+    return res.status(200).json({
+      ok: r.status >= 200 && r.status < 300,
+      status: r.status,
+      error: r.error || null,
+      data: parsed
+    });
+  } catch (globalErr) {
+    return res.status(200).json({
+      ok: false,
+      status: 0,
+      error: "handler error: " + (globalErr && globalErr.message ? globalErr.message : "unknown"),
+      data: null
+    });
   }
-
-  const KEY = process.env.BRIXHUB_KEY || "";
-
-  const headers = {
-    "Accept": "application/json",
-    "X-API-Key": KEY
-  };
-
-  let payload = {};
-
-  if (isEmailSearch) {
-    payload = { email: String(email).trim() };
-  } else if (isPhoneSearch) {
-    payload = { telephone: String(telephone).trim() };
-  } else {
-    payload = {
-      prenom: first_name,
-      nom_famille: last_name
-    };
-  }
-
-  const r = await httpsPost("https://api.brixhub.to/api/v1/search", headers, payload);
-
-  let parsed = null;
-  try { parsed = JSON.parse(r.body); } catch { parsed = r.body; }
-
-  return res.status(200).json({
-    ok: r.status >= 200 && r.status < 300,
-    status: r.status,
-    error: r.error || null,
-    data: parsed
-  });
 }
