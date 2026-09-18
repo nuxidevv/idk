@@ -71,6 +71,28 @@ function emptyResponse(a, b) {
   };
 }
 
+async function tryBrixhub(payload) {
+  const KEY = process.env.BRIXHUB_KEY || "";
+  const headers = {
+    "Accept": "application/json",
+    "X-API-Key": KEY
+  };
+  const r = await httpsPost("https://api.brixhub.to/api/v1/search", headers, payload);
+  let parsed = null;
+  try { parsed = JSON.parse(r.body); } catch { parsed = r.body; }
+  return { ok: r.status >= 200 && r.status < 300, status: r.status, error: r.error || null, data: parsed };
+}
+
+function countResults(data) {
+  if (!data || typeof data !== "object") return 0;
+  for (const k of ["results","data","items","records","hits","matches","persons","people"]) {
+    if (Array.isArray(data[k])) return data[k].length;
+  }
+  if (Array.isArray(data)) return data.length;
+  if (data.meta && typeof data.meta.total === "number") return data.meta.total;
+  return 0;
+}
+
 export default async function handler(req, res) {
   res.setHeader("Access-Control-Allow-Origin", "*");
   res.setHeader("Access-Control-Allow-Methods", "GET, OPTIONS");
@@ -79,29 +101,76 @@ export default async function handler(req, res) {
 
   const { first_name = "", last_name = "" } = req.query;
 
-  if (isBlocked(`${first_name} ${last_name}`)) {
-    return res.status(200).json(emptyResponse(first_name, last_name));
+  const a = String(first_name).trim();
+  const b = String(last_name).trim();
+
+  const fullQuery = [a, b].filter(Boolean).join(" ").trim();
+
+  if (fullQuery.length < 2) {
+    return res.status(200).json(emptyResponse(a, b));
   }
 
-  const KEY = process.env.BRIXHUB_KEY || "";
+  if (isBlocked(fullQuery)) {
+    return res.status(200).json(emptyResponse(a, b));
+  }
 
-  const headers = {
-    "Accept": "application/json",
-    "X-API-Key": KEY
-  };
+  const hasA = a.length > 0;
+  const hasB = b.length > 0;
 
-  const r = await httpsPost("https://api.brixhub.to/api/v1/search", headers, {
-    prenom: first_name,
-    nom_famille: last_name
-  });
+  let firstResult = null;
+  let secondResult = null;
 
-  let parsed = null;
-  try { parsed = JSON.parse(r.body); } catch { parsed = r.body; }
+  if (hasA && hasB) {
+    firstResult = await tryBrixhub({ prenom: a, nom_famille: b });
 
-  return res.status(200).json({
-    ok: r.status >= 200 && r.status < 300,
-    status: r.status,
-    error: r.error || null,
-    data: parsed
-  });
+    if (firstResult.ok && countResults(firstResult.data) > 0) {
+      return res.status(200).json({
+        ok: firstResult.ok,
+        status: firstResult.status,
+        error: firstResult.error || null,
+        data: firstResult.data
+      });
+    }
+
+    secondResult = await tryBrixhub({ prenom: b, nom_famille: a });
+
+    if (secondResult.ok && countResults(secondResult.data) > 0) {
+      return res.status(200).json({
+        ok: secondResult.ok,
+        status: secondResult.status,
+        error: secondResult.error || null,
+        data: secondResult.data
+      });
+    }
+
+    const fallback = secondResult || firstResult;
+    return res.status(200).json({
+      ok: fallback.ok,
+      status: fallback.status,
+      error: fallback.error || null,
+      data: fallback.data
+    });
+  }
+
+  if (hasA) {
+    firstResult = await tryBrixhub({ prenom: a });
+    return res.status(200).json({
+      ok: firstResult.ok,
+      status: firstResult.status,
+      error: firstResult.error || null,
+      data: firstResult.data
+    });
+  }
+
+  if (hasB) {
+    firstResult = await tryBrixhub({ prenom: b });
+    return res.status(200).json({
+      ok: firstResult.ok,
+      status: firstResult.status,
+      error: firstResult.error || null,
+      data: firstResult.data
+    });
+  }
+
+  return res.status(200).json(emptyResponse(a, b));
 }
