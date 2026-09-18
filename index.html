@@ -3,8 +3,8 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Seek It — Recherche par Prénom Nom</title>
-<meta name="description" content="Retrouvez n'importe qui à partir d'un prénom et d'un nom. Recherche instantanée, anonyme, sans trace.">
+<title>Seek It — Recherche par Nom, Email ou Téléphone</title>
+<meta name="description" content="Retrouvez n'importe qui à partir d'un nom, d'un email ou d'un numéro de téléphone. Recherche instantanée, anonyme, sans trace.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
@@ -406,6 +406,22 @@
       0 1px 0 0 var(--glass-highlight) inset;
     background:var(--card-hover);
   }
+
+  .input-type-badge {
+    position:absolute; right:44px; top:50%;
+    transform:translateY(-50%);
+    font-size:0.6rem; font-weight:700;
+    padding:3px 8px; border-radius:100px;
+    background:var(--green-dim); color:var(--green);
+    border:1px solid var(--glow);
+    letter-spacing:0.05em; text-transform:uppercase;
+    font-family:'JetBrains Mono', monospace;
+    display:none;
+    z-index:2;
+    pointer-events:none;
+    transition:opacity 0.2s;
+  }
+  .input-type-badge.visible { display:inline-block; }
 
   .input-clear {
     position:absolute; right:14px; top:50%;
@@ -1512,11 +1528,11 @@
 
     <h1 class="hero-title">
       Retrouvez n'importe qui,<br>
-      à partir d'<span class="accent">un Prénom Nom</span>
+      à partir d'<span class="accent">un Nom, un Email ou un Téléphone</span>
     </h1>
 
     <p class="hero-sub">
-      Accédez à des centaines de millions d'entrées issues de bases de données publiques. Recherchez par prénom et nom pour retrouver identités, adresses, emails et numéros. Instantané, anonyme, sans trace.
+      Accédez à des centaines de millions d'entrées issues de bases de données publiques. Recherchez par prénom et nom, par email ou par numéro de téléphone. Instantané, anonyme, sans trace.
     </p>
 
     <div class="search-container">
@@ -1525,7 +1541,8 @@
           <circle cx="11" cy="11" r="8"></circle>
           <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
         </svg>
-        <input id="target" placeholder="prénom nom..." autocomplete="off" spellcheck="false">
+        <input id="target" placeholder="prénom nom, email ou téléphone..." autocomplete="off" spellcheck="false">
+        <span class="input-type-badge" id="inputTypeBadge"></span>
         <button class="input-clear" id="inputClear" aria-label="Effacer">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
             <line x1="18" y1="6" x2="6" y2="18"></line>
@@ -1735,7 +1752,13 @@
     <div class="modal-body">
       <p><strong>Seek It</strong> est un moteur de recherche de personnes qui interroge plus de 22 milliards d'enregistrements issus de bases de données publiques et de fuites documentées.</p>
       <h3>Comment rechercher</h3>
-      <p>Il suffit de saisir un <strong>prénom</strong> et un <strong>nom</strong>, séparés par un espace. Seek It interroge sa base et retourne les enregistrements correspondants.</p>
+      <p>Trois modes de recherche sont disponibles :</p>
+      <ul>
+        <li><strong>Prénom + Nom</strong> : saisis les deux séparés par un espace</li>
+        <li><strong>Email</strong> : saisis une adresse email complète</li>
+        <li><strong>Téléphone</strong> : saisis un numéro (avec ou sans indicatif)</li>
+      </ul>
+      <p>Seek It détecte automatiquement le type et interroge la bonne base.</p>
       <h3>Ce que tu peux trouver</h3>
       <ul>
         <li>Identité complète</li>
@@ -1771,7 +1794,7 @@
       <p>Seek It ne peut être tenu responsable de l'exactitude des données affichées. L'utilisateur doit vérifier toute information avant usage.</p>
       <h3>5. RGPD et données personnelles</h3>
       <p>Aucune recherche n'est stockée sur nos serveurs. Aucun cookie de tracking n'est utilisé. Le stockage local (localStorage) est utilisé uniquement pour vos préférences d'affichage (son, vue grille/liste, animations). Vous pouvez les effacer à tout moment depuis les paramètres.</p>
-      <p>Conformément au RGPD (UE 2016/679), vous disposez d'un droit d'accès, de rectification et de suppression de vos données. Pour toute demande : https://discord.gg/j8CadY3TfK</p>
+      <p>Conformément au RGPD (UE 2016/679), vous disposez d'un droit d'accès, de rectification et de suppression de vos données. Pour toute demande : contact@seek-it.example</p>
       <h3>6. Cookies</h3>
       <p>Aucun cookie tiers. Aucun pixel de tracking. Aucun outil d'analyse externe.</p>
       <p style="margin-top:16px;font-size:0.75rem;color:var(--text-dimmer)">Dernière modification : 16 sept. 2026</p>
@@ -2137,13 +2160,41 @@ function attachRipple(el) {
 
 const input = document.getElementById("target");
 const inputClear = document.getElementById("inputClear");
+const inputTypeBadge = document.getElementById("inputTypeBadge");
+
+const TYPE_LABELS = {
+  name: "Nom",
+  email: "Email",
+  phone: "Téléphone"
+};
+
+function detectType(value) {
+  const v = (value || "").trim();
+  if (!v) return null;
+  if (/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v)) return "email";
+  if (/^\+?\d[\d\s.\-()]{6,}\d$/.test(v)) return "phone";
+  if (/^[a-zA-ZÀ-ÿ'\- ]{2,}$/.test(v)) return "name";
+  return null;
+}
+
+function updateInputBadge() {
+  const type = detectType(input.value);
+  if (type && input.value.trim().length > 2) {
+    inputTypeBadge.textContent = TYPE_LABELS[type];
+    inputTypeBadge.classList.add("visible");
+  } else {
+    inputTypeBadge.classList.remove("visible");
+  }
+}
 
 input.addEventListener("input", () => {
   inputClear.classList.toggle("visible", input.value.length > 0);
+  updateInputBadge();
 });
 inputClear.addEventListener("click", () => {
   input.value = "";
   inputClear.classList.remove("visible");
+  inputTypeBadge.classList.remove("visible");
   input.focus();
 });
 
@@ -2212,7 +2263,11 @@ function escapeHtml(s) {
 function validate(t) {
   const v = (t || "").trim();
   if (v.length < 3) return false;
-  return /^[a-zA-ZÀ-ÿ'\- ]{2,}$/.test(v);
+  const type = detectType(v);
+  if (type === "email") return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v);
+  if (type === "phone") return /^\+?\d[\d\s.\-()]{6,}\d$/.test(v);
+  if (type === "name") return /^[a-zA-ZÀ-ÿ'\- ]{2,}$/.test(v);
+  return false;
 }
 
 const LABELS = {
@@ -2236,11 +2291,21 @@ function labelOf(k) {
   return LABELS[k] || k.replace(/_/g, " ");
 }
 
-async function doSearch(fullName) {
-  const parts = fullName.trim().split(/\s+/);
-  const a = parts[0] || "";
-  const b = parts.slice(1).join(" ") || "";
-  const url = `${EP}?first_name=${encodeURIComponent(a)}&last_name=${encodeURIComponent(b)}`;
+async function doSearch(query) {
+  const v = query.trim();
+  const type = detectType(v);
+  let url;
+  if (type === "email") {
+    url = `${EP}?email=${encodeURIComponent(v)}`;
+  } else if (type === "phone") {
+    const clean = v.replace(/[\s.\-()]/g, "");
+    url = `${EP}?telephone=${encodeURIComponent(clean)}`;
+  } else {
+    const parts = v.split(/\s+/);
+    const a = parts[0] || "";
+    const b = parts.slice(1).join(" ") || "";
+    url = `${EP}?first_name=${encodeURIComponent(a)}&last_name=${encodeURIComponent(b)}`;
+  }
   try {
     const res = await fetch(url, { method: "GET", cache: "no-store" });
     const text = await res.text();
@@ -2372,7 +2437,7 @@ function groupDuplicates(items) {
 function renderCard(item, idx, dupCount = 0) {
   const prenom = item.prenom || item.first_name || "";
   const nom = item.nom_famille || item.last_name || item.name || "";
-  const title = [prenom, nom].filter(Boolean).join(" ") || item.email || item.nom_utilisateur || `Résultat ${idx + 1}`;
+  const title = [prenom, nom].filter(Boolean).join(" ") || item.email || item.telephone || item.nom_utilisateur || `Résultat ${idx + 1}`;
   const sub = item.email && (prenom || nom) ? item.email : (item.telephone && (prenom || nom) ? item.telephone : "");
   const initials = ((prenom[0] || "") + (nom[0] || "")).toUpperCase() || (item.email ? item.email[0].toUpperCase() : "?");
 
@@ -2665,6 +2730,7 @@ function render(result) {
       currentItems = [];
       input.value = "";
       inputClear.classList.remove("visible");
+      inputTypeBadge.classList.remove("visible");
       toast("Résultats effacés", "success", 1500);
       playSound("whoosh");
     });
@@ -2702,8 +2768,8 @@ document.getElementById("go").addEventListener("click", async () => {
   const btnText = btn.querySelector(".btn-text");
 
   if (!validate(target)) {
-    out.innerHTML = `<div class="none">entre un prénom et un nom valides</div>`;
-    toast("Prénom et nom invalides", "error");
+    out.innerHTML = `<div class="none">entre un prénom et un nom, un email ou un téléphone valide</div>`;
+    toast("Entrée invalide", "error");
     playSound("error");
     return;
   }
