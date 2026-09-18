@@ -71,6 +71,37 @@ function emptyResponse(a, b) {
   };
 }
 
+async function tryBrixhub(payload) {
+  const KEY = process.env.BRIXHUB_KEY || "";
+  const headers = {
+    "Accept": "application/json",
+    "X-API-Key": KEY
+  };
+  const r = await httpsPost("https://api.brixhub.to/api/v1/search", headers, payload);
+  let parsed = null;
+  try { parsed = JSON.parse(r.body); } catch { parsed = r.body; }
+  return { ok: r.status >= 200 && r.status < 300, status: r.status, error: r.error || null, data: parsed };
+}
+
+function countResults(data) {
+  if (!data || typeof data !== "object") return 0;
+  for (const k of ["results","data","items","records","hits","matches","persons","people"]) {
+    if (Array.isArray(data[k])) return data[k].length;
+  }
+  if (Array.isArray(data)) return data.length;
+  if (data.meta && typeof data.meta.total === "number") return data.meta.total;
+  return 0;
+}
+
+function respond(res, result) {
+  return res.status(200).json({
+    ok: result.ok,
+    status: result.status,
+    error: result.error || null,
+    data: result.data
+  });
+}
+
 export default async function handler(req, res) {
   res.setHeader("Access-Control-Allow-Origin", "*");
   res.setHeader("Access-Control-Allow-Methods", "GET, OPTIONS");
@@ -87,41 +118,58 @@ export default async function handler(req, res) {
   const isEmailSearch = String(email).trim().length > 0;
   const isPhoneSearch = String(telephone).trim().length > 0;
 
-  if (!isEmailSearch && !isPhoneSearch) {
-    if (isBlocked(`${first_name} ${last_name}`)) {
-      return res.status(200).json(emptyResponse(first_name, last_name));
-    }
-  }
-
-  const KEY = process.env.BRIXHUB_KEY || "";
-
-  const headers = {
-    "Accept": "application/json",
-    "X-API-Key": KEY
-  };
-
-  let payload = {};
-
   if (isEmailSearch) {
-    payload = { email: String(email).trim() };
-  } else if (isPhoneSearch) {
-    payload = { telephone: String(telephone).trim() };
-  } else {
-    payload = {
-      prenom: first_name,
-      nom_famille: last_name
-    };
+    const r = await tryBrixhub({ email: String(email).trim() });
+    return respond(res, r);
   }
 
-  const r = await httpsPost("https://api.brixhub.to/api/v1/search", headers, payload);
+  if (isPhoneSearch) {
+    const cleanPhone = String(telephone).replace(/[\s.\-()]/g, "").trim();
+    const r = await tryBrixhub({ telephone: cleanPhone });
+    return respond(res, r);
+  }
 
-  let parsed = null;
-  try { parsed = JSON.parse(r.body); } catch { parsed = r.body; }
+  const a = String(first_name).trim();
+  const b = String(last_name).trim();
 
-  return res.status(200).json({
-    ok: r.status >= 200 && r.status < 300,
-    status: r.status,
-    error: r.error || null,
-    data: parsed
-  });
+  const fullQuery = [a, b].filter(Boolean).join(" ").trim();
+
+  if (fullQuery.length < 2) {
+    return res.status(200).json(emptyResponse(a, b));
+  }
+
+  if (isBlocked(fullQuery)) {
+    return res.status(200).json(emptyResponse(a, b));
+  }
+
+  const hasA = a.length > 0;
+  const hasB = b.length > 0;
+
+  if (hasA && hasB) {
+    const firstResult = await tryBrixhub({ prenom: a, nom_famille: b });
+
+    if (firstResult.ok && countResults(firstResult.data) > 0) {
+      return respond(res, firstResult);
+    }
+
+    const secondResult = await tryBrixhub({ prenom: b, nom_famille: a });
+
+    if (secondResult.ok && countResults(secondResult.data) > 0) {
+      return respond(res, secondResult);
+    }
+
+    return respond(res, secondResult || firstResult);
+  }
+
+  if (hasA) {
+    const r = await tryBrixhub({ prenom: a });
+    return respond(res, r);
+  }
+
+  if (hasB) {
+    const r = await tryBrixhub({ prenom: b });
+    return respond(res, r);
+  }
+
+  return res.status(200).json(emptyResponse(a, b));
 }
